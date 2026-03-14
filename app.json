@@ -1,0 +1,88 @@
+{
+  "expo": {
+    "name": "WordSwipe - İngilizce Öğren",
+    "slug": "wordswipe",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "description": "Swipe yaparak İngilizce kelime öğren! 300+ kelime, günlük dersler, akıllı tekrar sistemi ve XP ödül sistemi ile eğlenceli öğrenme.",
+    "primaryColor": "#6C63FF",
+    "githubUrl": "https://github.com/wordswipe/wordswipe",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#6C63FF"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wordswipe.app",
+      "buildNumber": "1",
+      "requireFullScreen": false,
+      "usesAppleSignIn": false,
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": []
+      },
+      "infoPlist": {
+        "NSUserNotificationsUsageDescription": "Günlük çalışma hatırlatmaları için bildirim izni gereklidir.",
+        "NSLocalNetworkUsageDescription": "Bu uygulama yerel ağ erişimi gerektirmez.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.wordswipe.app",
+      "versionCode": 1,
+      "compileSdkVersion": 35,
+      "targetSdkVersion": 35,
+      "minSdkVersion": 24,
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#6C63FF",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "allowBackup": false,
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "name": "WordSwipe - İngilizce Öğren",
+      "shortName": "WordSwipe",
+      "description": "Swipe yaparak İngilizce kelime öğren. 300+ kelime, günlük dersler.",
+      "themeColor": "#6C63FF",
+      "backgroundColor": "#6C63FF",
+      "lang": "tr",
+      "scope": "/",
+      "display": "standalone",
+      "orientation": "portrait"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "YOUR_EAS_PROJECT_ID"
+      }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#6C63FF",
+          "sounds": [],
+          "defaultChannel": "default"
+        }
+      ],
+      "expo-splash-screen"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
