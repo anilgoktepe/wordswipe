@@ -41,11 +41,11 @@ function generateQuiz(words: Word[], level: 'easy' | 'medium' | 'hard'): QuizQue
       .filter(w => w.id !== word.id)
       .sort(() => Math.random() - 0.5)
       .slice(0, 3)
-      .map(w => w.turkishMeaning);
+      .map(w => w.translation);
 
     const correctIndex = Math.floor(Math.random() * 4);
     const options = [...wrongOptions];
-    options.splice(correctIndex, 0, word.turkishMeaning);
+    options.splice(correctIndex, 0, word.translation);
 
     return { word, options, correctIndex };
   });
@@ -232,7 +232,7 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
               end={{ x: 1, y: 1 }}
             />
             <Text style={[styles.questionWord, { color: theme.text }]}>
-              {q.word.englishWord}
+              {q.word.word}
             </Text>
             {streak >= 3 && (
               <View style={styles.streakBadge}>

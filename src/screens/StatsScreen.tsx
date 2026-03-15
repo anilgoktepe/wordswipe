@@ -256,10 +256,10 @@ export const StatsScreen: React.FC<Props> = () => {
                 >
                   <View style={[styles.wordRowDot, { backgroundColor: theme.correct }]} />
                   <Text style={[styles.wordEn, { color: theme.text }]}>
-                    {word.englishWord}
+                    {word.word}
                   </Text>
                   <Text style={[styles.wordTr, { color: theme.textSecondary }]}>
-                    {word.turkishMeaning}
+                    {word.translation}
                   </Text>
                   <View
                     style={[
@@ -312,10 +312,10 @@ export const StatsScreen: React.FC<Props> = () => {
                 >
                   <View style={[styles.wordRowDot, { backgroundColor: theme.incorrect }]} />
                   <Text style={[styles.wordEn, { color: theme.text }]}>
-                    {word.englishWord}
+                    {word.word}
                   </Text>
                   <Text style={[styles.wordTr, { color: theme.textSecondary }]}>
-                    {word.turkishMeaning}
+                    {word.translation}
                   </Text>
                 </View>
               ))}

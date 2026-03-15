@@ -38,13 +38,13 @@ function pickRandomWord(learnedIds: number[], excludeId?: number): Word | null {
 function evaluate(sentence: string, word: Word): EvalResult {
   const trimmed = sentence.trim();
   const lower = trimmed.toLowerCase();
-  const wordLower = word.englishWord.toLowerCase();
+  const wordLower = word.word.toLowerCase();
 
   if (!lower.includes(wordLower)) {
     return {
       isCorrect: false,
-      feedback: `"${word.englishWord}" kelimesini cümlende kullanmadın.`,
-      tip: `İpucu: "${word.englishWord}" kelimesini cümlenin içine yerleştirmeyi dene.`,
+      feedback: `"${word.word}" kelimesini cümlende kullanmadın.`,
+      tip: `İpucu: "${word.word}" kelimesini cümlenin içine yerleştirmeyi dene.`,
       xpAwarded: 0,
     };
   }
@@ -63,7 +63,7 @@ function evaluate(sentence: string, word: Word): EvalResult {
   if (!hasPunctuation) {
     return {
       isCorrect: true,
-      feedback: `Harika! "${word.englishWord}" kelimesini doğru kullandın. 🎉`,
+      feedback: `Harika! "${word.word}" kelimesini doğru kullandın. 🎉`,
       tip: 'Küçük not: İngilizce cümlelerin sonuna noktalama işareti (. ! ?) eklemeyi unutma.',
       xpAwarded: 5,
     };
@@ -73,7 +73,7 @@ function evaluate(sentence: string, word: Word): EvalResult {
   if (!startsCapital) {
     return {
       isCorrect: true,
-      feedback: `Süper! "${word.englishWord}" kelimesini başarıyla kullandın. ✅`,
+      feedback: `Süper! "${word.word}" kelimesini başarıyla kullandın. ✅`,
       tip: 'Küçük not: İngilizce cümleler büyük harfle başlamalı.',
       xpAwarded: 5,
     };
@@ -81,7 +81,7 @@ function evaluate(sentence: string, word: Word): EvalResult {
 
   return {
     isCorrect: true,
-    feedback: `Mükemmel! "${word.englishWord}" kelimesini doğru ve eksiksiz bir cümlede kullandın. 🏆`,
+    feedback: `Mükemmel! "${word.word}" kelimesini doğru ve eksiksiz bir cümlede kullandın. 🏆`,
     xpAwarded: 8,
   };
 }
@@ -180,10 +180,10 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                     Bu kelimeyi kullanarak bir cümle yaz:
                   </Text>
                   <Text style={[styles.wordText, { color: theme.text }]}>
-                    {word.englishWord}
+                    {word.word}
                   </Text>
                   <Text style={[styles.wordMeaning, { color: theme.primary }]}>
-                    {word.turkishMeaning}
+                    {word.translation}
                   </Text>
                   <View style={[styles.levelPill, { backgroundColor: theme.primaryLight }]}>
                     <Text style={[styles.levelPillText, { color: theme.primary }]}>
@@ -204,7 +204,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                           color: theme.text,
                         },
                       ]}
-                      placeholder={`"${word.englishWord}" kelimesini kullanarak bir cümle yaz...`}
+                      placeholder={`"${word.word}" kelimesini kullanarak bir cümle yaz...`}
                       placeholderTextColor={theme.textTertiary}
                       value={sentence}
                       onChangeText={setSentence}
@@ -272,7 +272,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                         Örnek cümle:
                       </Text>
                       <Text style={[{ color: theme.text, fontSize: 14 }]}>
-                        {word.exampleSentence}
+                        {word.example}
                       </Text>
                     </View>
 

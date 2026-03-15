@@ -15,6 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { useApp } from '../context/AppContext';
 import { Word } from '../data/vocabulary';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
+import { prefetchEnrichments } from '../services/wordEnrichment';
 
 function haptic(type: 'light' | 'medium' | 'success' | 'warning') {
   if (Platform.OS === 'web') return;
@@ -190,7 +191,7 @@ const FlashCard: React.FC<{
           <Text style={[styles.tapHint, { color: theme.textTertiary }]}>
             Çevirmek için dokun 👆
           </Text>
-          <Text style={[styles.wordText, { color: theme.text }]}>{word.englishWord}</Text>
+          <Text style={[styles.wordText, { color: theme.text }]}>{word.word}</Text>
           <View style={[styles.levelDot, { backgroundColor: theme.primaryLight }]}>
             <Text style={[styles.levelDotText, { color: theme.primary }]}>
               {word.level === 'easy' ? 'Kolay' : word.level === 'medium' ? 'Orta' : 'Zor'}
@@ -217,9 +218,9 @@ const FlashCard: React.FC<{
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           />
-          <Text style={styles.meaningText}>{word.turkishMeaning}</Text>
+          <Text style={styles.meaningText}>{word.translation}</Text>
           <View style={styles.sentenceBg}>
-            <Text style={styles.sentenceText}>{word.exampleSentence}</Text>
+            <Text style={styles.sentenceText}>{word.example}</Text>
           </View>
         </Animated.View>
       </TouchableOpacity>
@@ -235,6 +236,14 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
   const [swipeCommand, setSwipeCommand] = useState<'left' | 'right' | null>(null);
 
   const words = state.sessionWords.length > 0 ? state.sessionWords : getDailyWords();
+
+  // Background-prefetch enrichment data for all session words so the cache is
+  // warm by the time the user reaches individual cards. Fire-and-forget.
+  useEffect(() => {
+    if (words.length > 0) {
+      prefetchEnrichments(words.map(w => w.word));
+    }
+  }, [words.length]);
 
   // Fix 2 + Fix 5: save seen words and navigate to quiz
   const finishLesson = useCallback((seenUpToIndex: number) => {

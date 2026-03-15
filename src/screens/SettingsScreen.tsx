@@ -14,6 +14,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp, Level } from '../context/AppContext';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
+import { clearEnrichmentCache } from '../services/wordEnrichment';
 
 const levelLabels: Record<Level, string> = {
   easy: 'Başlangıç (A1-A2)',
@@ -106,6 +107,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           style: 'destructive',
           onPress: () => {
             dispatch({ type: 'RESET_PROGRESS' });
+            clearEnrichmentCache(); // also wipe optional API cache
             if (navigation && navigation.replace) {
               navigation.replace('LevelSelection');
             }

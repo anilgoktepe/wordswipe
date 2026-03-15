@@ -36,8 +36,8 @@ const WordCard: React.FC<{
     >
       <View style={styles.wordCardTop}>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.english, { color: theme.text }]}>{word.englishWord}</Text>
-          <Text style={[styles.turkish, { color: theme.primary }]}>{word.turkishMeaning}</Text>
+          <Text style={[styles.english, { color: theme.text }]}>{word.word}</Text>
+          <Text style={[styles.turkish, { color: theme.primary }]}>{word.translation}</Text>
         </View>
         <TouchableOpacity
           onPress={onRemove}
@@ -49,7 +49,7 @@ const WordCard: React.FC<{
       {expanded && (
         <View style={[styles.exampleBox, { backgroundColor: theme.surfaceSecondary }]}>
           <Text style={[styles.exampleText, { color: theme.textSecondary }]}>
-            "{word.exampleSentence}"
+            "{word.example}"
           </Text>
         </View>
       )}

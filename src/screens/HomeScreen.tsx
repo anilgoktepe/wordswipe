@@ -216,10 +216,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     style={[styles.wordChip, { backgroundColor: theme.primaryLight }]}
                   >
                     <Text style={[styles.wordChipText, { color: theme.primary }]}>
-                      {word.englishWord}
+                      {word.word}
                     </Text>
                     <Text style={[styles.wordChipMeaning, { color: theme.textSecondary }]}>
-                      {word.turkishMeaning}
+                      {word.translation}
                     </Text>
                   </View>
                 ))}
@@ -291,7 +291,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       style={[styles.miniChip, { backgroundColor: '#FEE2E2' }]}
                     >
                       <Text style={{ color: '#DC2626', fontSize: 11, fontWeight: '600' }}>
-                        {word.englishWord}
+                        {word.word}
                       </Text>
                     </View>
                   ))}
