@@ -289,7 +289,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               </Text>
               <Text style={[styles.actionSub, { color: theme.textSecondary }]}>
                 {difficultWords.length > 0
-                  ? `${difficultWords.length} kelime tekrar bekliyor`
+                  ? `${difficultWords.length} kelime · Hemen teste gir`
                   : 'Henüz zor kelimen yok'}
               </Text>
               {difficultWords.length > 0 && (
@@ -335,10 +335,12 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.actionTitle, { color: theme.text }]}>
-                Kelime Listesi
+                Kelime Yönetimi
               </Text>
               <Text style={[styles.actionSub, { color: theme.textSecondary }]}>
-                Zor kelimeleri gözden geçir ve yönet
+                {difficultWords.length > 0
+                  ? `${difficultWords.length} kelime · İncele, düzenle ve listeni yönet`
+                  : 'Zor kelime yok · Liste şu an temiz'}
               </Text>
             </View>
             <Text style={{ color: theme.textTertiary, fontSize: 20 }}>›</Text>
