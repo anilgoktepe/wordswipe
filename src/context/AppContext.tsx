@@ -418,8 +418,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // ─── Helper accessors ─────────────────────────────────────────────────────
+  // Read from wordProgress (source of truth), not the derived cache arrays.
+  // This guarantees freshness even when a screen is re-focused after being
+  // frozen by react-freeze while another screen was active.
   const getDifficultWordObjects = (): Word[] =>
-    vocabulary.filter(w => state.difficultWords.includes(w.id));
+    vocabulary.filter(w => state.wordProgress[w.id]?.isDifficult === true);
 
   const getLastLessonWords = (): Word[] =>
     vocabulary.filter(w => state.lastLessonWordIds.includes(w.id));

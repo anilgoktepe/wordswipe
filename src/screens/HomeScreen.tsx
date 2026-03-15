@@ -9,6 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useIsFocused } from '@react-navigation/native';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/Button';
 import { vocabulary } from '../data/vocabulary';
@@ -27,14 +28,22 @@ interface Props {
 }
 
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
-  const { state, dispatch, getDailyWords, getDifficultWordObjects } = useApp();
+  // useIsFocused changes false→true when the screen regains focus after being
+  // in the background (frozen by react-freeze). The boolean change triggers a
+  // re-render, ensuring all derived values below re-read the latest context state.
+  useIsFocused();
+
+  const { state, dispatch, getDailyWords } = useApp();
   const theme = getTheme(state.darkMode);
 
   const dailyWords = getDailyWords();
-  const difficultWords = getDifficultWordObjects();
-  const learnedWords = vocabulary.filter(w => state.learnedWordIds.includes(w.id));
+  // Derive directly from wordProgress (source of truth) so the section
+  // always reflects the latest reducer state, even when the screen is
+  // re-focused after being frozen by react-freeze.
+  const difficultWords = vocabulary.filter(w => state.wordProgress[w.id]?.isDifficult === true);
+  const learnedWords   = vocabulary.filter(w => state.wordProgress[w.id]?.isLearned   === true);
   const lessonSize = state.lessonSize ?? 20;
-  const todayProgress = Math.min(state.learnedWordIds.length % lessonSize, lessonSize);
+  const todayProgress = Math.min(learnedWords.length % lessonSize, lessonSize);
   const totalToday = lessonSize;
 
   const LESSON_SIZES = [5, 8, 10, 15, 20];
@@ -108,7 +117,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <View style={styles.statDivider} />
               <View style={styles.statCard}>
                 <Text style={styles.statIcon}>📚</Text>
-                <Text style={styles.statValue}>{state.learnedWordIds.length}</Text>
+                <Text style={styles.statValue}>{learnedWords.length}</Text>
                 <Text style={styles.statLabel}>Kelime</Text>
               </View>
             </View>
