@@ -6,14 +6,26 @@ export type Level = 'easy' | 'medium' | 'hard';
 
 // ─── Spaced-repetition intervals ────────────────────────────────────────────
 const MS_PER_DAY = 86_400_000;
+
 /** Wrong answer → try again tomorrow */
-const INTERVAL_WRONG        = 1 * MS_PER_DAY;
-/** First correct (no wrong attempts) → review in 3 days */
-const INTERVAL_FIRST_LEARN  = 3 * MS_PER_DAY;
-/** Difficult word corrected → review sooner (2 days) */
-const INTERVAL_DIFFICULT_OK = 2 * MS_PER_DAY;
-/** Subsequent correct reviews → review in 7 days */
-const INTERVAL_REVIEW       = 7 * MS_PER_DAY;
+const INTERVAL_WRONG = 1 * MS_PER_DAY;
+
+/**
+ * Growing review intervals keyed by how many times the word has been answered
+ * correctly (AFTER counting this answer).
+ *   1st correct → 1 day
+ *   2nd correct → 3 days
+ *   3rd correct → 7 days
+ *   4th correct → 14 days
+ *   5th+ correct → 30 days
+ */
+const SRS_INTERVALS = [1, 3, 7, 14, 30].map(d => d * MS_PER_DAY);
+
+/** Return the review interval for a given correctCount (1-based, post-increment). */
+function srsInterval(newCorrectCount: number): number {
+  const idx = Math.min(newCorrectCount, SRS_INTERVALS.length) - 1;
+  return SRS_INTERVALS[Math.max(0, idx)];
+}
 
 // ─── Per-word progress record ────────────────────────────────────────────────
 export interface WordProgress {
@@ -29,6 +41,11 @@ export interface WordProgress {
   isLearned: boolean;
   /** Has had at least one wrong answer; still needs reinforcement */
   isDifficult: boolean;
+  /**
+   * Consecutive first-attempt-correct answers while isDifficult is true.
+   * Resets to 0 on any wrong answer. When it reaches 3, isDifficult is cleared.
+   */
+  consecutiveCorrect: number;
   /** Unix-ms timestamp: earliest this word should reappear as a review */
   nextReviewAt: number;
 }
@@ -103,6 +120,7 @@ function emptyProgress(): WordProgress {
     firstAttemptWrong: false,
     isLearned: false,
     isDifficult: false,
+    consecutiveCorrect: 0,
     nextReviewAt: 0,
   };
 }
@@ -140,12 +158,13 @@ function migrateFromLegacy(
     const isLearned   = legacyLearned.includes(id);
     const isDifficult = legacyDifficult.includes(id);
     wp[id] = {
-      seenCount:         1,
-      correctCount:      isLearned   ? 1 : 0,
-      wrongCount:        isDifficult ? 1 : 0,
-      firstAttemptWrong: isDifficult,
+      seenCount:          1,
+      correctCount:       isLearned   ? 1 : 0,
+      wrongCount:         isDifficult ? 1 : 0,
+      firstAttemptWrong:  isDifficult,
       isLearned,
       isDifficult,
+      consecutiveCorrect: 0,
       // Schedule all migrated words for immediate review
       nextReviewAt: now,
     };
@@ -195,17 +214,18 @@ function reducer(state: AppState, action: Action): AppState {
 
       const updated: WordProgress = {
         ...existing,
-        wrongCount:        existing.wrongCount + 1,
+        wrongCount:         existing.wrongCount + 1,
         // If this is the first-ever interaction and it's wrong → flag it
-        firstAttemptWrong: isFirstEver ? true : existing.firstAttemptWrong,
-        isDifficult:       true,
-        // Cancel learned status: wrong on first attempt (isFirstEver) reverts
-        // to unlearned; otherwise keep existing isLearned
-        isLearned:         isFirstEver ? false : existing.isLearned,
+        firstAttemptWrong:  isFirstEver ? true : existing.firstAttemptWrong,
+        isDifficult:        true,
+        // Any wrong answer breaks the consecutive-correct streak
+        consecutiveCorrect: 0,
+        // Cancel learned status only if this is the very first encounter
+        isLearned:          isFirstEver ? false : existing.isLearned,
         // Schedule review: tomorrow
-        nextReviewAt:      Date.now() + INTERVAL_WRONG,
+        nextReviewAt:       Date.now() + INTERVAL_WRONG,
         // seenCount increments only on the first wrong (= first encounter)
-        seenCount:         isFirstEver ? existing.seenCount + 1 : existing.seenCount,
+        seenCount:          isFirstEver ? existing.seenCount + 1 : existing.seenCount,
       };
 
       const wordProgress = { ...state.wordProgress, [action.wordId]: updated };
@@ -215,33 +235,29 @@ function reducer(state: AppState, action: Action): AppState {
     // ── Quiz evaluation: first-attempt correct ───────────────────────────────
     case 'MARK_WORD_LEARNED': {
       const existing = state.wordProgress[action.wordId] ?? emptyProgress();
+      const isFirstSeen   = existing.correctCount === 0 && existing.wrongCount === 0;
+      const newCorrectCount = existing.correctCount + 1;
 
-      // If already learned (and not currently marked difficult) → no-op
-      if (existing.isLearned && !existing.isDifficult) return state;
+      // Track consecutive correct answers for difficult words.
+      // Increment if word is currently difficult; otherwise carry existing value.
+      const newConsecutive = existing.isDifficult
+        ? existing.consecutiveCorrect + 1
+        : existing.consecutiveCorrect;
 
-      const wasDifficult = existing.isDifficult;
-      const isFirstSeen  = existing.correctCount === 0 && existing.wrongCount === 0;
-
-      // Choose review interval:
-      // • Previously difficult word finally answered correctly → 2 days
-      // • Subsequent review (correctCount ≥ 1) → 7 days
-      // • Brand-new word answered correctly on first attempt → 3 days
-      let interval: number;
-      if (wasDifficult)                           interval = INTERVAL_DIFFICULT_OK;
-      else if (existing.correctCount >= 1)        interval = INTERVAL_REVIEW;
-      else                                        interval = INTERVAL_FIRST_LEARN;
+      // Auto-clear isDifficult after 3 consecutive first-attempt-correct answers
+      const newIsDifficult = existing.isDifficult && newConsecutive < 3
+        ? true
+        : false;
 
       const updated: WordProgress = {
         ...existing,
-        correctCount: existing.correctCount + 1,
-        isLearned:    true,
-        // Keep difficult flag as-is (spec: "keep difficult if needed").
-        // A difficult word that is answered correctly still needs re-review
-        // until it eventually falls out of the difficult bucket naturally
-        // via getDailyWords() priority ordering.
-        nextReviewAt: Date.now() + interval,
-        // seenCount increments if this is the first-ever encounter
-        seenCount:    isFirstSeen ? existing.seenCount + 1 : existing.seenCount,
+        correctCount:       newCorrectCount,
+        isLearned:          true,
+        isDifficult:        newIsDifficult,
+        consecutiveCorrect: newIsDifficult ? newConsecutive : 0,
+        // Interval grows with each correct answer (1→3→7→14→30 days)
+        nextReviewAt:       Date.now() + srsInterval(newCorrectCount),
+        seenCount:          isFirstSeen ? existing.seenCount + 1 : existing.seenCount,
       };
 
       const wordProgress = { ...state.wordProgress, [action.wordId]: updated };
@@ -333,19 +349,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   }, []);
 
-  // Persist on every change (skip until first load to avoid clobbering saved data)
+  // Persist on every change (skip until first load to avoid clobbering saved data).
+  // Excluded from storage:
+  //   sessionWords / sessionResults — transient UI state, rebuilt per session
+  //   learnedWordIds / difficultWords — always derived from wordProgress on load
   useEffect(() => {
     if (!isLoaded) return;
-    const { sessionWords, sessionResults, ...persistable } = state;
+    const { sessionWords, sessionResults, learnedWordIds, difficultWords, ...persistable } = state;
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(persistable));
   }, [state, isLoaded]);
 
   // ─── getDailyWords — priority-ordered spaced-repetition selection ─────────
   const getDailyWords = (): Word[] => {
     if (!state.level) return [];
-    const now    = Date.now();
-    const target = state.lessonSize ?? 20;
-    const wp     = state.wordProgress;
+    const now        = Date.now();
+    const target     = state.lessonSize ?? 20;
+    const wp         = state.wordProgress;
+
+    // Words seen in the previous lesson — avoid immediate repetition.
+    // These are used as a secondary filter: primary pass skips them;
+    // fallback pass uses them only if there aren't enough other words.
+    const lastLesson = new Set(state.lastLessonWordIds);
 
     // ── Bucket 1: Difficult words due for review (most overdue first) ────────
     const difficultDue: Word[] = Object.entries(wp)
@@ -355,7 +379,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       .filter((w): w is Word => w !== undefined);
 
     // ── Bucket 2: Learned words due for review (most overdue first) ──────────
-    // Exclude words already in bucket 1 (isDifficult && isLearned overlap)
     const learnedDue: Word[] = Object.entries(wp)
       .filter(([, p]) => p.isLearned && !p.isDifficult && p.nextReviewAt <= now)
       .sort(([, a], [, b]) => a.nextReviewAt - b.nextReviewAt)
@@ -363,19 +386,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       .filter((w): w is Word => w !== undefined);
 
     // ── Bucket 3: New/unseen words from current level ────────────────────────
-    const seenIds   = new Set(Object.keys(wp).map(Number));
+    const seenIds    = new Set(Object.keys(wp).map(Number));
     const levelWords = getWordsByLevel(state.level);
-    const newWords  = levelWords.filter(w => !seenIds.has(w.id));
+    const newWords   = levelWords.filter(w => !seenIds.has(w.id));
 
-    // Merge in priority order, deduplicate, stop at lessonSize
-    const seen   = new Set<number>();
+    // ── Primary pass: fill up to target, skipping last-lesson words ──────────
+    const added  = new Set<number>();
     const result: Word[] = [];
 
     for (const w of [...difficultDue, ...learnedDue, ...newWords]) {
       if (result.length >= target) break;
-      if (!seen.has(w.id)) {
-        seen.add(w.id);
+      if (!added.has(w.id) && !lastLesson.has(w.id)) {
+        added.add(w.id);
         result.push(w);
+      }
+    }
+
+    // ── Fallback pass: if still under target, backfill from last-lesson words ─
+    // (guarantees a full lesson even when the available pool is small)
+    if (result.length < target) {
+      for (const w of [...difficultDue, ...learnedDue, ...newWords]) {
+        if (result.length >= target) break;
+        if (!added.has(w.id)) {
+          added.add(w.id);
+          result.push(w);
+        }
       }
     }
 

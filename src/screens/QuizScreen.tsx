@@ -141,11 +141,11 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
       setWrongIndices(prev => [...prev, index]);
       if (isFirstAttempt) {
         setIncorrectCount(prev => prev + 1);
-      }
-      const wid = q.word.id;
-      dispatch({ type: 'ADD_DIFFICULT_WORD', wordId: wid });
-      if (!wrongWordIds.includes(wid)) {
-        setWrongWordIds(prev => [...prev, wid]);
+        const wid = q.word.id;
+        dispatch({ type: 'ADD_DIFFICULT_WORD', wordId: wid });
+        if (!wrongWordIds.includes(wid)) {
+          setWrongWordIds(prev => [...prev, wid]);
+        }
       }
     }
   };
