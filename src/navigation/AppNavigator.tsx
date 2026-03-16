@@ -54,16 +54,24 @@ export const AppNavigator: React.FC = () => {
       dispatch({ type: 'SET_SESSION_WORDS', words: [word] });
       pendingChallengeWordId.current = null;
 
-      // Small delay to ensure NavigationContainer has finished mounting
-      setTimeout(() => {
+      // Poll until NavigationContainer is ready instead of relying on a fixed delay.
+      // Retries every 50 ms for up to 2 seconds, then gives up gracefully.
+      let attempts = 0;
+      const tryNavigate = () => {
         try {
           if (navigationRef.isReady()) {
             navigationRef.navigate('Quiz');
+            return;
           }
         } catch (_) {
-          // Navigation container not yet ready — pending ref will retry via isLoaded effect
+          // isReady() threw — container not yet mounted
         }
-      }, 300);
+        if (attempts < 40) {
+          attempts++;
+          setTimeout(tryNavigate, 50);
+        }
+      };
+      tryNavigate();
     },
     [dispatch, navigationRef],
   );

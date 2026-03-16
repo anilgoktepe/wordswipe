@@ -46,8 +46,9 @@ export const StatsScreen: React.FC<Props> = () => {
   const { state } = useApp();
   const theme = getTheme(state.darkMode);
 
-  const learnedWords = vocabulary.filter(w => state.learnedWordIds.includes(w.id));
-  const difficultWords = vocabulary.filter(w => state.difficultWords.includes(w.id));
+  // Derive directly from wordProgress (source of truth) so stats are never stale.
+  const learnedWords   = vocabulary.filter(w => state.wordProgress[w.id]?.isLearned   === true);
+  const difficultWords = vocabulary.filter(w => state.wordProgress[w.id]?.isDifficult === true);
 
   const easyLearned = learnedWords.filter(w => w.level === 'easy').length;
   const mediumLearned = learnedWords.filter(w => w.level === 'medium').length;

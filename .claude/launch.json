@@ -2,15 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "WordSwipe Web",
+      "name": "WordSwipe",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["expo", "start", "--web", "--port", "8082"],
-      "port": 8082
-    },
-    {
-      "name": "WordSwipe Mobile (Metro)",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["expo", "start", "--port", "8081"],
+      "runtimeArgs": ["serve", "dist", "--listen", "8081"],
       "port": 8081
     }
   ]

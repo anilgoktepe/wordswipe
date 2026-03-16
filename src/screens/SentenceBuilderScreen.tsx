@@ -40,7 +40,9 @@ function evaluate(sentence: string, word: Word): EvalResult {
   const lower = trimmed.toLowerCase();
   const wordLower = word.word.toLowerCase();
 
-  if (!lower.includes(wordLower)) {
+  // Use word-boundary regex so "cat" doesn't falsely match inside "concatenate".
+  const wordBoundaryRegex = new RegExp(`(?<![a-z])${wordLower}(?![a-z])`, 'i');
+  if (!wordBoundaryRegex.test(lower)) {
     return {
       isCorrect: false,
       feedback: `"${word.word}" kelimesini cümlende kullanmadın.`,

@@ -221,7 +221,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 Kelime Öğrencisi
               </Text>
               <Text style={[styles.profileSub, { color: theme.textSecondary }]}>
-                {state.xp} XP · {state.streak} gün serisi · {state.learnedWordIds.length} kelime
+                {state.xp} XP · {state.streak} gün serisi · {Object.values(state.wordProgress).filter(p => p.isLearned).length} kelime
               </Text>
             </View>
           </View>

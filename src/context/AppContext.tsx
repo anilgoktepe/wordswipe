@@ -179,16 +179,18 @@ function migrateFromLegacy(
   for (const id of allIds) {
     const isLearned   = legacyLearned.includes(id);
     const isDifficult = legacyDifficult.includes(id);
+    const correctCount = isLearned ? 1 : 0;
     wp[id] = {
       seenCount:          1,
-      correctCount:       isLearned   ? 1 : 0,
+      correctCount,
       wrongCount:         isDifficult ? 1 : 0,
       firstAttemptWrong:  isDifficult,
       isLearned,
       isDifficult,
       consecutiveCorrect: 0,
-      // Schedule all migrated words for immediate review
-      nextReviewAt: now,
+      // Difficult words are due immediately; learned-only words get a 1-day
+      // grace period so they don't all flood back into the very next lesson.
+      nextReviewAt: isDifficult ? now : now + srsInterval(correctCount),
     };
   }
   return wp;
@@ -285,13 +287,18 @@ function reducer(state: AppState, action: Action): AppState {
       const wordProgress = { ...state.wordProgress, [action.wordId]: updated };
 
       // ── Daily progress: count each word only once per calendar day ──────────
+      // Recalculate today on every action so midnight crossings are handled
+      // correctly even if the app runs past midnight without restarting.
       const today = new Date().toDateString();
       const isSameDay = state.todayDate === today;
-      const alreadyCountedToday = isSameDay && state.dailyLearnedIds.includes(action.wordId);
-      const newDailyProgress = alreadyCountedToday ? state.dailyProgress : state.dailyProgress + 1;
+      // On a new day, start daily counters fresh before applying this word.
+      const baseProgress    = isSameDay ? state.dailyProgress    : 0;
+      const baseLearnedIds  = isSameDay ? state.dailyLearnedIds  : [];
+      const alreadyCountedToday = isSameDay && baseLearnedIds.includes(action.wordId);
+      const newDailyProgress   = alreadyCountedToday ? baseProgress : baseProgress + 1;
       const newDailyLearnedIds = alreadyCountedToday
-        ? state.dailyLearnedIds
-        : [...state.dailyLearnedIds, action.wordId];
+        ? baseLearnedIds
+        : [...baseLearnedIds, action.wordId];
 
       return {
         ...state,

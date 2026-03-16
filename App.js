@@ -24,7 +24,13 @@ async function scheduleDailyStreakReminder() {
         shouldSetBadge: false,
       }),
     });
-    const { status } = await Notifications.requestPermissionsAsync();
+    // Check existing permission before prompting to avoid repeated iOS dialogs.
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let status = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status: askedStatus } = await Notifications.requestPermissionsAsync();
+      status = askedStatus;
+    }
     if (status !== 'granted') return;
     await Notifications.cancelAllScheduledNotificationsAsync();
     await Notifications.scheduleNotificationAsync({

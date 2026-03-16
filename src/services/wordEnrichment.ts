@@ -27,8 +27,10 @@ export interface WordEnrichment {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const CACHE_PREFIX = '@wordswipe_enrich_';
-const API_BASE     = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
+const CACHE_PREFIX   = '@wordswipe_enrich_';
+const API_BASE       = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
+/** Re-fetch enrichment data after 30 days so definitions can refresh. */
+const CACHE_TTL_MS   = 30 * 24 * 60 * 60 * 1000;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -36,12 +38,15 @@ function cacheKey(word: string): string {
   return `${CACHE_PREFIX}${word.toLowerCase().trim()}`;
 }
 
-/** Read a cached enrichment record; returns null if absent or unreadable. */
+/** Read a cached enrichment record; returns null if absent, unreadable, or expired. */
 async function readCache(word: string): Promise<WordEnrichment | null> {
   try {
     const raw = await AsyncStorage.getItem(cacheKey(word));
     if (!raw) return null;
-    return JSON.parse(raw) as WordEnrichment;
+    const cached = JSON.parse(raw) as WordEnrichment;
+    // Treat entries older than CACHE_TTL_MS as stale so they get refreshed.
+    if (Date.now() - (cached.cachedAt ?? 0) > CACHE_TTL_MS) return null;
+    return cached;
   } catch {
     return null;
   }
