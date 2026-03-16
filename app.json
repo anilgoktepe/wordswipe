@@ -64,12 +64,7 @@
       "display": "standalone",
       "orientation": "portrait"
     },
-    "extra": {
-      "eas": {
-        "projectId": "YOUR_EAS_PROJECT_ID"
-      }
-    },
-    "owner": "YOUR_EXPO_ACCOUNT_SLUG",
+    "owner": "anilgoktepe",
     "plugins": [
       [
         "expo-notifications",
@@ -91,6 +86,11 @@
     ],
     "experiments": {
       "typedRoutes": false
+    },
+    "extra": {
+      "eas": {
+        "projectId": "13e9ab3d-808a-4c3c-b7fb-d021720ed169"
+      }
     }
   }
 }
