@@ -5,27 +5,17 @@
  * The web bundle keeps using AdBanner.tsx (the placeholder), so react-native-
  * google-mobile-ads is never imported by the web bundler.
  *
- * ─── Before going to production ───────────────────────────────────────────────
- * 1. Replace the placeholder unit IDs below with your real AdMob banner unit
- *    IDs from https://apps.admob.com → Apps → Ad units.
- * 2. Replace the App IDs in app.json (androidAppId / iosAppId) with your real
- *    AdMob App IDs. The current values are Google's official test App IDs.
+ * ─── To go to production ──────────────────────────────────────────────────────
+ * All ad IDs are managed centrally in src/config/adConfig.ts.
+ * App IDs (for app.json / EAS) are managed via env vars in app.config.js.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
 import React, { useState } from 'react';
-import { Platform, View, StyleSheet } from 'react-native';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import { View, StyleSheet } from 'react-native';
+import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 import { spacing } from '../utils/theme';
-
-// ─── Ad unit IDs ──────────────────────────────────────────────────────────────
-// __DEV__ is true when running via Metro (Expo Go / dev client).
-// In production builds __DEV__ is false and the production IDs below are used.
-const UNIT_ID = __DEV__
-  ? TestIds.BANNER
-  : Platform.OS === 'ios'
-    ? 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX'   // ← replace with real iOS unit ID
-    : 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';  // ← replace with real Android unit ID
+import { BANNER_UNIT_ID } from '../config/adConfig';
 
 interface Props {
   /** Passed by ResultsScreen; unused here because BannerAd handles its own styling. */
@@ -41,7 +31,7 @@ export const AdBanner: React.FC<Props> = () => {
   return (
     <View style={styles.container}>
       <BannerAd
-        unitId={UNIT_ID}
+        unitId={BANNER_UNIT_ID}
         size={BannerAdSize.BANNER}          // standard 320 × 50
         requestOptions={{
           // Request non-personalised ads to simplify GDPR compliance.

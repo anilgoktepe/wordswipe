@@ -13,8 +13,7 @@ import { useApp } from '../context/AppContext';
 import { Button } from '../components/Button';
 import { AdBanner } from '../components/AdBanner';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
-
-const MAX_DAILY_ADS = 2;
+import { MAX_DAILY_ADS } from '../config/adConfig';
 
 const { width } = Dimensions.get('window');
 

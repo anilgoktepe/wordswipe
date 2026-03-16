@@ -69,6 +69,7 @@
         "projectId": "YOUR_EAS_PROJECT_ID"
       }
     },
+    "owner": "YOUR_EXPO_ACCOUNT_SLUG",
     "plugins": [
       [
         "expo-notifications",
