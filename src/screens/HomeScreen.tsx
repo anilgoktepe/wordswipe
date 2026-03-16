@@ -43,7 +43,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const difficultWords = vocabulary.filter(w => state.wordProgress[w.id]?.isDifficult === true);
   const learnedWords   = vocabulary.filter(w => state.wordProgress[w.id]?.isLearned   === true);
   const lessonSize = state.lessonSize ?? 20;
-  const todayProgress = Math.min(learnedWords.length % lessonSize, lessonSize);
+  const todayProgress = Math.min(state.dailyProgress, lessonSize);
   const totalToday = lessonSize;
 
   const LESSON_SIZES = [5, 8, 10, 15, 20];

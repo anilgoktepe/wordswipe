@@ -7,6 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useIsFocused } from '@react-navigation/native';
 import { useApp } from '../context/AppContext';
 import { vocabulary } from '../data/vocabulary';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
@@ -38,6 +39,10 @@ const StatCard: React.FC<{
 );
 
 export const StatsScreen: React.FC<Props> = () => {
+  // useIsFocused triggers a re-render when this tab regains focus after being
+  // frozen by react-freeze, ensuring counts reflect the latest quiz results.
+  useIsFocused();
+
   const { state } = useApp();
   const theme = getTheme(state.darkMode);
 

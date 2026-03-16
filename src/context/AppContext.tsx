@@ -76,6 +76,13 @@ export interface AppState {
   } | null;
   lastLessonWordIds: number[];
   lessonSize: number;
+
+  /** Daily progress tracking — resets every new calendar day */
+  dailyProgress: number;
+  /** ISO date string (toDateString) of the last day dailyProgress was updated */
+  todayDate: string;
+  /** Word IDs already counted toward dailyProgress today (prevents double-counting) */
+  dailyLearnedIds: number[];
 }
 
 // ─── Actions (unchanged surface API so all screens keep working) ─────────────
@@ -109,6 +116,9 @@ const initialState: AppState = {
   sessionResults: null,
   lastLessonWordIds: [],
   lessonSize: 20,
+  dailyProgress: 0,
+  todayDate: new Date().toDateString(),
+  dailyLearnedIds: [],
 };
 
 /** Build an empty progress entry for a word that has never been seen */
@@ -261,7 +271,24 @@ function reducer(state: AppState, action: Action): AppState {
       };
 
       const wordProgress = { ...state.wordProgress, [action.wordId]: updated };
-      return { ...state, wordProgress, ...deriveFromProgress(wordProgress) };
+
+      // ── Daily progress: count each word only once per calendar day ──────────
+      const today = new Date().toDateString();
+      const isSameDay = state.todayDate === today;
+      const alreadyCountedToday = isSameDay && state.dailyLearnedIds.includes(action.wordId);
+      const newDailyProgress = alreadyCountedToday ? state.dailyProgress : state.dailyProgress + 1;
+      const newDailyLearnedIds = alreadyCountedToday
+        ? state.dailyLearnedIds
+        : [...state.dailyLearnedIds, action.wordId];
+
+      return {
+        ...state,
+        wordProgress,
+        ...deriveFromProgress(wordProgress),
+        dailyProgress:   newDailyProgress,
+        todayDate:       today,
+        dailyLearnedIds: newDailyLearnedIds,
+      };
     }
 
     // ── Manual difficult removal (DifficultWordsScreen) ─────────────────────
@@ -291,6 +318,11 @@ function reducer(state: AppState, action: Action): AppState {
 
       const derived = deriveFromProgress(wordProgress);
 
+      // ── Daily progress: reset if the saved date is not today ─────────────────
+      const today = new Date().toDateString();
+      const savedDate = loaded.todayDate ?? '';
+      const isNewDay  = savedDate !== today;
+
       return {
         ...state,
         level:             loaded.level             ?? state.level,
@@ -302,6 +334,10 @@ function reducer(state: AppState, action: Action): AppState {
         lessonSize:        loaded.lessonSize        ?? state.lessonSize,
         wordProgress,
         ...derived,
+        // Reset daily counters on a new day; otherwise restore saved values
+        dailyProgress:   isNewDay ? 0               : (loaded.dailyProgress   ?? 0),
+        todayDate:       today,
+        dailyLearnedIds: isNewDay ? []              : (loaded.dailyLearnedIds ?? []),
       };
     }
 
@@ -311,6 +347,10 @@ function reducer(state: AppState, action: Action): AppState {
         ...initialState,
         level:    state.level,
         darkMode: state.darkMode,
+        // initialState.todayDate is computed once at module load and can be
+        // stale if the app runs past midnight. Always use the real current date
+        // so dailyLearnedIds / dailyProgress start clean from the correct day.
+        todayDate: new Date().toDateString(),
       };
 
     default:
@@ -355,6 +395,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   //   learnedWordIds / difficultWords — always derived from wordProgress on load
   useEffect(() => {
     if (!isLoaded) return;
+    // Excluded: sessionWords, sessionResults (transient)
+    //           learnedWordIds, difficultWords (always re-derived from wordProgress on load)
     const { sessionWords, sessionResults, learnedWordIds, difficultWords, ...persistable } = state;
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(persistable));
   }, [state, isLoaded]);

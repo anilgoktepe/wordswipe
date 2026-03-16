@@ -151,6 +151,11 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const finishQuiz = (correct: number, incorrect: number, wrongIds: number[]) => {
+    // Update streak here so it fires for ALL quiz paths:
+    //   regular   → Home → Flashcard → Quiz (UPDATE_STREAK guard prevents double-count)
+    //   reinforce → Home → Quiz directly (only call, would otherwise be missed)
+    //   difficult → Home → Quiz directly (same as above)
+    dispatch({ type: 'UPDATE_STREAK' });
     dispatch({
       type: 'SET_SESSION_RESULTS',
       results: { correct, incorrect, wrongWordIds: wrongIds },
