@@ -11,7 +11,10 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/Button';
+import { AdBanner } from '../components/AdBanner';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
+
+const MAX_DAILY_ADS = 2;
 
 const { width } = Dimensions.get('window');
 
@@ -40,6 +43,17 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
     motivationalMessages.find(m => successRate >= m.min)?.text ??
     motivationalMessages[motivationalMessages.length - 1].text;
 
+  // ── Ad eligibility ──────────────────────────────────────────────────────────
+  // Frozen in a ref at mount so the banner stays visible for the entire screen
+  // visit even after RECORD_AD_SHOWN increments dailyAdsShown and triggers a
+  // re-render (which would otherwise recompute the condition to false, causing
+  // the banner to flash and disappear on the 2nd eligible visit of the day).
+  const shouldShowAd = useRef(
+    !state.isPremium && state.dailyAdsShown < MAX_DAILY_ADS,
+  ).current;
+
+  const adRecorded = useRef(false);
+
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const countAnim = useRef(new Animated.Value(0)).current;
@@ -65,6 +79,14 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
       useNativeDriver: false,
     }).start();
   }, []);
+
+  // Record the ad impression exactly once per screen visit
+  useEffect(() => {
+    if (shouldShowAd && !adRecorded.current) {
+      adRecorded.current = true;
+      dispatch({ type: 'RECORD_AD_SHOWN' });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRetry = () => {
     const words = state.sessionWords;
@@ -140,6 +162,9 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={[styles.statLabel, { color: theme.primary }]}>XP</Text>
             </View>
           </Animated.View>
+
+          {/* Ad banner — free users only, max 2 per day */}
+          {shouldShowAd && <AdBanner darkMode={state.darkMode} />}
 
           {/* Buttons */}
           <Animated.View style={[styles.buttons, { opacity: fadeAnim }]}>

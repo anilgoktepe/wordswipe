@@ -83,6 +83,14 @@ export interface AppState {
   todayDate: string;
   /** Word IDs already counted toward dailyProgress today (prevents double-counting) */
   dailyLearnedIds: number[];
+
+  // ── Ad system ──────────────────────────────────────────────────────────────
+  /** Premium users see no ads */
+  isPremium: boolean;
+  /** How many ads have been shown today */
+  dailyAdsShown: number;
+  /** Date string matching dailyAdsShown — resets counter on a new day */
+  adsDate: string;
 }
 
 // ─── Actions (unchanged surface API so all screens keep working) ─────────────
@@ -99,7 +107,8 @@ type Action =
   | { type: 'SET_LAST_LESSON_WORDS'; wordIds: number[] }
   | { type: 'SET_LESSON_SIZE'; size: number }
   | { type: 'LOAD_STATE'; state: Partial<AppState> }
-  | { type: 'RESET_PROGRESS' };
+  | { type: 'RESET_PROGRESS' }
+  | { type: 'RECORD_AD_SHOWN' };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -119,6 +128,9 @@ const initialState: AppState = {
   dailyProgress: 0,
   todayDate: new Date().toDateString(),
   dailyLearnedIds: [],
+  isPremium: false,
+  dailyAdsShown: 0,
+  adsDate: new Date().toDateString(),
 };
 
 /** Build an empty progress entry for a word that has never been seen */
@@ -320,8 +332,10 @@ function reducer(state: AppState, action: Action): AppState {
 
       // ── Daily progress: reset if the saved date is not today ─────────────────
       const today = new Date().toDateString();
-      const savedDate = loaded.todayDate ?? '';
-      const isNewDay  = savedDate !== today;
+      const savedDate    = loaded.todayDate ?? '';
+      const isNewDay     = savedDate !== today;
+      const savedAdsDate = loaded.adsDate ?? '';
+      const isNewAdsDay  = savedAdsDate !== today;
 
       return {
         ...state,
@@ -335,22 +349,36 @@ function reducer(state: AppState, action: Action): AppState {
         wordProgress,
         ...derived,
         // Reset daily counters on a new day; otherwise restore saved values
-        dailyProgress:   isNewDay ? 0               : (loaded.dailyProgress   ?? 0),
+        dailyProgress:   isNewDay    ? 0  : (loaded.dailyProgress   ?? 0),
         todayDate:       today,
-        dailyLearnedIds: isNewDay ? []              : (loaded.dailyLearnedIds ?? []),
+        dailyLearnedIds: isNewDay    ? [] : (loaded.dailyLearnedIds ?? []),
+        // Ad state
+        isPremium:       loaded.isPremium    ?? false,
+        dailyAdsShown:   isNewAdsDay ? 0  : (loaded.dailyAdsShown   ?? 0),
+        adsDate:         today,
       };
     }
 
-    // ── Full reset (keeps level + dark mode preference) ──────────────────────
+    // ── Ad impression tracking ────────────────────────────────────────────────
+    case 'RECORD_AD_SHOWN': {
+      const today = new Date().toDateString();
+      // Reset counter if somehow called on a new day before LOAD_STATE fires
+      const base = state.adsDate === today ? state.dailyAdsShown : 0;
+      return { ...state, dailyAdsShown: base + 1, adsDate: today };
+    }
+
+    // ── Full reset (keeps level + dark mode + premium status) ────────────────
     case 'RESET_PROGRESS':
       return {
         ...initialState,
-        level:    state.level,
-        darkMode: state.darkMode,
+        level:      state.level,
+        darkMode:   state.darkMode,
+        isPremium:  state.isPremium,   // preserve subscription across resets
         // initialState.todayDate is computed once at module load and can be
         // stale if the app runs past midnight. Always use the real current date
         // so dailyLearnedIds / dailyProgress start clean from the correct day.
         todayDate: new Date().toDateString(),
+        adsDate:   new Date().toDateString(),
       };
 
     default:
