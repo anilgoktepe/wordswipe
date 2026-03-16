@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useApp, Level } from '../context/AppContext';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import { clearEnrichmentCache } from '../services/wordEnrichment';
+import { pickChallengeWord, buildChallengeContent } from '../services/curiosityNotification';
 
 const levelLabels: Record<Level, string> = {
   easy: 'Başlangıç (A1-A2)',
@@ -90,6 +91,82 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const { state, dispatch } = useApp();
   const theme = getTheme(state.darkMode);
   const [showLevelPicker, setShowLevelPicker] = useState(false);
+  const [testNotifStatus, setTestNotifStatus] = useState<'idle' | 'sent' | 'unsupported' | 'denied'>('idle');
+
+  const handleTestNotification = async () => {
+    // Build notification content (shared between web and native)
+    const challengeWord = pickChallengeWord(state);
+    let title: string;
+    let body: string;
+    if (challengeWord) {
+      const content = buildChallengeContent(challengeWord);
+      title = content.title;
+      body  = content.body;
+    } else {
+      title = 'WordSwipe';
+      body  = "Do you know what 'reluctant' means?";
+    }
+
+    // ── Web path: use browser Notification API ─────────────────────────────
+    if (Platform.OS === 'web') {
+      if (!('Notification' in window)) {
+        setTestNotifStatus('unsupported');
+        setTimeout(() => setTestNotifStatus('idle'), 3000);
+        return;
+      }
+
+      let permission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+      }
+
+      if (permission !== 'granted') {
+        setTestNotifStatus('denied');
+        setTimeout(() => setTestNotifStatus('idle'), 3000);
+        return;
+      }
+
+      new Notification(title, { body, icon: '/favicon.ico' });
+      setTestNotifStatus('sent');
+      setTimeout(() => setTestNotifStatus('idle'), 4000);
+      return;
+    }
+
+    // ── Native path: use expo-notifications ────────────────────────────────
+    try {
+      const Notif = await import('expo-notifications');
+
+      // Request permission if not already granted
+      let { status } = await Notif.getPermissionsAsync();
+      if (status !== 'granted') {
+        const result = await Notif.requestPermissionsAsync();
+        status = result.status;
+      }
+      if (status !== 'granted') {
+        Alert.alert(
+          'İzin Gerekli',
+          'Bildirim göndermek için lütfen ayarlardan bildirim iznini etkinleştirin.',
+          [{ text: 'Tamam' }],
+        );
+        return;
+      }
+
+      // Fire after 3 seconds so the user has time to read the confirmation
+      await Notif.scheduleNotificationAsync({
+        content: { title, body, sound: true },
+        trigger: {
+          type:    Notif.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: 3,
+          repeats: false,
+        },
+      });
+
+      setTestNotifStatus('sent');
+      setTimeout(() => setTestNotifStatus('idle'), 4000);
+    } catch (_) {
+      Alert.alert('Hata', 'Bildirim gönderilemedi.');
+    }
+  };
 
   const handleChangeLevel = (level: Level) => {
     dispatch({ type: 'SET_LEVEL', level });
@@ -248,6 +325,39 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           />
 
           <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+            TEST
+          </Text>
+
+          <SettingRow
+            icon="🔔"
+            title="Test Bildirimi"
+            subtitle="3 saniye içinde örnek bir bildirim gönderir"
+            onPress={handleTestNotification}
+            theme={theme}
+          />
+          {testNotifStatus === 'sent' && (
+            <View style={[styles.toastBanner, { backgroundColor: theme.correctLight, borderColor: theme.correct }]}>
+              <Text style={{ color: theme.correct, fontWeight: '700', fontSize: 13 }}>
+                ✓ Test bildirimi gönderildi.
+              </Text>
+            </View>
+          )}
+          {testNotifStatus === 'unsupported' && (
+            <View style={[styles.toastBanner, { backgroundColor: theme.incorrectLight, borderColor: theme.incorrect }]}>
+              <Text style={{ color: theme.incorrect, fontWeight: '700', fontSize: 13 }}>
+                ✕ Tarayıcınız bildirimleri desteklemiyor.
+              </Text>
+            </View>
+          )}
+          {testNotifStatus === 'denied' && (
+            <View style={[styles.toastBanner, { backgroundColor: theme.incorrectLight, borderColor: theme.incorrect }]}>
+              <Text style={{ color: theme.incorrect, fontWeight: '700', fontSize: 13 }}>
+                ✕ Bildirim izni reddedildi. Tarayıcı ayarlarından izin verin.
+              </Text>
+            </View>
+          )}
+
+          <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
             VERİ
           </Text>
 
@@ -360,6 +470,14 @@ const styles = StyleSheet.create({
   },
   levelOptionText: {
     ...typography.bodyBold,
+  },
+  toastBanner: {
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.sm,
+    alignItems: 'center',
   },
   infoCard: {
     borderRadius: radius.lg,
