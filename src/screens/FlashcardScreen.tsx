@@ -9,13 +9,18 @@ import {
   Dimensions,
   PanResponder,
   Platform,
+  Pressable,
 } from 'react-native';
+import * as Speech from 'expo-speech';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '../context/AppContext';
+import { useInterstitialAd } from '../hooks/useInterstitialAd';
 import { Word } from '../data/vocabulary';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import { prefetchEnrichments } from '../services/wordEnrichment';
+import { SoundService } from '../utils/sound';
 
 function haptic(type: 'light' | 'medium' | 'success' | 'warning') {
   if (Platform.OS === 'web') return;
@@ -36,11 +41,120 @@ const { width, height } = Dimensions.get('window');
 const CARD_WIDTH = width - spacing.lg * 2;
 const SWIPE_THRESHOLD = width * 0.25;
 
+// ─── SpeakButton ─────────────────────────────────────────────────────────────
+
+const SpeakButton: React.FC<{ word: string; theme: ReturnType<typeof getTheme> }> = ({ word, theme }) => {
+  const [speaking, setSpeaking] = useState(false);
+  const scaleAnim  = useRef(new Animated.Value(1)).current;
+  const pulseAnim  = useRef(new Animated.Value(1)).current;
+  const pulseLoop  = useRef<Animated.CompositeAnimation | null>(null);
+  const cooldown   = useRef(false);
+
+  // Cleanup on unmount or word change
+  useEffect(() => {
+    return () => {
+      Speech.stop();
+      pulseLoop.current?.stop();
+    };
+  }, [word]);
+
+  const startPulse = () => {
+    pulseLoop.current?.stop();
+    pulseAnim.setValue(1);
+    pulseLoop.current = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.22, duration: 520, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.00, duration: 520, useNativeDriver: true }),
+      ]),
+    );
+    pulseLoop.current.start();
+  };
+
+  const stopPulse = () => {
+    pulseLoop.current?.stop();
+    pulseLoop.current = null;
+    Animated.spring(pulseAnim, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 0 }).start();
+  };
+
+  const handlePress = () => {
+    if (cooldown.current) return;
+    cooldown.current = true;
+    setTimeout(() => { cooldown.current = false; }, 400);
+
+    // Press-down scale
+    Animated.sequence([
+      Animated.spring(scaleAnim, { toValue: 0.82, useNativeDriver: true, speed: 60, bounciness: 0 }),
+      Animated.spring(scaleAnim, { toValue: 1,    useNativeDriver: true, speed: 40, bounciness: 8 }),
+    ]).start();
+
+    if (speaking) {
+      Speech.stop();
+      setSpeaking(false);
+      stopPulse();
+      return;
+    }
+
+    // Stop any previous speech, then speak
+    Speech.stop();
+    setSpeaking(true);
+    startPulse();
+    haptic('light');
+
+    Speech.speak(word, {
+      language: 'en-US',
+      rate: 0.85,
+      pitch: 1.0,
+      onDone:  () => { setSpeaking(false); stopPulse(); },
+      onError: () => { setSpeaking(false); stopPulse(); },
+      onStopped: () => { setSpeaking(false); stopPulse(); },
+    });
+  };
+
+  return (
+    <Pressable
+      onPress={handlePress}
+      hitSlop={12}
+      style={styles.speakHitArea}
+    >
+      {/* Outer pulse ring — only visible while speaking */}
+      <Animated.View
+        style={[
+          styles.speakRing,
+          {
+            backgroundColor: speaking ? theme.primary + '22' : 'transparent',
+            transform: [{ scale: speaking ? pulseAnim : 1 }],
+          },
+        ]}
+      />
+      {/* Icon button */}
+      <Animated.View
+        style={[
+          styles.speakBtn,
+          {
+            backgroundColor: speaking ? theme.primary : theme.surfaceSecondary,
+            transform: [{ scale: scaleAnim }],
+            shadowColor: speaking ? theme.primary : 'transparent',
+            shadowOpacity: speaking ? 0.45 : 0,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: speaking ? 6 : 0,
+          },
+        ]}
+      >
+        <Ionicons
+          name={speaking ? 'volume-high' : 'volume-medium-outline'}
+          size={20}
+          color={speaking ? '#fff' : theme.textSecondary}
+        />
+      </Animated.View>
+    </Pressable>
+  );
+};
+
 interface Props {
   navigation: any;
 }
 
-// Fix 4: accept swipeCommand prop to trigger programmatic swipe
 const FlashCard: React.FC<{
   word: Word;
   theme: ReturnType<typeof getTheme>;
@@ -54,7 +168,6 @@ const FlashCard: React.FC<{
   const flipAnim = useRef(new Animated.Value(0)).current;
   const pan = useRef(new Animated.ValueXY()).current;
 
-  // Fix 4: trigger animation when swipeCommand changes
   useEffect(() => {
     if (!swipeCommand || !isTop) return;
     const toX = swipeCommand === 'left' ? -width * 1.5 : width * 1.5;
@@ -67,10 +180,12 @@ const FlashCard: React.FC<{
       if (swipeCommand === 'left') onSwipeLeft();
       else onSwipeRight();
     });
-  }, [swipeCommand]);
+  }, [swipeCommand, isTop, pan, onSwipeCommandDone, onSwipeLeft, onSwipeRight]);
 
   const flipCard = () => {
     if (!isTop) return;
+    SoundService.playFlip();
+    Speech.stop();
     Animated.spring(flipAnim, {
       toValue: flipped ? 0 : 1,
       useNativeDriver: true,
@@ -89,14 +204,18 @@ const FlashCard: React.FC<{
       },
       onPanResponderRelease: (_, gs) => {
         if (gs.dx > SWIPE_THRESHOLD) {
+          Speech.stop();
           haptic('success');
+          SoundService.playCorrect();
           Animated.timing(pan, {
             toValue: { x: width * 1.5, y: gs.dy },
             duration: 280,
             useNativeDriver: true,
           }).start(onSwipeRight);
         } else if (gs.dx < -SWIPE_THRESHOLD) {
+          Speech.stop();
           haptic('warning');
+          SoundService.playWrong();
           Animated.timing(pan, {
             toValue: { x: -width * 1.5, y: gs.dy },
             duration: 280,
@@ -161,7 +280,6 @@ const FlashCard: React.FC<{
         },
       ]}
     >
-      {/* Swipe Indicators */}
       {isTop && (
         <>
           <Animated.View style={[styles.swipeLabel, styles.swipeLabelLeft, { opacity: leftIndicatorOpacity }]}>
@@ -174,7 +292,6 @@ const FlashCard: React.FC<{
       )}
 
       <TouchableOpacity activeOpacity={1} onPress={flipCard} style={{ flex: 1 }}>
-        {/* Front */}
         <Animated.View
           style={[
             styles.card,
@@ -187,19 +304,31 @@ const FlashCard: React.FC<{
             shadows.lg,
           ]}
         >
-          <LinearGradient colors={['#6C63FF15', '#9B5CF615']} style={styles.cardDecor} />
+          <LinearGradient colors={['#6C63FF22', '#9B5CF622']} style={styles.cardDecor} />
+          <LinearGradient colors={['#9B5CF614', '#6C63FF14']} style={styles.cardDecor2} />
           <Text style={[styles.tapHint, { color: theme.textTertiary }]}>
             Çevirmek için dokun 👆
           </Text>
           <Text style={[styles.wordText, { color: theme.text }]}>{word.word}</Text>
-          <View style={[styles.levelDot, { backgroundColor: theme.primaryLight }]}>
-            <Text style={[styles.levelDotText, { color: theme.primary }]}>
+          <SpeakButton word={word.word} theme={theme} />
+          <View style={[
+            styles.levelDot,
+            {
+              backgroundColor:
+                word.level === 'easy' ? '#D1FAE5' :
+                word.level === 'medium' ? theme.primaryLight : '#FEE2E2',
+            },
+          ]}>
+            <Text style={[styles.levelDotText, {
+              color:
+                word.level === 'easy' ? '#10B981' :
+                word.level === 'medium' ? theme.primary : '#EF4444',
+            }]}>
               {word.level === 'easy' ? 'Kolay' : word.level === 'medium' ? 'Orta' : 'Zor'}
             </Text>
           </View>
         </Animated.View>
 
-        {/* Back */}
         <Animated.View
           style={[
             styles.card,
@@ -220,7 +349,7 @@ const FlashCard: React.FC<{
           />
           <Text style={styles.meaningText}>{word.translation}</Text>
           <View style={styles.sentenceBg}>
-            <Text style={styles.sentenceText}>{word.example}</Text>
+            <Text style={styles.sentenceText}>"{word.example}"</Text>
           </View>
         </Animated.View>
       </TouchableOpacity>
@@ -232,27 +361,24 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
   const { state, dispatch, getDailyWords } = useApp();
   const theme = getTheme(state.darkMode);
   const [currentIndex, setCurrentIndex] = useState(0);
-  // Fix 4: swipe command state
   const [swipeCommand, setSwipeCommand] = useState<'left' | 'right' | null>(null);
+  const { showInterstitial } = useInterstitialAd();
 
   const words = state.sessionWords.length > 0 ? state.sessionWords : getDailyWords();
 
-  // Background-prefetch enrichment data for all session words so the cache is
-  // warm by the time the user reaches individual cards. Fire-and-forget.
   useEffect(() => {
     if (words.length > 0) {
       prefetchEnrichments(words.map(w => w.word));
     }
-  }, [words.length]);
+  }, [words.length, words]);
 
-  // Fix 2 + Fix 5: save seen words and navigate to quiz
   const finishLesson = useCallback((seenUpToIndex: number) => {
     const seenWords = words.slice(0, seenUpToIndex + 1);
     dispatch({ type: 'SET_LAST_LESSON_WORDS', wordIds: seenWords.map(w => w.id) });
     dispatch({ type: 'ADD_XP', amount: 20 });
     dispatch({ type: 'UPDATE_STREAK' });
     navigation.navigate('Quiz');
-  }, [words]);
+  }, [words, dispatch, navigation]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < words.length - 1) {
@@ -261,13 +387,13 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
     } else {
       finishLesson(currentIndex);
     }
-  }, [currentIndex, words, finishLesson]);
+  }, [currentIndex, words.length, finishLesson, dispatch]);
 
-  const handleFinish = useCallback(() => {
+  const handleFinish = useCallback(async () => {
+    await showInterstitial();
     finishLesson(currentIndex);
-  }, [currentIndex, finishLesson]);
+  }, [currentIndex, finishLesson, showInterstitial]);
 
-  // Button handlers with haptics
   const handleKnow = () => {
     if (swipeCommand) return;
     haptic('success');
@@ -284,7 +410,7 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
     setSwipeCommand(null);
   };
 
-  const progress = (currentIndex / words.length) * 100;
+  const progress = words.length > 0 ? (currentIndex / words.length) * 100 : 0;
 
   if (words.length === 0) {
     return (
@@ -302,10 +428,9 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <SafeAreaView style={{ flex: 1 }}>
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.navigate('Main')} style={styles.backBtn}>
-            <Text style={[styles.backText, { color: theme.textSecondary }]}>✕</Text>
+            <Ionicons name="close" size={22} color={theme.textSecondary} />
           </TouchableOpacity>
           <View style={{ flex: 1, marginHorizontal: spacing.md }}>
             <View style={[styles.progressBg, { backgroundColor: theme.surfaceSecondary }]}>
@@ -320,7 +445,6 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Cards Stack */}
         <View style={styles.cardArea}>
           {[2, 1].map(offset => {
             const idx = currentIndex + offset;
@@ -352,14 +476,13 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
           )}
         </View>
 
-        {/* Fix 4: Biliyorum / Bilmiyorum buttons */}
         <View style={styles.actionRow}>
           <TouchableOpacity
             onPress={handleDontKnow}
             activeOpacity={0.85}
             style={[styles.actionBtn, styles.actionBtnLeft, { backgroundColor: theme.incorrectLight, borderColor: theme.incorrect }]}
           >
-            <Text style={styles.actionBtnIcon}>✕</Text>
+            <Ionicons name="close" size={20} color={theme.incorrect} />
             <Text style={[styles.actionBtnText, { color: theme.incorrect }]}>Bilmiyorum</Text>
           </TouchableOpacity>
 
@@ -368,12 +491,11 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.85}
             style={[styles.actionBtn, styles.actionBtnRight, { backgroundColor: theme.correctLight, borderColor: theme.correct }]}
           >
-            <Text style={styles.actionBtnIcon}>✓</Text>
+            <Ionicons name="checkmark" size={20} color={theme.correct} />
             <Text style={[styles.actionBtnText, { color: theme.correct }]}>Biliyorum</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Footer: Finish button */}
         <View style={styles.footer}>
           <TouchableOpacity onPress={handleFinish} style={styles.finishBtn}>
             <LinearGradient
@@ -382,7 +504,8 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
               end={{ x: 1, y: 0 }}
               style={styles.finishGradient}
             >
-              <Text style={styles.finishText}>Bitir ve Teste Geç →</Text>
+              <Text style={styles.finishText}>Bitir ve Teste Geç</Text>
+              <Ionicons name="chevron-forward" size={18} color="#fff" style={{ marginLeft: 6 }} />
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -403,8 +526,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
   },
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  backText: { fontSize: 20, fontWeight: '300' },
-  progressBg: { height: 6, borderRadius: radius.full, overflow: 'hidden' },
+  progressBg: { height: 8, borderRadius: radius.full, overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: radius.full },
   progressCount: { fontSize: 12, fontWeight: '600', marginTop: 4, textAlign: 'center' },
   skipText: { fontWeight: '600', fontSize: 14 },
@@ -442,42 +564,83 @@ const styles = StyleSheet.create({
     width: 200, height: 200,
     borderRadius: 100,
   },
-  tapHint: { fontSize: 12, fontWeight: '600', marginBottom: spacing.xl, letterSpacing: 0.3 },
-  wordText: { ...typography.word, textAlign: 'center', marginBottom: spacing.md },
+  cardDecor2: {
+    position: 'absolute',
+    bottom: -60, left: -60,
+    width: 160, height: 160,
+    borderRadius: 80,
+  },
+  tapHint: {
+    fontSize: 12,
+    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
+    marginBottom: spacing.xl,
+    letterSpacing: 0.3,
+  },
+  wordText: {
+    ...typography.word,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+    fontFamily: 'Inter_800ExtraBold',
+  },
   levelDot: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: radius.full,
     marginTop: spacing.md,
   },
-  levelDotText: { fontSize: 12, fontWeight: '700' },
+  levelDotText: { fontSize: 12, fontWeight: '700', fontFamily: 'Inter_700Bold' },
   meaningText: {
-    fontSize: 32, fontWeight: '800', color: '#fff',
-    textAlign: 'center', marginBottom: spacing.lg,
+    fontSize: 36,
+    fontWeight: '800',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+    fontFamily: 'Inter_800ExtraBold',
   },
   sentenceBg: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: radius.md,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    borderRadius: radius.lg,
     padding: spacing.md,
-    maxWidth: '90%',
+    maxWidth: '92%',
   },
   sentenceText: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 15, fontStyle: 'italic',
-    textAlign: 'center', lineHeight: 22,
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: 15,
+    fontStyle: 'italic',
+    fontFamily: 'Inter_400Regular',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  speakHitArea: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  speakRing: {
+    position: 'absolute',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
+  speakBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   swipeLabel: {
     position: 'absolute',
     top: 20,
     zIndex: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
     borderRadius: radius.full,
   },
-  swipeLabelLeft: { left: 16, backgroundColor: 'rgba(239,68,68,0.85)' },
-  swipeLabelRight: { right: 16, backgroundColor: 'rgba(16,185,129,0.85)' },
-  swipeLabelText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-  // Fix 4: action buttons
+  swipeLabelLeft: { left: 16, backgroundColor: 'rgba(239,68,68,0.90)' },
+  swipeLabelRight: { right: 16, backgroundColor: 'rgba(16,185,129,0.90)' },
+  swipeLabelText: { color: '#fff', fontWeight: '700', fontSize: 13, fontFamily: 'Inter_700Bold' },
   actionRow: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
@@ -489,21 +652,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md + 2,
     borderRadius: radius.lg,
     borderWidth: 2,
     gap: spacing.xs,
   },
   actionBtnLeft: {},
   actionBtnRight: {},
-  actionBtnIcon: { fontSize: 18, fontWeight: '800' },
-  actionBtnText: { fontSize: 15, fontWeight: '700' },
+  actionBtnText: { fontSize: 16, fontWeight: '700', fontFamily: 'Inter_700Bold' },
   footer: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
     paddingTop: spacing.xs,
   },
   finishBtn: { borderRadius: radius.full, overflow: 'hidden' },
-  finishGradient: { height: 52, alignItems: 'center', justifyContent: 'center' },
-  finishText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  finishGradient: { height: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  finishText: { color: '#fff', fontSize: 16, fontWeight: '700', fontFamily: 'Inter_700Bold' },
 });

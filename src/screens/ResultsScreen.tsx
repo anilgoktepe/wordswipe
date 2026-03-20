@@ -1,4 +1,5 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import {
   View,
   Text,
@@ -14,6 +15,8 @@ import { Button } from '../components/Button';
 import { AdBanner } from '../components/AdBanner';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import { MAX_DAILY_ADS } from '../config/adConfig';
+import { ConfettiEffect } from '../components/ConfettiEffect';
+import { hapticSuccess } from '../utils/haptics';
 
 const { width } = Dimensions.get('window');
 
@@ -57,6 +60,10 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const countAnim = useRef(new Animated.Value(0)).current;
 
+  // Drives the integer count-up inside the circle
+  const [displayPercent, setDisplayPercent] = useState(0);
+  const [confettiVisible, setConfettiVisible] = useState(false);
+
   useEffect(() => {
     Animated.sequence([
       Animated.spring(scaleAnim, {
@@ -72,12 +79,30 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
       }),
     ]).start();
 
+    const listener = countAnim.addListener(({ value }) => {
+      setDisplayPercent(Math.round(value));
+    });
+
     Animated.timing(countAnim, {
       toValue: successRate,
       duration: 1200,
       useNativeDriver: false,
     }).start();
-  }, []);
+
+    // Fire confetti + haptic once entrance animation settles (~900 ms)
+    let confettiTimer: ReturnType<typeof setTimeout> | null = null;
+    if (successRate >= 50) {
+      confettiTimer = setTimeout(() => {
+        setConfettiVisible(true);
+        hapticSuccess();
+      }, 750);
+    }
+
+    return () => {
+      countAnim.removeListener(listener);
+      if (confettiTimer) clearTimeout(confettiTimer);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Record the ad impression exactly once per screen visit
   useEffect(() => {
@@ -101,7 +126,7 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleRetryWrong = () => {
     const wrongWords = getDifficultWordObjects().filter(w =>
-      results?.wrongWordIds.includes(w.id)
+      results?.wrongWordIds?.includes(w.id)
     );
     if (wrongWords.length === 0) return;
     dispatch({ type: 'SET_SESSION_WORDS', words: wrongWords });
@@ -132,7 +157,7 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
               end={{ x: 1, y: 1 }}
             >
               <Animated.Text style={styles.circlePercent}>
-                {successRate}%
+                {displayPercent}%
               </Animated.Text>
               <Text style={styles.circleLabel}>Başarı</Text>
             </LinearGradient>
@@ -146,17 +171,17 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
           {/* Stats Cards */}
           <Animated.View style={[styles.statsRow, { opacity: fadeAnim }]}>
             <View style={[styles.statCard, { backgroundColor: theme.correctLight, ...shadows.sm }]}>
-              <Text style={styles.statIcon}>✓</Text>
+              <Ionicons name="checkmark-circle" size={24} color={theme.correct} />
               <Text style={[styles.statValue, { color: theme.correct }]}>{correct}</Text>
               <Text style={[styles.statLabel, { color: theme.correct }]}>Doğru</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: theme.incorrectLight, ...shadows.sm }]}>
-              <Text style={styles.statIcon}>✕</Text>
+              <Ionicons name="close-circle" size={24} color={theme.incorrect} />
               <Text style={[styles.statValue, { color: theme.incorrect }]}>{incorrect}</Text>
               <Text style={[styles.statLabel, { color: theme.incorrect }]}>Yanlış</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: theme.primaryLight, ...shadows.sm }]}>
-              <Text style={styles.statIcon}>⭐</Text>
+              <Ionicons name="star" size={24} color={theme.primary} />
               <Text style={[styles.statValue, { color: theme.primary }]}>{state.xp}</Text>
               <Text style={[styles.statLabel, { color: theme.primary }]}>XP</Text>
             </View>
@@ -174,7 +199,7 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
               theme={theme}
               size="lg"
               style={styles.btn}
-              icon="🏠"
+              icon={<Ionicons name="home" size={18} color="#fff" />}
             />
             <Button
               title="Tekrar Çalış"
@@ -197,11 +222,14 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
+
+      {/* Confetti burst — shown once after entrance on good scores (≥50%) */}
+      <ConfettiEffect visible={confettiVisible} />
     </LinearGradient>
   );
 };
 
-const CIRCLE_SIZE = 180;
+const CIRCLE_SIZE = 200;
 
 const styles = StyleSheet.create({
   scroll: {
@@ -212,7 +240,11 @@ const styles = StyleSheet.create({
   },
   circleContainer: {
     marginBottom: spacing.xl,
-    ...shadows.lg,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.35,
+    shadowRadius: 32,
+    elevation: 16,
   },
   circle: {
     width: CIRCLE_SIZE,
@@ -222,15 +254,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   circlePercent: {
-    fontSize: 48,
+    fontSize: 52,
     fontWeight: '900',
     color: '#fff',
     letterSpacing: -1,
+    fontFamily: 'Inter_800ExtraBold',
   },
   circleLabel: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(255,255,255,0.88)',
     fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
   messageArea: {
     marginBottom: spacing.xl,
@@ -239,7 +273,8 @@ const styles = StyleSheet.create({
   message: {
     ...typography.h3,
     textAlign: 'center',
-    lineHeight: 32,
+    lineHeight: 34,
+    fontFamily: 'Inter_700Bold',
   },
   statsRow: {
     flexDirection: 'row',
@@ -249,19 +284,20 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
     alignItems: 'center',
     gap: spacing.xs,
   },
-  statIcon: { fontSize: 22 },
   statValue: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '900',
+    fontFamily: 'Inter_800ExtraBold',
   },
   statLabel: {
     fontSize: 12,
     fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
   buttons: {
     width: '100%',

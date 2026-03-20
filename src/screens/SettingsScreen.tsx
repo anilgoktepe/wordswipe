@@ -12,6 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp, Level } from '../context/AppContext';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import { clearEnrichmentCache } from '../services/wordEnrichment';
@@ -23,18 +24,19 @@ const levelLabels: Record<Level, string> = {
   hard: 'İleri (C1-C2)',
 };
 
-const levelEmojis: Record<Level, string> = {
-  easy: '🌱',
-  medium: '🚀',
-  hard: '🔥',
-};
+/** Maps a difficulty level to a vector icon (used in the level picker and setting row). */
+function LevelIcon({ levelKey, size = 20 }: { levelKey: Level; size?: number }) {
+  if (levelKey === 'easy')   return <MaterialCommunityIcons name="sprout" size={size} color="#43D99D" />;
+  if (levelKey === 'medium') return <MaterialCommunityIcons name="rocket" size={size} color="#6C63FF" />;
+  return <MaterialCommunityIcons name="fire" size={size} color="#EF4444" />;
+}
 
 interface Props {
   navigation: any;
 }
 
 const SettingRow: React.FC<{
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   subtitle?: string;
   onPress?: () => void;
@@ -62,7 +64,7 @@ const SettingRow: React.FC<{
         },
       ]}
     >
-      <Text style={{ fontSize: 20 }}>{icon}</Text>
+      {icon}
     </View>
     <View style={{ flex: 1 }}>
       <Text
@@ -82,7 +84,7 @@ const SettingRow: React.FC<{
     {rightElement ? (
       rightElement
     ) : onPress ? (
-      <Text style={{ color: theme.textTertiary, fontSize: 18 }}>›</Text>
+      <Ionicons name="chevron-forward" size={18} color={theme.textTertiary} />
     ) : null}
   </TouchableOpacity>
 );
@@ -213,7 +215,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         >
           {/* Profile Summary */}
           <View style={[styles.profileCard, { backgroundColor: theme.surface, ...shadows.md }]}>
-            <View style={[styles.avatar, { backgroundColor: theme.primaryLight }]}>
+            <View style={[styles.avatar, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '40' }]}>
               <Text style={{ fontSize: 32 }}>🦉</Text>
             </View>
             <View style={{ flex: 1 }}>
@@ -232,7 +234,10 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Level */}
           <SettingRow
-            icon={state.level ? levelEmojis[state.level] : '🎯'}
+            icon={state.level
+              ? <LevelIcon levelKey={state.level} size={20} />
+              : <MaterialCommunityIcons name="target" size={20} color={theme.primary} />
+            }
             title="Seviye"
             subtitle={state.level ? levelLabels[state.level] : 'Seçilmedi'}
             onPress={() => setShowLevelPicker(!showLevelPicker)}
@@ -256,9 +261,9 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                     },
                   ]}
                 >
-                  <Text style={{ fontSize: 20, marginRight: spacing.md }}>
-                    {levelEmojis[lvl]}
-                  </Text>
+                  <View style={{ marginRight: spacing.md }}>
+                    <LevelIcon levelKey={lvl} size={20} />
+                  </View>
                   <Text
                     style={[
                       styles.levelOptionText,
@@ -271,9 +276,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                     {levelLabels[lvl]}
                   </Text>
                   {state.level === lvl && (
-                    <Text style={{ color: theme.primary, marginLeft: 'auto', fontWeight: '700' }}>
-                      ✓
-                    </Text>
+                    <Ionicons name="checkmark" size={18} color={theme.primary} style={{ marginLeft: 'auto' as any }} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -285,7 +288,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           </Text>
 
           <SettingRow
-            icon="🌙"
+            icon={<MaterialCommunityIcons name="moon-waning-crescent" size={20} color={theme.primary} />}
             title="Karanlık Mod"
             subtitle={state.darkMode ? 'Açık' : 'Kapalı'}
             theme={theme}
@@ -304,7 +307,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           </Text>
 
           <SettingRow
-            icon="⭐"
+            icon={<Ionicons name="star" size={20} color={theme.primary} />}
             title="Uygulamayı Değerlendir"
             subtitle="App Store'da yorum bırak"
             onPress={() => {
@@ -317,7 +320,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           />
 
           <SettingRow
-            icon="📧"
+            icon={<MaterialCommunityIcons name="email-outline" size={20} color={theme.primary} />}
             title="Geri Bildirim Gönder"
             subtitle="Görüşlerinizi paylaşın"
             onPress={() => Linking.openURL('mailto:support@wordswipe.app').catch(() => {})}
@@ -329,7 +332,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           </Text>
 
           <SettingRow
-            icon="🔔"
+            icon={<Ionicons name="notifications-outline" size={20} color={theme.primary} />}
             title="Test Bildirimi"
             subtitle="3 saniye içinde örnek bir bildirim gönderir"
             onPress={handleTestNotification}
@@ -337,22 +340,25 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           />
           {testNotifStatus === 'sent' && (
             <View style={[styles.toastBanner, { backgroundColor: theme.correctLight, borderColor: theme.correct }]}>
+              <Ionicons name="checkmark-circle" size={16} color={theme.correct} style={{ marginRight: 6 }} />
               <Text style={{ color: theme.correct, fontWeight: '700', fontSize: 13 }}>
-                ✓ Test bildirimi gönderildi.
+                Test bildirimi gönderildi.
               </Text>
             </View>
           )}
           {testNotifStatus === 'unsupported' && (
             <View style={[styles.toastBanner, { backgroundColor: theme.incorrectLight, borderColor: theme.incorrect }]}>
+              <Ionicons name="close-circle" size={16} color={theme.incorrect} style={{ marginRight: 6 }} />
               <Text style={{ color: theme.incorrect, fontWeight: '700', fontSize: 13 }}>
-                ✕ Tarayıcınız bildirimleri desteklemiyor.
+                Tarayıcınız bildirimleri desteklemiyor.
               </Text>
             </View>
           )}
           {testNotifStatus === 'denied' && (
             <View style={[styles.toastBanner, { backgroundColor: theme.incorrectLight, borderColor: theme.incorrect }]}>
+              <Ionicons name="close-circle" size={16} color={theme.incorrect} style={{ marginRight: 6 }} />
               <Text style={{ color: theme.incorrect, fontWeight: '700', fontSize: 13 }}>
-                ✕ Bildirim izni reddedildi. Tarayıcı ayarlarından izin verin.
+                Bildirim izni reddedildi. Tarayıcı ayarlarından izin verin.
               </Text>
             </View>
           )}
@@ -362,7 +368,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           </Text>
 
           <SettingRow
-            icon="🗑️"
+            icon={<MaterialCommunityIcons name="delete-outline" size={20} color={theme.incorrect} />}
             title="İlerlemeyi Sıfırla"
             subtitle="Tüm verileriniz silinir"
             onPress={handleReset}
@@ -372,7 +378,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* App Info */}
           <View style={[styles.infoCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            <Text style={{ fontSize: 32, marginBottom: spacing.sm }}>📱</Text>
+            <MaterialCommunityIcons name="cellphone" size={32} color={theme.primary} style={{ marginBottom: spacing.sm }} />
             <Text style={[styles.infoTitle, { color: theme.text }]}>WordSwipe</Text>
             <Text style={[styles.infoVersion, { color: theme.textSecondary }]}>
               Versiyon 1.0.0
@@ -402,6 +408,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     paddingBottom: spacing.xxl,
+    flexGrow: 1,
   },
   profileCard: {
     flexDirection: 'row',
@@ -412,23 +419,27 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
   },
   profileTitle: {
     ...typography.h4,
+    fontFamily: 'Inter_700Bold',
   },
   profileSub: {
     fontSize: 13,
     marginTop: 2,
     fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
   },
   sectionTitle: {
     fontSize: 11,
     fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     letterSpacing: 1.5,
     marginBottom: spacing.sm,
     marginTop: spacing.md,
@@ -438,20 +449,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     borderWidth: 1.5,
     padding: spacing.md,
     marginBottom: spacing.sm,
   },
   rowIcon: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rowTitle: {
     ...typography.bodyBold,
+    fontFamily: 'Inter_600SemiBold',
   },
   rowSub: {
     ...typography.caption,
@@ -472,6 +484,7 @@ const styles = StyleSheet.create({
     ...typography.bodyBold,
   },
   toastBanner: {
+    flexDirection: 'row',
     borderRadius: radius.md,
     borderWidth: 1.5,
     paddingHorizontal: spacing.md,
@@ -480,7 +493,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   infoCard: {
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     borderWidth: 1.5,
     padding: spacing.lg,
     alignItems: 'center',
@@ -488,6 +501,7 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     ...typography.h4,
+    fontFamily: 'Inter_700Bold',
   },
   infoVersion: {
     fontSize: 13,

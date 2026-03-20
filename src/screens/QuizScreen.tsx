@@ -9,10 +9,13 @@ import {
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '../context/AppContext';
 import { Word, getWordsByLevel } from '../data/vocabulary';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
+import { SoundService } from '../utils/sound';
+import { XPPopup, XPPopupHandle } from '../components/XPPopup';
 
 // Haptics helper — only fires on native
 function haptic(type: 'success' | 'error' | 'light') {
@@ -68,8 +71,10 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
   const [incorrectCount, setIncorrectCount] = useState(0);
   const [wrongWordIds, setWrongWordIds] = useState<number[]>([]);
   const [streak, setStreak] = useState(0);
-  const shakeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const shakeAnim  = useRef(new Animated.Value(0)).current;
+  const scaleAnim  = useRef(new Animated.Value(1)).current;
+  const flashAnim  = useRef(new Animated.Value(0)).current;  // green overlay flash
+  const xpPopupRef = useRef<XPPopupHandle>(null);
 
   useEffect(() => {
     const words = state.sessionWords;
@@ -95,8 +100,16 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
 
   const bounce = () => {
     Animated.sequence([
-      Animated.spring(scaleAnim, { toValue: 1.06, useNativeDriver: true, speed: 50 }),
-      Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 50 }),
+      Animated.spring(scaleAnim, { toValue: 1.08, useNativeDriver: true, speed: 50 }),
+      Animated.spring(scaleAnim, { toValue: 1,    useNativeDriver: true, speed: 40 }),
+    ]).start();
+  };
+
+  /** Brief translucent green flash — reinforces correct answer visually */
+  const flashCorrect = () => {
+    Animated.sequence([
+      Animated.timing(flashAnim, { toValue: 1, duration: 60,  useNativeDriver: true }),
+      Animated.timing(flashAnim, { toValue: 0, duration: 380, useNativeDriver: true }),
     ]).start();
   };
 
@@ -105,19 +118,30 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
     if (isAnsweredCorrectly || wrongIndices.includes(index)) return;
 
     const q = questions[currentQ];
+    if (!q) return; // guard: question may not exist during rapid-tap / state transitions
     const isFirstAttempt = wrongIndices.length === 0;
 
     if (index === q.correctIndex) {
       // ✅ Correct answer selected
       setIsAnsweredCorrectly(true);
       bounce();
+      flashCorrect();
       haptic('success');
-      dispatch({ type: 'ADD_XP', amount: 1 });
+      SoundService.playCorrect();
+
+      // Calculate total XP for this answer to show in popup
       const newStreak = streak + 1;
       setStreak(newStreak);
-      if (newStreak > 0 && newStreak % 3 === 0) {
-        dispatch({ type: 'ADD_XP', amount: newStreak >= 10 ? 5 : 3 });
-      }
+      const bonusXp = (newStreak > 0 && newStreak % 3 === 0)
+        ? (newStreak >= 10 ? 5 : 3)
+        : 0;
+      const totalXp = 1 + bonusXp;
+
+      dispatch({ type: 'ADD_XP', amount: 1 });
+      if (bonusXp > 0) dispatch({ type: 'ADD_XP', amount: bonusXp });
+
+      xpPopupRef.current?.show(totalXp);
+
       // Only count as correct if no wrong attempts for this question
       let newCorrect = correctCount;
       if (isFirstAttempt) {
@@ -137,6 +161,7 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
       // ❌ Wrong answer selected — only increment incorrect on FIRST wrong attempt
       shake();
       haptic('error');
+      SoundService.playWrong();
       setStreak(0);
       setWrongIndices(prev => [...prev, index]);
       if (isFirstAttempt) {
@@ -155,6 +180,7 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
     //   regular   → Home → Flashcard → Quiz (UPDATE_STREAK guard prevents double-count)
     //   reinforce → Home → Quiz directly (only call, would otherwise be missed)
     //   difficult → Home → Quiz directly (same as above)
+    SoundService.playComplete();
     dispatch({ type: 'UPDATE_STREAK' });
     dispatch({
       type: 'SET_SESSION_RESULTS',
@@ -172,6 +198,8 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
   }
 
   const q = questions[currentQ];
+  if (!q) return null; // guard: currentQ may briefly equal questions.length during finish transition
+
   const progress = (currentQ / questions.length) * 100;
 
   // Fix 3: option coloring logic
@@ -196,7 +224,7 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.replace('Main')} style={styles.backBtn}>
-            <Text style={{ color: theme.textSecondary, fontSize: 20 }}>✕</Text>
+            <Ionicons name="close" size={22} color={theme.textSecondary} />
           </TouchableOpacity>
           <View style={{ flex: 1, marginHorizontal: spacing.md }}>
             <View style={[styles.progressBg, { backgroundColor: theme.surfaceSecondary }]}>
@@ -212,9 +240,11 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
             </Text>
           </View>
           <View style={styles.scoreRow}>
-            <Text style={[styles.scoreText, { color: theme.correct }]}>✓{correctCount}</Text>
+            <Ionicons name="checkmark" size={14} color={theme.correct} />
+            <Text style={[styles.scoreText, { color: theme.correct }]}>{correctCount}</Text>
             <Text style={{ color: theme.textTertiary, marginHorizontal: 4 }}>|</Text>
-            <Text style={[styles.scoreText, { color: theme.incorrect }]}>✕{incorrectCount}</Text>
+            <Ionicons name="close" size={14} color={theme.incorrect} />
+            <Text style={[styles.scoreText, { color: theme.incorrect }]}>{incorrectCount}</Text>
           </View>
         </View>
 
@@ -240,8 +270,9 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
               {q.word.word}
             </Text>
             {streak >= 3 && (
-              <View style={styles.streakBadge}>
-                <Text style={styles.streakBadgeText}>🔥 {streak} seri</Text>
+              <View style={[styles.streakBadge, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+                <MaterialCommunityIcons name="fire" size={16} color="#FF6B35" />
+                <Text style={styles.streakBadgeText}>{streak} seri</Text>
               </View>
             )}
           </Animated.View>
@@ -286,10 +317,10 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
                   {option}
                 </Text>
                 {isAnsweredCorrectly && index === q.correctIndex && (
-                  <Text style={{ color: theme.correct, fontSize: 18, marginLeft: 'auto' }}>✓</Text>
+                  <Ionicons name="checkmark-circle" size={20} color={theme.correct} style={{ marginLeft: 'auto' as any }} />
                 )}
                 {wrongIndices.includes(index) && (
-                  <Text style={{ color: theme.incorrect, fontSize: 18, marginLeft: 'auto' }}>✕</Text>
+                  <Ionicons name="close-circle" size={20} color={theme.incorrect} style={{ marginLeft: 'auto' as any }} />
                 )}
               </TouchableOpacity>
             );
@@ -299,12 +330,33 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
         {/* Hint: shown only after at least one wrong attempt */}
         {hasWrongAttempt && !isAnsweredCorrectly && (
           <View style={styles.hintArea}>
-            <Text style={[styles.hintText, { color: theme.textSecondary }]}>
-              💡 Doğru cevabı seçmeye devam et
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <MaterialCommunityIcons name="lightbulb-outline" size={16} color={theme.textSecondary} />
+              <Text style={[styles.hintText, { color: theme.textSecondary }]}>
+                Doğru cevabı seçmeye devam et
+              </Text>
+            </View>
           </View>
         )}
       </SafeAreaView>
+
+      {/* ── Green success flash overlay ── */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFillObject,
+          {
+            backgroundColor: '#10B981',
+            opacity: flashAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 0.18],
+            }),
+          },
+        ]}
+      />
+
+      {/* ── Floating XP reward badge ── */}
+      <XPPopup ref={xpPopupRef} />
     </View>
   );
 };
@@ -325,7 +377,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   progressBg: {
-    height: 6,
+    height: 8,
     borderRadius: radius.full,
     overflow: 'hidden',
   },
@@ -345,7 +397,8 @@ const styles = StyleSheet.create({
   },
   scoreText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
   },
   questionArea: {
     paddingHorizontal: spacing.lg,
@@ -364,12 +417,14 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 140,
+    minHeight: 160,
     overflow: 'hidden',
   },
   questionWord: {
     ...typography.word,
     textAlign: 'center',
+    letterSpacing: -1,
+    fontFamily: 'Inter_800ExtraBold',
   },
   streakBadge: {
     marginTop: spacing.md,
@@ -382,6 +437,7 @@ const styles = StyleSheet.create({
     color: '#FF6B35',
     fontWeight: '700',
     fontSize: 13,
+    fontFamily: 'Inter_700Bold',
   },
   optionsArea: {
     paddingHorizontal: spacing.lg,
@@ -389,27 +445,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   option: {
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     borderWidth: 2,
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md + 2,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
   },
   optionBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
   optionBadgeText: {
     fontSize: 14,
     fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
   },
   optionText: {
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     flex: 1,
   },
   hintArea: {

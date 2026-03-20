@@ -5,22 +5,30 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  ScrollView,
   Animated,
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp, Level } from '../context/AppContext';
 import { Button } from '../components/Button';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 
 const { width } = Dimensions.get('window');
 
+/** Renders the level icon as a vector icon (always white, shown on gradient bg). */
+function LevelIcon({ levelKey, size = 28 }: { levelKey: Level; size?: number }) {
+  if (levelKey === 'easy')   return <MaterialCommunityIcons name="sprout"  size={size} color="#fff" />;
+  if (levelKey === 'medium') return <MaterialCommunityIcons name="rocket"  size={size} color="#fff" />;
+  return <MaterialCommunityIcons name="fire" size={size} color="#fff" />;
+}
+
 const levels: {
   key: Level;
   label: string;
   range: string;
   description: string;
-  emoji: string;
   gradient: string[];
 }[] = [
   {
@@ -28,7 +36,6 @@ const levels: {
     label: 'Başlangıç',
     range: 'A1-A2',
     description: 'Temel günlük kelimeler',
-    emoji: '🌱',
     gradient: ['#43D99D', '#38BDF8'],
   },
   {
@@ -36,7 +43,6 @@ const levels: {
     label: 'Orta',
     range: 'B1-B2',
     description: 'Daha gelişmiş kelimeler',
-    emoji: '🚀',
     gradient: ['#6C63FF', '#9B5CF6'],
   },
   {
@@ -44,7 +50,6 @@ const levels: {
     label: 'İleri',
     range: 'C1-C2',
     description: 'Akademik ve zor kelimeler',
-    emoji: '🔥',
     gradient: ['#FF6584', '#F59E0B'],
   },
 ];
@@ -70,6 +75,11 @@ export const LevelSelectionScreen: React.FC<Props> = ({ navigation }) => {
       style={styles.container}
     >
       <SafeAreaView style={styles.safe}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.text }]}>
             İngilizce seviyeni seç
@@ -94,7 +104,7 @@ export const LevelSelectionScreen: React.FC<Props> = ({ navigation }) => {
                     borderColor: isSelected ? lvl.gradient[0] : theme.border,
                     borderWidth: isSelected ? 2.5 : 1.5,
                     ...shadows.md,
-                    transform: [{ scale: isSelected ? 1.02 : 1 }],
+                    transform: [{ scale: isSelected ? 1.03 : 1 }],
                   },
                 ]}
               >
@@ -104,7 +114,7 @@ export const LevelSelectionScreen: React.FC<Props> = ({ navigation }) => {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Text style={styles.emoji}>{lvl.emoji}</Text>
+                  <LevelIcon levelKey={lvl.key} size={32} />
                 </LinearGradient>
 
                 <View style={styles.cardContent}>
@@ -139,7 +149,7 @@ export const LevelSelectionScreen: React.FC<Props> = ({ navigation }) => {
 
                 {isSelected && (
                   <View style={[styles.checkmark, { backgroundColor: lvl.gradient[0] }]}>
-                    <Text style={styles.checkmarkText}>✓</Text>
+                    <Ionicons name="checkmark" size={14} color="#fff" />
                   </View>
                 )}
               </TouchableOpacity>
@@ -157,6 +167,7 @@ export const LevelSelectionScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.button}
           />
         </View>
+        </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -164,7 +175,12 @@ export const LevelSelectionScreen: React.FC<Props> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  safe: { flex: 1, paddingHorizontal: spacing.lg },
+  safe: { flex: 1 },
+  scroll: {
+    flexGrow: 1,
+    paddingHorizontal: spacing.lg,
+    justifyContent: 'center',
+  },
   header: {
     paddingTop: spacing.xxl,
     paddingBottom: spacing.xl,
@@ -178,25 +194,23 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   cards: {
-    flex: 1,
-    justifyContent: 'center',
     gap: spacing.md,
   },
   card: {
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     padding: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
+    minHeight: 80,
   },
   emojiBg: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.md,
+    width: 66,
+    height: 66,
+    borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emoji: { fontSize: 28 },
   cardContent: {
     flex: 1,
     flexDirection: 'row',
@@ -206,9 +220,11 @@ const styles = StyleSheet.create({
   levelLabel: {
     ...typography.h4,
     marginBottom: 2,
+    fontFamily: 'Inter_700Bold',
   },
   levelDescription: {
     ...typography.caption,
+    fontFamily: 'Inter_500Medium',
   },
   badge: {
     paddingHorizontal: spacing.sm,
@@ -226,7 +242,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkmarkText: { color: '#fff', fontSize: 12, fontWeight: '800' },
   footer: {
     paddingBottom: spacing.xl,
     paddingTop: spacing.md,

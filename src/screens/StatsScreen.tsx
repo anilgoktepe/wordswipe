@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   SafeAreaView,
   ScrollView,
+  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import { useApp } from '../context/AppContext';
 import { vocabulary } from '../data/vocabulary';
@@ -16,14 +18,60 @@ interface Props {
   navigation?: any;
 }
 
+/** Animated horizontal progress bar — animates width from 0 on first layout. */
+const AnimatedProgressBar: React.FC<{
+  progress: number;   // 0–1
+  color: string | string[];  // single color or gradient colors array
+  trackColor: string;
+  height: number;
+  delay?: number;
+}> = ({ progress, color, trackColor, height, delay = 0 }) => {
+  const [barWidth, setBarWidth] = useState(0);
+  const anim = useRef(new Animated.Value(0)).current;
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (barWidth === 0 || started.current) return;
+    started.current = true;
+    Animated.timing(anim, {
+      toValue: barWidth * Math.min(progress, 1),
+      duration: 900,
+      delay,
+      useNativeDriver: false,
+    }).start();
+  }, [barWidth, progress]);
+
+  const isGradient = Array.isArray(color);
+
+  return (
+    <View
+      style={{ height, backgroundColor: trackColor, borderRadius: height / 2, overflow: 'hidden' }}
+      onLayout={e => setBarWidth(e.nativeEvent.layout.width)}
+    >
+      <Animated.View style={{ width: anim, height: '100%', borderRadius: height / 2, overflow: 'hidden' }}>
+        {isGradient ? (
+          <LinearGradient
+            colors={color as string[]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ flex: 1 }}
+          />
+        ) : (
+          <View style={{ flex: 1, backgroundColor: color as string }} />
+        )}
+      </Animated.View>
+    </View>
+  );
+};
+
 const StatCard: React.FC<{
-  emoji: string;
+  icon: React.ReactNode;
   value: string | number;
   label: string;
   color: string;
   bgColor: string;
   theme: ReturnType<typeof getTheme>;
-}> = ({ emoji, value, label, color, bgColor, theme }) => (
+}> = ({ icon, value, label, color, bgColor, theme }) => (
   <View
     style={[
       styles.statCard,
@@ -31,7 +79,7 @@ const StatCard: React.FC<{
     ]}
   >
     <View style={[styles.statIconBg, { backgroundColor: bgColor }]}>
-      <Text style={{ fontSize: 24 }}>{emoji}</Text>
+      {icon}
     </View>
     <Text style={[styles.statValue, { color }]}>{value}</Text>
     <Text style={[styles.statLabel, { color: theme.textSecondary }]}>{label}</Text>
@@ -89,15 +137,19 @@ export const StatsScreen: React.FC<Props> = () => {
               <View style={styles.xpLeft}>
                 <Text style={styles.xpLevelNum}>Seviye {xpLevel}</Text>
                 <Text style={styles.xpTotal}>{state.xp} XP toplam</Text>
-                <View style={styles.xpBarBg}>
-                  <View style={[styles.xpBarFill, { width: `${xpProgress}%` }]} />
-                </View>
+                <AnimatedProgressBar
+                  progress={xpProgress / 100}
+                  color="#fff"
+                  trackColor="rgba(255,255,255,0.25)"
+                  height={8}
+                  delay={200}
+                />
                 <Text style={styles.xpNextLabel}>
                   Sonraki seviyeye {xpToNextLevel} XP
                 </Text>
               </View>
               <View style={styles.xpRight}>
-                <Text style={{ fontSize: 40 }}>⭐</Text>
+                <MaterialCommunityIcons name="star" size={40} color="#F59E0B" />
                 <Text style={styles.xpBig}>{state.xp}</Text>
               </View>
             </View>
@@ -106,7 +158,7 @@ export const StatsScreen: React.FC<Props> = () => {
           {/* Core Stats Grid */}
           <View style={styles.statsGrid}>
             <StatCard
-              emoji="🔥"
+              icon={<MaterialCommunityIcons name="fire" size={26} color="#FF6B35" />}
               value={state.streak}
               label="Günlük seri"
               color={theme.streak}
@@ -114,7 +166,7 @@ export const StatsScreen: React.FC<Props> = () => {
               theme={theme}
             />
             <StatCard
-              emoji="📚"
+              icon={<MaterialCommunityIcons name="book-open-variant" size={26} color={theme.correct} />}
               value={learnedWords.length}
               label="Öğrenilen"
               color={theme.correct}
@@ -122,7 +174,7 @@ export const StatsScreen: React.FC<Props> = () => {
               theme={theme}
             />
             <StatCard
-              emoji="💪"
+              icon={<MaterialCommunityIcons name="dumbbell" size={26} color={theme.incorrect} />}
               value={difficultWords.length}
               label="Zor kelime"
               color={theme.incorrect}
@@ -130,7 +182,7 @@ export const StatsScreen: React.FC<Props> = () => {
               theme={theme}
             />
             <StatCard
-              emoji="🎯"
+              icon={<MaterialCommunityIcons name="target" size={26} color={theme.primary} />}
               value={`%${overallProgress}`}
               label="Genel ilerleme"
               color={theme.primary}
@@ -140,7 +192,7 @@ export const StatsScreen: React.FC<Props> = () => {
           </View>
 
           {/* Overall Progress Bar */}
-          <View style={[styles.sectionCard, { backgroundColor: theme.surface, ...shadows.md }]}>
+          <View style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border, ...shadows.md }]}>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: theme.text }]}>
                 Toplam Kelime İlerlemesi
@@ -149,24 +201,20 @@ export const StatsScreen: React.FC<Props> = () => {
                 {learnedWords.length} / {totalWords}
               </Text>
             </View>
-            <View style={[styles.bigProgressBg, { backgroundColor: theme.surfaceSecondary }]}>
-              <LinearGradient
-                colors={['#6C63FF', '#43D99D']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={[
-                  styles.bigProgressFill,
-                  { width: `${overallProgress}%` },
-                ]}
-              />
-            </View>
+            <AnimatedProgressBar
+              progress={overallProgress / 100}
+              color={['#6C63FF', '#43D99D']}
+              trackColor={theme.surfaceSecondary}
+              height={14}
+              delay={100}
+            />
             <Text style={[styles.progressCaption, { color: theme.textSecondary }]}>
               {totalWords - learnedWords.length} kelime kaldı
             </Text>
           </View>
 
           {/* Level Breakdown */}
-          <View style={[styles.sectionCard, { backgroundColor: theme.surface, ...shadows.md }]}>
+          <View style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border, ...shadows.md }]}>
             <Text style={[styles.sectionTitle, { color: theme.text, marginBottom: spacing.md }]}>
               Seviyeye Göre İlerleme
             </Text>
@@ -174,20 +222,16 @@ export const StatsScreen: React.FC<Props> = () => {
             {/* Easy */}
             <View style={styles.levelRow}>
               <View style={styles.levelInfo}>
-                <Text style={{ fontSize: 18 }}>🌱</Text>
+                <MaterialCommunityIcons name="sprout" size={20} color="#43D99D" />
                 <View style={{ flex: 1, marginLeft: spacing.sm }}>
                   <Text style={[styles.levelName, { color: theme.text }]}>Başlangıç</Text>
-                  <View style={[styles.levelBarBg, { backgroundColor: theme.surfaceSecondary }]}>
-                    <View
-                      style={[
-                        styles.levelBarFill,
-                        {
-                          width: `${(easyLearned / totalByLevel.easy) * 100}%`,
-                          backgroundColor: '#43D99D',
-                        },
-                      ]}
-                    />
-                  </View>
+                  <AnimatedProgressBar
+                    progress={easyLearned / totalByLevel.easy}
+                    color="#43D99D"
+                    trackColor={theme.surfaceSecondary}
+                    height={10}
+                    delay={150}
+                  />
                 </View>
                 <Text style={[styles.levelCount, { color: theme.textSecondary }]}>
                   {easyLearned}/{totalByLevel.easy}
@@ -198,20 +242,16 @@ export const StatsScreen: React.FC<Props> = () => {
             {/* Medium */}
             <View style={[styles.levelRow, { marginTop: spacing.md }]}>
               <View style={styles.levelInfo}>
-                <Text style={{ fontSize: 18 }}>🚀</Text>
+                <MaterialCommunityIcons name="rocket" size={20} color="#F59E0B" />
                 <View style={{ flex: 1, marginLeft: spacing.sm }}>
                   <Text style={[styles.levelName, { color: theme.text }]}>Orta</Text>
-                  <View style={[styles.levelBarBg, { backgroundColor: theme.surfaceSecondary }]}>
-                    <View
-                      style={[
-                        styles.levelBarFill,
-                        {
-                          width: `${(mediumLearned / totalByLevel.medium) * 100}%`,
-                          backgroundColor: '#F59E0B',
-                        },
-                      ]}
-                    />
-                  </View>
+                  <AnimatedProgressBar
+                    progress={mediumLearned / totalByLevel.medium}
+                    color="#F59E0B"
+                    trackColor={theme.surfaceSecondary}
+                    height={10}
+                    delay={250}
+                  />
                 </View>
                 <Text style={[styles.levelCount, { color: theme.textSecondary }]}>
                   {mediumLearned}/{totalByLevel.medium}
@@ -222,20 +262,16 @@ export const StatsScreen: React.FC<Props> = () => {
             {/* Hard */}
             <View style={[styles.levelRow, { marginTop: spacing.md }]}>
               <View style={styles.levelInfo}>
-                <Text style={{ fontSize: 18 }}>🔥</Text>
+                <MaterialCommunityIcons name="fire" size={20} color="#EF4444" />
                 <View style={{ flex: 1, marginLeft: spacing.sm }}>
                   <Text style={[styles.levelName, { color: theme.text }]}>İleri</Text>
-                  <View style={[styles.levelBarBg, { backgroundColor: theme.surfaceSecondary }]}>
-                    <View
-                      style={[
-                        styles.levelBarFill,
-                        {
-                          width: `${(hardLearned / totalByLevel.hard) * 100}%`,
-                          backgroundColor: '#EF4444',
-                        },
-                      ]}
-                    />
-                  </View>
+                  <AnimatedProgressBar
+                    progress={hardLearned / totalByLevel.hard}
+                    color="#EF4444"
+                    trackColor={theme.surfaceSecondary}
+                    height={10}
+                    delay={350}
+                  />
                 </View>
                 <Text style={[styles.levelCount, { color: theme.textSecondary }]}>
                   {hardLearned}/{totalByLevel.hard}
@@ -246,7 +282,7 @@ export const StatsScreen: React.FC<Props> = () => {
 
           {/* Recently Learned */}
           {learnedWords.length > 0 && (
-            <View style={[styles.sectionCard, { backgroundColor: theme.surface, ...shadows.md }]}>
+            <View style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border, ...shadows.md }]}>
               <View style={styles.sectionHeader}>
                 <Text style={[styles.sectionTitle, { color: theme.text }]}>
                   Son Öğrenilenler
@@ -302,7 +338,7 @@ export const StatsScreen: React.FC<Props> = () => {
 
           {/* Difficult Words List */}
           {difficultWords.length > 0 && (
-            <View style={[styles.sectionCard, { backgroundColor: theme.surface, ...shadows.md }]}>
+            <View style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border, ...shadows.md }]}>
               <View style={styles.sectionHeader}>
                 <Text style={[styles.sectionTitle, { color: theme.text }]}>
                   Zorlandıklarım
@@ -336,7 +372,7 @@ export const StatsScreen: React.FC<Props> = () => {
           {/* Empty State */}
           {learnedWords.length === 0 && difficultWords.length === 0 && (
             <View style={[styles.emptyCard, { backgroundColor: theme.surface, ...shadows.sm }]}>
-              <Text style={{ fontSize: 48, marginBottom: spacing.md }}>📖</Text>
+              <MaterialCommunityIcons name="book-open" size={48} color={theme.textTertiary} style={{ marginBottom: spacing.md }} />
               <Text style={[styles.emptyTitle, { color: theme.text }]}>
                 Henüz istatistik yok
               </Text>
@@ -353,11 +389,11 @@ export const StatsScreen: React.FC<Props> = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { paddingBottom: spacing.xxl },
+  scroll: { paddingBottom: spacing.xxl, flexGrow: 1 },
   header: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xxl,
     borderBottomLeftRadius: radius.xl,
     borderBottomRightRadius: radius.xl,
   },
@@ -365,11 +401,13 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
     color: '#fff',
+    fontFamily: 'Inter_800ExtraBold',
   },
   headerSub: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.75)',
+    color: 'rgba(255,255,255,0.78)',
     fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     marginTop: 2,
     marginBottom: spacing.lg,
   },
@@ -382,26 +420,16 @@ const styles = StyleSheet.create({
   },
   xpLeft: { flex: 1 },
   xpLevelNum: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     color: '#fff',
+    fontFamily: 'Inter_800ExtraBold',
   },
   xpTotal: {
     fontSize: 13,
     color: 'rgba(255,255,255,0.75)',
     marginTop: 2,
     marginBottom: spacing.sm,
-  },
-  xpBarBg: {
-    height: 8,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    borderRadius: radius.full,
-    overflow: 'hidden',
-  },
-  xpBarFill: {
-    height: '100%',
-    backgroundColor: '#fff',
-    borderRadius: radius.full,
   },
   xpNextLabel: {
     fontSize: 11,
@@ -413,10 +441,11 @@ const styles = StyleSheet.create({
     marginLeft: spacing.lg,
   },
   xpBig: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: '900',
     color: '#fff',
     marginTop: 4,
+    fontFamily: 'Inter_800ExtraBold',
   },
   statsGrid: {
     flexDirection: 'row',
@@ -428,7 +457,8 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     minWidth: '44%',
-    borderRadius: radius.lg,
+    minHeight: 110,
+    borderRadius: radius.xl,
     padding: spacing.md,
     alignItems: 'center',
     gap: spacing.xs,
@@ -443,6 +473,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 26,
     fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
   },
   statLabel: {
     fontSize: 11,
@@ -454,6 +485,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     borderRadius: radius.xl,
     padding: spacing.lg,
+    borderWidth: 1,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -476,14 +508,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
   },
   bigProgressBg: {
-    height: 12,
+    height: 14,
     borderRadius: radius.full,
     overflow: 'hidden',
     marginBottom: spacing.xs,
-  },
-  bigProgressFill: {
-    height: '100%',
-    borderRadius: radius.full,
   },
   progressCaption: {
     fontSize: 12,
@@ -499,15 +527,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     marginBottom: 6,
-  },
-  levelBarBg: {
-    height: 8,
-    borderRadius: radius.full,
-    overflow: 'hidden',
-  },
-  levelBarFill: {
-    height: '100%',
-    borderRadius: radius.full,
   },
   levelCount: {
     fontSize: 12,

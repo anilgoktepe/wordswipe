@@ -9,6 +9,7 @@ import {
   Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { Word } from '../data/vocabulary';
 import { Button } from '../components/Button';
@@ -43,7 +44,7 @@ const WordCard: React.FC<{
           onPress={onRemove}
           style={[styles.removeBtn, { backgroundColor: theme.incorrectLight }]}
         >
-          <Text style={{ color: theme.incorrect, fontSize: 14, fontWeight: '700' }}>✕</Text>
+          <Ionicons name="close" size={16} color={theme.incorrect} />
         </TouchableOpacity>
       </View>
       {expanded && (
@@ -53,9 +54,16 @@ const WordCard: React.FC<{
           </Text>
         </View>
       )}
-      <Text style={[styles.expandHint, { color: theme.textTertiary }]}>
-        {expanded ? '▲ Gizle' : '▼ Örnek cümle'}
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.xs }}>
+        <Ionicons
+          name={expanded ? 'chevron-up' : 'chevron-down'}
+          size={12}
+          color={theme.textTertiary}
+        />
+        <Text style={[styles.expandHint, { color: theme.textTertiary }]}>
+          {expanded ? 'Gizle' : 'Örnek cümle'}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -86,7 +94,7 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.header}
         >
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={{ color: '#fff', fontSize: 20 }}>←</Text>
+            <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={styles.headerTitle}>Zorlandıklarım</Text>
@@ -113,6 +121,7 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
               keyExtractor={item => item.id.toString()}
               contentContainerStyle={styles.list}
               showsVerticalScrollIndicator={false}
+              style={styles.flatList}
               renderItem={({ item }) => (
                 <WordCard
                   word={item}
@@ -128,7 +137,7 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
                 theme={theme}
                 size="lg"
                 style={{ width: '100%' }}
-                icon="💪"
+                icon={<MaterialCommunityIcons name="dumbbell" size={20} color="#fff" />}
               />
             </View>
           </>
@@ -144,7 +153,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
+    paddingTop: spacing.xl,
     paddingBottom: spacing.lg,
     gap: spacing.md,
   },
@@ -153,26 +162,31 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.22)',
     borderRadius: 20,
   },
   headerTitle: {
     ...typography.h3,
     color: '#fff',
+    fontFamily: 'Inter_700Bold',
   },
   headerSub: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.82)',
     marginTop: 2,
     fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
+  },
+  flatList: {
+    flex: 1,
   },
   list: {
     padding: spacing.lg,
     gap: spacing.sm,
   },
   wordCard: {
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
+    borderRadius: radius.xl,
+    borderWidth: 2,
     padding: spacing.md,
     marginBottom: spacing.sm,
   },
@@ -183,11 +197,13 @@ const styles = StyleSheet.create({
   },
   english: {
     ...typography.h4,
+    fontFamily: 'Inter_700Bold',
   },
   turkish: {
     fontSize: 15,
     fontWeight: '600',
     marginTop: 2,
+    fontFamily: 'Inter_600SemiBold',
   },
   removeBtn: {
     width: 32,
@@ -211,7 +227,6 @@ const styles = StyleSheet.create({
   expandHint: {
     fontSize: 11,
     fontWeight: '600',
-    marginTop: spacing.xs,
   },
   emptyState: {
     flex: 1,

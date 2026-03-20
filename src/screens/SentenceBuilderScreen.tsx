@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { vocabulary, Word } from '../data/vocabulary';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
@@ -98,6 +99,42 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
   const [result, setResult] = useState<EvalResult | null>(null);
   const [totalXp, setTotalXp] = useState(0);
 
+  // ── Animations ────────────────────────────────────────────────────────────
+  const wordAnim   = useRef(new Animated.Value(0)).current;
+  const resultAnim = useRef(new Animated.Value(0)).current;
+  const submitScale = useRef(new Animated.Value(1)).current;
+
+  // Animate word card in on mount and whenever the word changes
+  useEffect(() => {
+    wordAnim.setValue(0);
+    Animated.spring(wordAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 60,
+      friction: 7,
+    }).start();
+  }, [word]);
+
+  // Animate result card in when a result appears
+  useEffect(() => {
+    if (!result) return;
+    resultAnim.setValue(0);
+    Animated.spring(resultAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 55,
+      friction: 7,
+    }).start();
+  }, [result]);
+
+  const onSubmitPressIn  = () => Animated.spring(submitScale, { toValue: 0.96, useNativeDriver: true, speed: 50, bounciness: 0 }).start();
+  const onSubmitPressOut = () => Animated.spring(submitScale, { toValue: 1, useNativeDriver: true, speed: 40, bounciness: 6 }).start();
+
+  const cardSlide = (anim: Animated.Value) => ({
+    opacity: anim,
+    transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }],
+  });
+
   const handleSubmit = useCallback(() => {
     if (!word || sentence.trim().length === 0) return;
     const evalResult = evaluate(sentence, word);
@@ -123,7 +160,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
   if (learnedIds.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }]}>
-        <Text style={{ fontSize: 48, marginBottom: spacing.md }}>📚</Text>
+        <MaterialCommunityIcons name="book-open-variant" size={48} color={theme.textTertiary} style={{ marginBottom: spacing.md }} />
         <Text style={[typography.h3, { color: theme.text, textAlign: 'center', marginBottom: spacing.sm }]}>
           Henüz kelime öğrenmedin
         </Text>
@@ -152,10 +189,13 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.header}
           >
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBackBtn}>
-              <Text style={{ color: '#fff', fontSize: 20 }}>←</Text>
+              <Ionicons name="arrow-back" size={22} color="#fff" />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
-              <Text style={styles.headerTitle}>Cümle Kur ✍️</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.headerTitle}>Cümle Kur</Text>
+                <MaterialCommunityIcons name="pencil" size={16} color="rgba(255,255,255,0.9)" style={{ marginLeft: 6 }} />
+              </View>
               <Text style={styles.headerSub}>Öğrendiğin kelimelerle cümle yaz</Text>
             </View>
             {totalXp > 0 && (
@@ -173,9 +213,10 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
             {word ? (
               <>
                 {/* Word Card */}
+                <Animated.View style={cardSlide(wordAnim)}>
                 <View style={[styles.wordCard, { backgroundColor: theme.surface, ...shadows.lg }]}>
                   <LinearGradient
-                    colors={['#6C63FF10', '#9B5CF610']}
+                    colors={['#6C63FF18', '#9B5CF618']}
                     style={StyleSheet.absoluteFillObject}
                   />
                   <Text style={[styles.wordHint, { color: theme.textTertiary }]}>
@@ -193,6 +234,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                     </Text>
                   </View>
                 </View>
+                </Animated.View>
 
                 {/* Input */}
                 {!result && (
@@ -215,10 +257,14 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                       autoCapitalize="sentences"
                       autoCorrect={false}
                     />
+                    <Animated.View style={[styles.submitBtn, { transform: [{ scale: submitScale }], opacity: sentence.trim().length === 0 ? 0.5 : 1 }]}>
                     <TouchableOpacity
                       onPress={handleSubmit}
+                      onPressIn={onSubmitPressIn}
+                      onPressOut={onSubmitPressOut}
                       disabled={sentence.trim().length === 0}
-                      style={[styles.submitBtn, { opacity: sentence.trim().length === 0 ? 0.5 : 1 }]}
+                      activeOpacity={1}
+                      style={{ borderRadius: radius.full, overflow: 'hidden' }}
                     >
                       <LinearGradient
                         colors={['#6C63FF', '#9B5CF6']}
@@ -226,14 +272,17 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                         end={{ x: 1, y: 0 }}
                         style={styles.submitGradient}
                       >
-                        <Text style={styles.submitText}>Gönder →</Text>
+                        <Text style={styles.submitText}>Gönder</Text>
+                        <Ionicons name="send" size={16} color="#fff" style={{ marginLeft: 8 }} />
                       </LinearGradient>
                     </TouchableOpacity>
+                    </Animated.View>
                   </>
                 )}
 
                 {/* Result */}
                 {result && (
+                  <Animated.View style={cardSlide(resultAnim)}>
                   <View style={[
                     styles.resultCard,
                     {
@@ -289,22 +338,33 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={handleNextWord}
-                        style={[styles.nextWordBtn, { backgroundColor: theme.primary }]}
+                        style={styles.nextWordBtn}
                       >
-                        <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>
-                          Yeni Kelime →
+                        <LinearGradient
+                          colors={['#6C63FF', '#9B5CF6']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={StyleSheet.absoluteFillObject}
+                        />
+                        <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14, fontFamily: 'Inter_700Bold' }}>
+                          Yeni Kelime
                         </Text>
+                        <Ionicons name="chevron-forward" size={16} color="#fff" style={{ marginLeft: 4 }} />
                       </TouchableOpacity>
                     </View>
                   </View>
+                  </Animated.View>
                 )}
 
                 {/* Skip button */}
                 {!result && (
                   <TouchableOpacity onPress={handleNextWord} style={styles.skipLink}>
-                    <Text style={[styles.skipLinkText, { color: theme.textTertiary }]}>
-                      Bu kelimeyi geç →
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Text style={[styles.skipLinkText, { color: theme.textTertiary }]}>
+                        Bu kelimeyi geç
+                      </Text>
+                      <Ionicons name="chevron-forward" size={14} color={theme.textTertiary} />
+                    </View>
                   </TouchableOpacity>
                 )}
               </>
@@ -379,6 +439,7 @@ const styles = StyleSheet.create({
   wordHint: {
     fontSize: 12,
     fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     marginBottom: spacing.md,
     letterSpacing: 0.3,
     textAlign: 'center',
@@ -389,12 +450,14 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
     textAlign: 'center',
     marginBottom: spacing.sm,
+    fontFamily: 'Inter_800ExtraBold',
   },
   wordMeaning: {
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
     marginBottom: spacing.md,
+    fontFamily: 'Inter_600SemiBold',
   },
   levelPill: {
     paddingHorizontal: spacing.md,
@@ -406,21 +469,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   input: {
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
+    borderRadius: radius.xl,
+    borderWidth: 2,
     padding: spacing.md,
     fontSize: 16,
-    minHeight: 110,
+    minHeight: 120,
     lineHeight: 24,
     marginBottom: spacing.md,
+    fontFamily: 'Inter_400Regular',
   },
   submitBtn: {
-    borderRadius: radius.full,
-    overflow: 'hidden',
     marginBottom: spacing.sm,
   },
   submitGradient: {
     height: 52,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -451,6 +514,7 @@ const styles = StyleSheet.create({
   resultFeedback: {
     fontSize: 16,
     fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -484,18 +548,20 @@ const styles = StyleSheet.create({
   },
   retryBtn: {
     flex: 1,
-    height: 46,
-    borderRadius: radius.lg,
+    height: 52,
+    borderRadius: radius.full,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
   nextWordBtn: {
     flex: 1,
-    height: 46,
-    borderRadius: radius.lg,
+    height: 52,
+    borderRadius: radius.full,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   emptyState: {
     alignItems: 'center',

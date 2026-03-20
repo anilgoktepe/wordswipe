@@ -4,8 +4,17 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Platform } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_800ExtraBold,
+} from '@expo-google-fonts/inter';
 import { AppProvider } from './src/context/AppContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
+import { SoundService } from './src/utils/sound';
 
 // Keep the splash screen visible while we load resources
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -49,13 +58,24 @@ async function scheduleDailyStreakReminder() {
 export default function App() {
   const [appReady, setAppReady] = useState(false);
 
+  // Load all Inter weights used across the typography system.
+  // useFonts returns [loaded, error]; splash stays visible until loaded = true.
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Inter_800ExtraBold,
+  });
+
   useEffect(() => {
     async function prepare() {
       try {
         // Schedule notifications in background
         scheduleDailyStreakReminder();
-        // Add any other async setup here (font loading, etc.)
-        // Small artificial delay to ensure AppContext hydrates before showing UI
+        // Preload native sounds (no-op on web)
+        SoundService.init();
+        // Small delay to ensure AppContext hydrates before showing UI
         await new Promise(resolve => setTimeout(resolve, 100));
       } catch (e) {
         console.warn('App prepare error:', e);
@@ -66,14 +86,15 @@ export default function App() {
     prepare();
   }, []);
 
+  // Hide splash only when BOTH fonts are loaded AND app state is ready.
   const onLayoutRootView = useCallback(async () => {
-    if (appReady) {
-      // Hide splash screen once app is ready
+    if (appReady && fontsLoaded) {
       await SplashScreen.hideAsync().catch(() => {});
     }
-  }, [appReady]);
+  }, [appReady, fontsLoaded]);
 
-  if (!appReady) {
+  // Keep splash visible until everything is ready — no flash of unstyled text.
+  if (!appReady || !fontsLoaded) {
     return null;
   }
 

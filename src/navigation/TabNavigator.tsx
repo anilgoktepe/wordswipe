@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { HomeScreen } from '../screens/HomeScreen';
 import { StatsScreen } from '../screens/StatsScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
@@ -8,12 +9,17 @@ import { getTheme, radius } from '../utils/theme';
 
 type TabName = 'home' | 'stats' | 'settings';
 
-interface Tab { name: TabName; emoji: string; label: string; }
+interface Tab {
+  name: TabName;
+  iconFocused: keyof typeof Ionicons.glyphMap;
+  iconUnfocused: keyof typeof Ionicons.glyphMap;
+  label: string;
+}
 
 const TABS: Tab[] = [
-  { name: 'home',     emoji: '🏠', label: 'Öğren' },
-  { name: 'stats',    emoji: '📊', label: 'İstatistik' },
-  { name: 'settings', emoji: '⚙️', label: 'Ayarlar' },
+  { name: 'home',     iconFocused: 'home',      iconUnfocused: 'home-outline',      label: 'Öğren' },
+  { name: 'stats',    iconFocused: 'bar-chart',  iconUnfocused: 'bar-chart-outline', label: 'İstatistik' },
+  { name: 'settings', iconFocused: 'settings',   iconUnfocused: 'settings-outline',  label: 'Ayarlar' },
 ];
 
 const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 84 : 64;
@@ -74,6 +80,8 @@ export const TabNavigator: React.FC<Props> = ({ navigation }) => {
       >
         {TABS.map(tab => {
           const focused = activeTab === tab.name;
+          const iconColor = focused ? theme.primary : theme.textTertiary;
+          const iconName = focused ? tab.iconFocused : tab.iconUnfocused;
           return (
             <TouchableOpacity
               key={tab.name}
@@ -84,13 +92,15 @@ export const TabNavigator: React.FC<Props> = ({ navigation }) => {
               {focused && (
                 <View style={[styles.activePill, { backgroundColor: theme.primary }]} />
               )}
-              <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>
-                {tab.emoji}
-              </Text>
+              <Ionicons
+                name={iconName}
+                size={focused ? 26 : 24}
+                color={iconColor}
+              />
               <Text
                 style={[
                   styles.tabLabel,
-                  { color: focused ? theme.primary : theme.textTertiary, fontWeight: focused ? '700' : '500' },
+                  { color: iconColor, fontWeight: focused ? '700' : '500' },
                 ]}
               >
                 {tab.label}
@@ -135,7 +145,5 @@ const styles = StyleSheet.create({
     height: 3,
     borderRadius: radius.full,
   },
-  tabEmoji: { fontSize: 22, lineHeight: 28 },
-  tabEmojiActive: { fontSize: 24 },
   tabLabel: { fontSize: 10, letterSpacing: 0.2 },
 });
