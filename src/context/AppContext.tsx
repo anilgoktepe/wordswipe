@@ -217,8 +217,28 @@ function reducer(state: AppState, action: Action): AppState {
     case 'TOGGLE_DARK_MODE':
       return { ...state, darkMode: !state.darkMode };
 
-    case 'SET_SESSION_WORDS':
-      return { ...state, sessionWords: action.words };
+    case 'SET_SESSION_WORDS': {
+      // Seed every lesson word into wordProgress if not already present.
+      // This ensures that seenCount (= Object.keys(wordProgress).length on the
+      // Home screen) reflects words as soon as a session begins — even before
+      // the user answers any card.  Existing entries are never overwritten, so
+      // SRS intervals, correctCount, wrongCount, and all other fields are safe.
+      const seededProgress = { ...state.wordProgress };
+      let anyNew = false;
+      for (const word of action.words) {
+        if (!(word.id in seededProgress)) {
+          seededProgress[word.id] = emptyProgress();
+          anyNew = true;
+        }
+      }
+      const wordProgress = anyNew ? seededProgress : state.wordProgress;
+      return {
+        ...state,
+        sessionWords: action.words,
+        wordProgress,
+        ...(anyNew ? deriveFromProgress(wordProgress) : {}),
+      };
+    }
 
     case 'SET_SESSION_RESULTS':
       return { ...state, sessionResults: action.results };
@@ -419,8 +439,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // engine — all core flows always use the authoritative local word list.
   const [vocabularySource, setVocabularySource] = useState<WordSource>('local');
 
-  // The authoritative local word list — used by every lesson/quiz/progress helper.
-  // Never replaced by API data to keep the learning engine stable.
+  // The single authoritative word list for the core learning engine.
+  // Never replaced or supplemented by API data — guarantees lesson and SRS stability.
   const localVocabulary = getLocalWords();
 
   // Load persisted state once on mount
@@ -448,53 +468,94 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(persistable));
   }, [state, isLoaded]);
 
-  // ─── getDailyWords — priority-ordered spaced-repetition selection ─────────
+  // ─── getDailyWords — 80/20 new-vs-review lesson composition ────────────
+  //
+  // Lesson shape:
+  //   ~80% new words   — truly unseen (correctCount === 0 AND wrongCount === 0)
+  //   ~20% review words — words that need reinforcement, selected by:
+  //       • isDifficult flag, OR
+  //       • wrongCount > 0 (ever struggled), OR
+  //       • SRS review is due (nextReviewAt ≤ now)
+  //
+  // Priorities within the review pool:
+  //   1. Difficult first
+  //   2. Most wrong-answers (more struggle = higher urgency)
+  //   3. Most overdue SRS date
+  //
+  // Deduplication and no-consecutive-repetition are preserved from the
+  // original implementation. A fallback pass backfills from the other pool
+  // if either allocation comes up short (small vocabulary edge case).
   const getDailyWords = (): Word[] => {
     if (!state.level) return [];
-    const now        = Date.now();
-    const target     = state.lessonSize ?? 20;
-    const wp         = state.wordProgress;
-
-    // Words seen in the previous lesson — avoid immediate repetition.
-    // These are used as a secondary filter: primary pass skips them;
-    // fallback pass uses them only if there aren't enough other words.
+    const now       = Date.now();
+    const target    = state.lessonSize ?? 20;
+    const wp        = state.wordProgress;
     const lastLesson = new Set(state.lastLessonWordIds);
 
-    // ── Bucket 1: Difficult words due for review (most overdue first) ────────
-    const difficultDue: Word[] = Object.entries(wp)
-      .filter(([, p]) => p.isDifficult && p.nextReviewAt <= now)
-      .sort(([, a], [, b]) => a.nextReviewAt - b.nextReviewAt)
-      .map(([id]) => localVocabulary.find(w => w.id === Number(id)))
-      .filter((w): w is Word => w !== undefined);
+    // ── Review cap: at most 20% of the lesson (minimum 1 slot when target ≥ 5)
+    const reviewCap = target >= 5 ? Math.round(target * 0.20) : 0;
+    const newCap    = target - reviewCap;
 
-    // ── Bucket 2: Learned words due for review (most overdue first) ──────────
-    const learnedDue: Word[] = Object.entries(wp)
-      .filter(([, p]) => p.isLearned && !p.isDifficult && p.nextReviewAt <= now)
-      .sort(([, a], [, b]) => a.nextReviewAt - b.nextReviewAt)
-      .map(([id]) => localVocabulary.find(w => w.id === Number(id)))
-      .filter((w): w is Word => w !== undefined);
-
-    // ── Bucket 3: New/unseen words from current level ────────────────────────
-    const seenIds    = new Set(Object.keys(wp).map(Number));
+    // ── New words: level-matched, never answered ──────────────────────────────
+    // "Never answered" aligns with the Home screen seenCount definition:
+    // seeded entries (correctCount === 0 && wrongCount === 0) are still "new".
+    const interactedIds = new Set(
+      Object.entries(wp)
+        .filter(([, p]) => p.correctCount > 0 || p.wrongCount > 0)
+        .map(([id]) => Number(id)),
+    );
     const levelWords = localVocabulary.filter(w => w.level === state.level);
-    const newWords   = levelWords.filter(w => !seenIds.has(w.id));
+    const newWords   = levelWords.filter(w => !interactedIds.has(w.id));
 
-    // ── Primary pass: fill up to target, skipping last-lesson words ──────────
+    // ── Review candidates: actually seen + qualifies for reinforcement ────────
+    const reviewCandidates: Word[] = Object.entries(wp)
+      .filter(([, p]) =>
+        // Must have been answered at least once (not just seeded)
+        (p.correctCount > 0 || p.wrongCount > 0) &&
+        // Must qualify for review via at least one condition
+        (p.isDifficult ||
+          p.wrongCount > 0 ||
+          (p.nextReviewAt > 0 && p.nextReviewAt <= now)),
+      )
+      .sort(([, a], [, b]) => {
+        // Difficult words always surface first
+        if (a.isDifficult !== b.isDifficult) return a.isDifficult ? -1 : 1;
+        // Then by most wrong answers (higher struggle = higher urgency)
+        if (b.wrongCount !== a.wrongCount) return b.wrongCount - a.wrongCount;
+        // Finally most overdue SRS date
+        return a.nextReviewAt - b.nextReviewAt;
+      })
+      .map(([id]) => localVocabulary.find(w => w.id === Number(id)))
+      .filter((w): w is Word => w !== undefined);
+
+    // ── Primary pass: new words fill ~80%, review words fill ~20% ────────────
     const added  = new Set<number>();
     const result: Word[] = [];
+    let   reviewCount = 0;
 
-    for (const w of [...difficultDue, ...learnedDue, ...newWords]) {
-      if (result.length >= target) break;
+    // New words first (up to newCap), skipping last-lesson words
+    for (const w of newWords) {
+      if (result.length - reviewCount >= newCap) break;
       if (!added.has(w.id) && !lastLesson.has(w.id)) {
         added.add(w.id);
         result.push(w);
       }
     }
 
-    // ── Fallback pass: if still under target, backfill from last-lesson words ─
-    // (guarantees a full lesson even when the available pool is small)
+    // Review words next (up to reviewCap), skipping last-lesson words
+    for (const w of reviewCandidates) {
+      if (reviewCount >= reviewCap) break;
+      if (!added.has(w.id) && !lastLesson.has(w.id)) {
+        added.add(w.id);
+        result.push(w);
+        reviewCount++;
+      }
+    }
+
+    // ── Fallback pass: backfill from whichever pool has remaining words ───────
+    // Ensures a full lesson even when vocabulary pool is small.
     if (result.length < target) {
-      for (const w of [...difficultDue, ...learnedDue, ...newWords]) {
+      for (const w of [...newWords, ...reviewCandidates]) {
         if (result.length >= target) break;
         if (!added.has(w.id)) {
           added.add(w.id);

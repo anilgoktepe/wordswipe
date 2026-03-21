@@ -103,7 +103,14 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const wp = state.wordProgress[w.id];
     return wp ? wp.correctCount >= 2 : false;
   });
-  const seenCount = vocabulary.filter(w => w.id in state.wordProgress).length;
+  // Count only words the user has actually answered at least once.
+  // Words seeded into wordProgress at session start (correctCount === 0 AND
+  // wrongCount === 0) are excluded — the counter only moves when the user
+  // interacts with a card.
+  const seenCount = vocabulary.filter(w => {
+    const p = state.wordProgress[w.id];
+    return p !== undefined && (p.correctCount > 0 || p.wrongCount > 0);
+  }).length;
   const lessonSize = state.lessonSize ?? 20;
   const todayProgress = Math.min(state.dailyProgress, lessonSize);
   const totalToday = lessonSize;
@@ -191,7 +198,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <View style={styles.statDivider} />
               <View style={styles.statCard}>
                 <MaterialCommunityIcons name="book-open-variant" size={24} color="rgba(255,255,255,0.95)" />
-                <Text style={styles.statValue}>{learnedWords.length}</Text>
+                <Text style={styles.statValue}>{seenCount}</Text>
                 <Text style={styles.statLabel}>Kelime</Text>
               </View>
             </View>

@@ -4,11 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { HomeScreen } from '../screens/HomeScreen';
 import { StatsScreen } from '../screens/StatsScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
-import { DiscoverWordsScreen } from '../screens/DiscoverWordsScreen';
 import { useApp } from '../context/AppContext';
 import { getTheme, radius } from '../utils/theme';
 
-type TabName = 'home' | 'discover' | 'stats' | 'settings';
+type TabName = 'home' | 'stats' | 'settings';
 
 interface Tab {
   name: TabName;
@@ -18,10 +17,9 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { name: 'home',     iconFocused: 'home',        iconUnfocused: 'home-outline',        label: 'Öğren' },
-  { name: 'discover', iconFocused: 'compass',     iconUnfocused: 'compass-outline',     label: 'Keşfet' },
-  { name: 'stats',    iconFocused: 'bar-chart',   iconUnfocused: 'bar-chart-outline',   label: 'İstatistik' },
-  { name: 'settings', iconFocused: 'settings',    iconUnfocused: 'settings-outline',    label: 'Ayarlar' },
+  { name: 'home',     iconFocused: 'home',      iconUnfocused: 'home-outline',      label: 'Öğren' },
+  { name: 'stats',    iconFocused: 'bar-chart',  iconUnfocused: 'bar-chart-outline', label: 'İstatistik' },
+  { name: 'settings', iconFocused: 'settings',   iconUnfocused: 'settings-outline',  label: 'Ayarlar' },
 ];
 
 const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 84 : 64;
@@ -36,7 +34,6 @@ export const TabNavigator: React.FC<Props> = ({ navigation }) => {
   const renderScreen = () => {
     switch (activeTab) {
       case 'home':     return <HomeScreen navigation={navigation} />;
-      case 'discover': return <DiscoverWordsScreen />;
       case 'stats':    return <StatsScreen />;
       case 'settings': return <SettingsScreen navigation={navigation} />;
     }
