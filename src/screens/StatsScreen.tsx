@@ -11,8 +11,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import { useApp } from '../context/AppContext';
-import { vocabulary } from '../data/vocabulary';
+import { getLocalWords } from '../services/vocabularyService';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
+
+const vocabulary = getLocalWords();
 
 interface Props {
   navigation?: any;
@@ -95,8 +97,16 @@ export const StatsScreen: React.FC<Props> = () => {
   const theme = getTheme(state.darkMode);
 
   // Derive directly from wordProgress (source of truth) so stats are never stale.
-  const learnedWords   = vocabulary.filter(w => state.wordProgress[w.id]?.isLearned   === true);
-  const difficultWords = vocabulary.filter(w => state.wordProgress[w.id]?.isDifficult === true);
+  // Use raw counts for user-facing display so words never mysteriously disappear
+  // as the internal SRS flags are cleared during mastery progression.
+  const learnedWords = vocabulary.filter(w => {
+    const wp = state.wordProgress[w.id];
+    return wp ? wp.correctCount >= 2 : false;
+  });
+  const difficultWords = vocabulary.filter(w => {
+    const wp = state.wordProgress[w.id];
+    return wp ? wp.wrongCount > 0 && wp.wrongCount >= wp.correctCount : false;
+  });
 
   const easyLearned = learnedWords.filter(w => w.level === 'easy').length;
   const mediumLearned = learnedWords.filter(w => w.level === 'medium').length;

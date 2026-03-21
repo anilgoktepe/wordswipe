@@ -6,47 +6,115 @@ import {
   SafeAreaView,
   FlatList,
   TouchableOpacity,
-  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useApp } from '../context/AppContext';
-import { Word } from '../data/vocabulary';
+import { useApp, WordProgress } from '../context/AppContext';
+import { getLocalWords, Word } from '../services/vocabularyService';
 import { Button } from '../components/Button';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
+
+const vocabulary = getLocalWords();
 
 interface Props {
   navigation: any;
 }
 
+type FilterTab = 'all' | 'difficult' | 'learned';
+
+// ─── User-facing classification helpers ──────────────────────────────────────
+// These drive the Word Management UI. The internal SRS flags (isDifficult /
+// isLearned) continue to run independently for spaced-repetition scheduling.
+
+/** Struggling: at least one wrong, and wrong count ≥ correct count. */
+function isDisplayDifficult(wp: WordProgress): boolean {
+  return wp.wrongCount > 0 && wp.wrongCount >= wp.correctCount;
+}
+
+/** Solid: answered correctly at least twice. */
+function isDisplayLearned(wp: WordProgress): boolean {
+  return wp.correctCount >= 2;
+}
+
+// ─── Word Card ────────────────────────────────────────────────────────────────
+
 const WordCard: React.FC<{
   word: Word;
+  progress: WordProgress;
   theme: ReturnType<typeof getTheme>;
+  tab: FilterTab;
   onRemove: () => void;
-}> = ({ word, theme, onRemove }) => {
+}> = ({ word, progress, theme, tab, onRemove }) => {
   const [expanded, setExpanded] = useState(false);
+  const difficult = isDisplayDifficult(progress);
+  const learned   = isDisplayLearned(progress);
+
+  const badge = difficult
+    ? { label: 'Zorlu',      bg: '#FEE2E2', text: '#DC2626' }
+    : learned
+    ? { label: 'Öğrenildi',  bg: '#D1FAE5', text: '#059669' }
+    : { label: 'Görüldü',    bg: theme.surfaceSecondary, text: theme.textSecondary };
 
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      onPress={() => setExpanded(!expanded)}
+      onPress={() => setExpanded(v => !v)}
       style={[
         styles.wordCard,
-        { backgroundColor: theme.surface, borderColor: theme.border, ...shadows.sm },
+        {
+          backgroundColor: theme.surface,
+          borderColor: difficult ? '#FCA5A5' : learned ? '#6EE7B7' : theme.border,
+          ...shadows.sm,
+        },
       ]}
     >
+      {/* Top row */}
       <View style={styles.wordCardTop}>
         <View style={{ flex: 1 }}>
           <Text style={[styles.english, { color: theme.text }]}>{word.word}</Text>
           <Text style={[styles.turkish, { color: theme.primary }]}>{word.translation}</Text>
         </View>
-        <TouchableOpacity
-          onPress={onRemove}
-          style={[styles.removeBtn, { backgroundColor: theme.incorrectLight }]}
-        >
-          <Ionicons name="close" size={16} color={theme.incorrect} />
-        </TouchableOpacity>
+
+        {/* ✓ / ✗ counters */}
+        <View style={styles.statsRow}>
+          <View style={styles.statChip}>
+            <Ionicons name="checkmark" size={12} color="#059669" />
+            <Text style={[styles.statNum, { color: '#059669' }]}>{progress.correctCount}</Text>
+          </View>
+          <View style={styles.statChip}>
+            <Ionicons name="close" size={12} color="#DC2626" />
+            <Text style={[styles.statNum, { color: '#DC2626' }]}>{progress.wrongCount}</Text>
+          </View>
+        </View>
+
+        {/* Remove — only in Difficult tab */}
+        {tab === 'difficult' && (
+          <TouchableOpacity
+            onPress={onRemove}
+            style={[styles.removeBtn, { backgroundColor: theme.incorrectLight }]}
+          >
+            <Ionicons name="close" size={16} color={theme.incorrect} />
+          </TouchableOpacity>
+        )}
       </View>
+
+      {/* Status badge + expand toggle */}
+      <View style={styles.wordCardFooter}>
+        <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
+          <Text style={[styles.statusText, { color: badge.text }]}>{badge.label}</Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Ionicons
+            name={expanded ? 'chevron-up' : 'chevron-down'}
+            size={12}
+            color={theme.textTertiary}
+          />
+          <Text style={[styles.expandHint, { color: theme.textTertiary }]}>
+            {expanded ? 'Gizle' : 'Örnek cümle'}
+          </Text>
+        </View>
+      </View>
+
       {expanded && (
         <View style={[styles.exampleBox, { backgroundColor: theme.surfaceSecondary }]}>
           <Text style={[styles.exampleText, { color: theme.textSecondary }]}>
@@ -54,28 +122,33 @@ const WordCard: React.FC<{
           </Text>
         </View>
       )}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.xs }}>
-        <Ionicons
-          name={expanded ? 'chevron-up' : 'chevron-down'}
-          size={12}
-          color={theme.textTertiary}
-        />
-        <Text style={[styles.expandHint, { color: theme.textTertiary }]}>
-          {expanded ? 'Gizle' : 'Örnek cümle'}
-        </Text>
-      </View>
     </TouchableOpacity>
   );
 };
 
+// ─── Main Screen ──────────────────────────────────────────────────────────────
+
 export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
-  const { state, dispatch, getDifficultWordObjects } = useApp();
+  const { state, dispatch } = useApp();
   const theme = getTheme(state.darkMode);
-  const words = getDifficultWordObjects();
+  const [activeTab, setActiveTab] = useState<FilterTab>('all');
+
+  // All words that have ever been encountered in a quiz session.
+  // A word enters wordProgress the first time it is answered (correctly or not).
+  // Once a word is in this set it NEVER disappears — this is the permanent record.
+  const seenWords     = vocabulary.filter(w => w.id in state.wordProgress);
+  const difficultList = seenWords.filter(w => isDisplayDifficult(state.wordProgress[w.id]));
+  const learnedList   = seenWords.filter(w => isDisplayLearned(state.wordProgress[w.id]));
+
+  const displayWords =
+    activeTab === 'all'       ? seenWords
+    : activeTab === 'difficult' ? difficultList
+    :                             learnedList;
 
   const handlePractice = () => {
-    if (words.length === 0) return;
-    dispatch({ type: 'SET_SESSION_WORDS', words });
+    if (displayWords.length === 0) return;
+    const shuffled = [...displayWords].sort(() => Math.random() - 0.5).slice(0, 20);
+    dispatch({ type: 'SET_SESSION_WORDS', words: shuffled });
     navigation.navigate('Flashcard');
   };
 
@@ -83,41 +156,110 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
     dispatch({ type: 'REMOVE_DIFFICULT_WORD', wordId });
   };
 
+  const tabs: { key: FilterTab; label: string; count: number }[] = [
+    { key: 'all',       label: 'Tümü',      count: seenWords.length     },
+    { key: 'difficult', label: 'Zorlu',      count: difficultList.length },
+    { key: 'learned',   label: 'Öğrenildi', count: learnedList.length   },
+  ];
+
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <SafeAreaView style={{ flex: 1 }}>
         {/* Header */}
         <LinearGradient
-          colors={['#FF6584', '#F59E0B']}
+          colors={['#6C63FF', '#9B5CF6']}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={styles.header}
         >
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
-            <Text style={styles.headerTitle}>Zorlandıklarım</Text>
+            <Text style={styles.headerTitle}>Kelime Yönetimi</Text>
             <Text style={styles.headerSub}>
-              {words.length} kelime · Pratik yaparak üstesinden gel
+              {seenWords.length > 0
+                ? `${seenWords.length} kelime görüldü · ${difficultList.length} zorlu`
+                : 'Henüz kelime görülmedi'}
             </Text>
           </View>
         </LinearGradient>
 
-        {words.length === 0 ? (
+        {/* Filter Tabs */}
+        <View style={[styles.tabBar, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+          {tabs.map(tab => (
+            <TouchableOpacity
+              key={tab.key}
+              onPress={() => setActiveTab(tab.key)}
+              style={[
+                styles.tabBtn,
+                activeTab === tab.key && {
+                  borderBottomWidth: 2.5,
+                  borderBottomColor: theme.primary,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tabLabel,
+                  { color: activeTab === tab.key ? theme.primary : theme.textSecondary },
+                ]}
+              >
+                {tab.label}
+              </Text>
+              <View
+                style={[
+                  styles.tabCount,
+                  {
+                    backgroundColor:
+                      activeTab === tab.key ? theme.primaryLight : theme.surfaceSecondary,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.tabCountText,
+                    { color: activeTab === tab.key ? theme.primary : theme.textTertiary },
+                  ]}
+                >
+                  {tab.count}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Empty states */}
+        {seenWords.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>🎉</Text>
+            <Text style={styles.emptyEmoji}>📚</Text>
             <Text style={[styles.emptyTitle, { color: theme.text }]}>
-              Harika! Zor kelimen yok
+              Henüz kelime görmedin
             </Text>
             <Text style={[styles.emptySub, { color: theme.textSecondary }]}>
-              Yanlış yaptığın kelimeler burada görünecek
+              Derslerini tamamlayınca kelimeler burada görünecek
+            </Text>
+          </View>
+        ) : displayWords.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyEmoji}>
+              {activeTab === 'difficult' ? '🎉' : '📖'}
+            </Text>
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>
+              {activeTab === 'difficult'
+                ? 'Harika! Zor kelimen yok'
+                : 'Henüz öğrenilmiş kelime yok'}
+            </Text>
+            <Text style={[styles.emptySub, { color: theme.textSecondary }]}>
+              {activeTab === 'difficult'
+                ? 'Yanlış yaptığın kelimeler burada görünecek'
+                : 'Sınavda en az 2 kez doğru bilince buraya taşınır'}
             </Text>
           </View>
         ) : (
           <>
             <FlatList
-              data={words}
+              data={displayWords}
               keyExtractor={item => item.id.toString()}
               contentContainerStyle={styles.list}
               showsVerticalScrollIndicator={false}
@@ -125,14 +267,16 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
               renderItem={({ item }) => (
                 <WordCard
                   word={item}
+                  progress={state.wordProgress[item.id]}
                   theme={theme}
+                  tab={activeTab}
                   onRemove={() => handleRemove(item.id)}
                 />
               )}
             />
             <View style={styles.footer}>
               <Button
-                title={`Hepsini Pratik Yap (${words.length})`}
+                title={`Pratik Yap (${Math.min(displayWords.length, 20)})`}
                 onPress={handlePractice}
                 theme={theme}
                 size="lg"
@@ -149,6 +293,8 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+
+  /* Header */
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -177,18 +323,52 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'Inter_600SemiBold',
   },
-  flatList: {
-    flex: 1,
+
+  /* Filter Tabs */
+  tabBar: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
   },
+  tabBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    gap: spacing.xs,
+  },
+  tabLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
+  },
+  tabCount: {
+    minWidth: 22,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  tabCountText: {
+    fontSize: 11,
+    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
+  },
+
+  /* List */
+  flatList: { flex: 1 },
   list: {
     padding: spacing.lg,
+    paddingBottom: spacing.sm,
     gap: spacing.sm,
   },
+
+  /* Word Card */
   wordCard: {
     borderRadius: radius.xl,
     borderWidth: 2,
     padding: spacing.md,
-    marginBottom: spacing.sm,
   },
   wordCardTop: {
     flexDirection: 'row',
@@ -205,29 +385,75 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontFamily: 'Inter_600SemiBold',
   },
+  statsRow: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    alignItems: 'center',
+    marginRight: spacing.xs,
+  },
+  statChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: radius.sm,
+    backgroundColor: 'transparent',
+  },
+  statNum: {
+    fontSize: 12,
+    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
+  },
   removeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: spacing.sm,
+    marginLeft: spacing.xs,
+    flexShrink: 0,
+  },
+  wordCardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.xs,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
+  },
+  expandHint: {
+    fontSize: 11,
+    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   exampleBox: {
     borderRadius: radius.sm,
     padding: spacing.sm,
     marginTop: spacing.sm,
-    marginBottom: spacing.xs,
   },
   exampleText: {
     fontSize: 13,
     fontStyle: 'italic',
     lineHeight: 18,
+    fontFamily: 'Inter_400Regular',
   },
-  expandHint: {
-    fontSize: 11,
-    fontWeight: '600',
+
+  /* Footer */
+  footer: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
   },
+
+  /* Empty states */
   emptyState: {
     flex: 1,
     alignItems: 'center',
@@ -244,9 +470,5 @@ const styles = StyleSheet.create({
     ...typography.body,
     textAlign: 'center',
     lineHeight: 22,
-  },
-  footer: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xl,
   },
 });

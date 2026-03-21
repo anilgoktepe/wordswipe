@@ -14,9 +14,12 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp, Level } from '../context/AppContext';
+import { getLocalWords } from '../services/vocabularyService';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import { clearEnrichmentCache } from '../services/wordEnrichment';
 import { pickChallengeWord, buildChallengeContent } from '../services/curiosityNotification';
+
+const vocabulary = getLocalWords();
 
 const levelLabels: Record<Level, string> = {
   easy: 'Başlangıç (A1-A2)',
@@ -61,6 +64,10 @@ const SettingRow: React.FC<{
         styles.rowIcon,
         {
           backgroundColor: danger ? theme.incorrectLight : theme.primaryLight,
+          borderWidth: 1.5,
+          borderColor: danger
+            ? (theme.incorrect + '40')
+            : (theme.primary + '30'),
         },
       ]}
     >
@@ -223,7 +230,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 Kelime Öğrencisi
               </Text>
               <Text style={[styles.profileSub, { color: theme.textSecondary }]}>
-                {state.xp} XP · {state.streak} gün serisi · {Object.values(state.wordProgress).filter(p => p.isLearned).length} kelime
+                {state.xp} XP · {state.streak} gün serisi · {Object.values(state.wordProgress).filter(p => p.correctCount >= 2).length} kelime
               </Text>
             </View>
           </View>
@@ -384,7 +391,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               Versiyon 1.0.0
             </Text>
             <Text style={[styles.infoDesc, { color: theme.textTertiary }]}>
-              300 kelime · 3 seviye · Made with ❤️
+              {vocabulary.length} kelime · 3 seviye · Made with ❤️
             </Text>
           </View>
         </ScrollView>

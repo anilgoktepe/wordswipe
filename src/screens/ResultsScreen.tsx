@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '../context/AppContext';
+import { getLocalWords } from '../services/vocabularyService';
 import { Button } from '../components/Button';
 import { AdBanner } from '../components/AdBanner';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
@@ -19,6 +20,7 @@ import { ConfettiEffect } from '../components/ConfettiEffect';
 import { hapticSuccess } from '../utils/haptics';
 
 const { width } = Dimensions.get('window');
+const vocabulary = getLocalWords();
 
 const motivationalMessages = [
   { min: 90, text: '🏆 Muhteşem! Gerçek bir kelime ustasısın!' },
@@ -32,7 +34,7 @@ interface Props {
 }
 
 export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
-  const { state, dispatch, getDifficultWordObjects } = useApp();
+  const { state, dispatch } = useApp();
   const theme = getTheme(state.darkMode);
 
   const results = state.sessionResults;
@@ -125,9 +127,8 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleRetryWrong = () => {
-    const wrongWords = getDifficultWordObjects().filter(w =>
-      results?.wrongWordIds?.includes(w.id)
-    );
+    // Look up wrong words directly from vocabulary — no dependency on isDifficult flag.
+    const wrongWords = vocabulary.filter(w => results?.wrongWordIds?.includes(w.id));
     if (wrongWords.length === 0) return;
     dispatch({ type: 'SET_SESSION_WORDS', words: wrongWords });
     dispatch({ type: 'SET_SESSION_RESULTS', results: null });

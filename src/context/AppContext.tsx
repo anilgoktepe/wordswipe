@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Word, vocabulary, getWordsByLevel } from '../data/vocabulary';
+import { Word, getLocalWords, getWords, WordSource } from '../services/vocabularyService';
 
 export type Level = 'easy' | 'medium' | 'hard';
 
@@ -398,9 +398,12 @@ interface AppContextValue {
   state: AppState;
   dispatch: React.Dispatch<Action>;
   isLoaded: boolean;
+  vocabularySource: WordSource;
+  setVocabularySource: (source: WordSource) => void;
   getDailyWords: () => Word[];
   getDifficultWordObjects: () => Word[];
   getLastLessonWords: () => Word[];
+  getSupplementaryApiWords: () => Promise<Word[]>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -410,6 +413,15 @@ const STORAGE_KEY = '@wordswipe_state';
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // ── Vocabulary source ──────────────────────────────────────────────────────
+  // Preserved for future use. Does NOT affect the main lesson/quiz/progress
+  // engine — all core flows always use the authoritative local word list.
+  const [vocabularySource, setVocabularySource] = useState<WordSource>('local');
+
+  // The authoritative local word list — used by every lesson/quiz/progress helper.
+  // Never replaced by API data to keep the learning engine stable.
+  const localVocabulary = getLocalWords();
 
   // Load persisted state once on mount
   useEffect(() => {
@@ -452,19 +464,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const difficultDue: Word[] = Object.entries(wp)
       .filter(([, p]) => p.isDifficult && p.nextReviewAt <= now)
       .sort(([, a], [, b]) => a.nextReviewAt - b.nextReviewAt)
-      .map(([id]) => vocabulary.find(w => w.id === Number(id)))
+      .map(([id]) => localVocabulary.find(w => w.id === Number(id)))
       .filter((w): w is Word => w !== undefined);
 
     // ── Bucket 2: Learned words due for review (most overdue first) ──────────
     const learnedDue: Word[] = Object.entries(wp)
       .filter(([, p]) => p.isLearned && !p.isDifficult && p.nextReviewAt <= now)
       .sort(([, a], [, b]) => a.nextReviewAt - b.nextReviewAt)
-      .map(([id]) => vocabulary.find(w => w.id === Number(id)))
+      .map(([id]) => localVocabulary.find(w => w.id === Number(id)))
       .filter((w): w is Word => w !== undefined);
 
     // ── Bucket 3: New/unseen words from current level ────────────────────────
     const seenIds    = new Set(Object.keys(wp).map(Number));
-    const levelWords = getWordsByLevel(state.level);
+    const levelWords = localVocabulary.filter(w => w.level === state.level);
     const newWords   = levelWords.filter(w => !seenIds.has(w.id));
 
     // ── Primary pass: fill up to target, skipping last-lesson words ──────────
@@ -499,14 +511,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // This guarantees freshness even when a screen is re-focused after being
   // frozen by react-freeze while another screen was active.
   const getDifficultWordObjects = (): Word[] =>
-    vocabulary.filter(w => state.wordProgress[w.id]?.isDifficult === true);
+    localVocabulary.filter(w => state.wordProgress[w.id]?.isDifficult === true);
 
   const getLastLessonWords = (): Word[] =>
-    vocabulary.filter(w => state.lastLessonWordIds.includes(w.id));
+    localVocabulary.filter(w => state.lastLessonWordIds.includes(w.id));
+
+  // ─── Supplementary API words ───────────────────────────────────────────────
+  // Isolated from the core learning engine. API words returned here:
+  //   - are NOT tracked in wordProgress
+  //   - do NOT affect learnedWordIds, difficultWords, or seen counts
+  //   - are NOT used by getDailyWords, getDifficultWordObjects, or getLastLessonWords
+  // Safe to display alongside local content (e.g. explore/browse screens).
+  const getSupplementaryApiWords = (): Promise<Word[]> =>
+    getWords({ source: 'api' });
 
   return (
     <AppContext.Provider
-      value={{ state, dispatch, isLoaded, getDailyWords, getDifficultWordObjects, getLastLessonWords }}
+      value={{ state, dispatch, isLoaded, vocabularySource, setVocabularySource, getDailyWords, getDifficultWordObjects, getLastLessonWords, getSupplementaryApiWords }}
     >
       {children}
     </AppContext.Provider>

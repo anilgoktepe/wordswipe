@@ -3,7 +3,7 @@ import { View, ActivityIndicator, Platform } from 'react-native';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useApp } from '../context/AppContext';
-import { vocabulary } from '../data/vocabulary';
+import { getLocalWords } from '../services/vocabularyService';
 import { LevelSelectionScreen } from '../screens/LevelSelectionScreen';
 import { FlashcardScreen } from '../screens/FlashcardScreen';
 import { QuizScreen } from '../screens/QuizScreen';
@@ -15,6 +15,8 @@ import {
   pickChallengeWord,
   scheduleDailyChallengeNotification,
 } from '../services/curiosityNotification';
+
+const vocabulary = getLocalWords();
 
 export type RootStackParamList = {
   LevelSelection: undefined;

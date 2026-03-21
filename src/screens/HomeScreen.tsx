@@ -14,10 +14,11 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/Button';
-import { vocabulary } from '../data/vocabulary';
+import { getLocalWords } from '../services/vocabularyService';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 
 const { width } = Dimensions.get('window');
+const vocabulary = getLocalWords();
 
 const levelLabels = {
   easy: 'Başlangıç (A1-A2)',
@@ -88,8 +89,21 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const theme = getTheme(state.darkMode);
 
   const dailyWords = getDailyWords();
-  const difficultWords = vocabulary.filter(w => state.wordProgress[w.id]?.isDifficult === true);
-  const learnedWords   = vocabulary.filter(w => state.wordProgress[w.id]?.isLearned   === true);
+
+  // User-facing classification: raw counts, not internal SRS flags.
+  // isDifficult / isLearned continue to drive SRS scheduling internally,
+  // but the UI shows what actually matches the user's expectation:
+  //   difficult = wrong more than (or equal to) correct, with ≥1 wrong
+  //   learned   = answered correctly at least twice
+  const difficultWords = vocabulary.filter(w => {
+    const wp = state.wordProgress[w.id];
+    return wp ? wp.wrongCount > 0 && wp.wrongCount >= wp.correctCount : false;
+  });
+  const learnedWords = vocabulary.filter(w => {
+    const wp = state.wordProgress[w.id];
+    return wp ? wp.correctCount >= 2 : false;
+  });
+  const seenCount = vocabulary.filter(w => w.id in state.wordProgress).length;
   const lessonSize = state.lessonSize ?? 20;
   const todayProgress = Math.min(state.dailyProgress, lessonSize);
   const totalToday = lessonSize;
@@ -297,7 +311,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               activeOpacity={0.85}
               style={[styles.actionCard, { backgroundColor: theme.surface, borderColor: '#C4B5FD', ...shadows.sm }]}
             >
-              <View style={[styles.actionIcon, { backgroundColor: '#EDE9FE' }]}>
+              <View style={[styles.actionIcon, { backgroundColor: '#EDE9FE', borderWidth: 1.5, borderColor: '#7C3AED4D' }]}>
                 <MaterialCommunityIcons name="pencil" size={24} color="#7C3AED" />
               </View>
               <View style={{ flex: 1 }}>
@@ -326,7 +340,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               },
             ]}
           >
-            <View style={[styles.actionIcon, { backgroundColor: '#FEE2E2' }]}>
+            <View style={[styles.actionIcon, { backgroundColor: '#FEE2E2', borderWidth: 1.5, borderColor: '#DC26264D' }]}>
               <MaterialCommunityIcons name="dumbbell" size={24} color="#DC2626" />
             </View>
             <View style={{ flex: 1 }}>
@@ -366,15 +380,15 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.85}
             style={[styles.actionCard, { backgroundColor: theme.surface, borderColor: theme.border, ...shadows.sm }]}
           >
-            <View style={[styles.actionIcon, { backgroundColor: '#E8E6FF' }]}>
+            <View style={[styles.actionIcon, { backgroundColor: '#E8E6FF', borderWidth: 1.5, borderColor: '#6C63FF4D' }]}>
               <MaterialCommunityIcons name="format-list-bulleted" size={24} color="#6C63FF" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.actionTitle, { color: theme.text }]}>Kelime Yönetimi</Text>
               <Text style={[styles.actionSub, { color: theme.textSecondary }]}>
-                {difficultWords.length > 0
-                  ? `${difficultWords.length} kelime · İncele, düzenle ve listeni yönet`
-                  : 'Zor kelime yok · Liste şu an temiz'}
+                {seenCount > 0
+                  ? `${seenCount} kelime görüldü · ${difficultWords.length > 0 ? `${difficultWords.length} zorlu` : 'Zor yok'}`
+                  : 'Henüz kelime yok · Derse başla'}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.textTertiary} />

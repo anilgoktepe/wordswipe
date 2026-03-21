@@ -14,8 +14,10 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { vocabulary, Word } from '../data/vocabulary';
+import { getLocalWords, Word } from '../services/vocabularyService';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
+
+const vocabulary = getLocalWords();
 
 interface Props {
   navigation: any;
@@ -290,7 +292,12 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                       borderColor: result.isCorrect ? theme.correct : theme.incorrect,
                     },
                   ]}>
-                    <Text style={styles.resultIcon}>{result.isCorrect ? '🎉' : '❌'}</Text>
+                    <Ionicons
+                      name={result.isCorrect ? 'checkmark-circle' : 'close-circle'}
+                      size={40}
+                      color={result.isCorrect ? theme.correct : theme.incorrect}
+                      style={{ alignSelf: 'center' }}
+                    />
                     <Text style={[styles.resultFeedback, { color: result.isCorrect ? theme.correct : theme.incorrect }]}>
                       {result.feedback}
                     </Text>
@@ -506,10 +513,6 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginBottom: spacing.lg,
     gap: spacing.md,
-  },
-  resultIcon: {
-    fontSize: 32,
-    textAlign: 'center',
   },
   resultFeedback: {
     fontSize: 16,

@@ -1,9 +1,26 @@
+/**
+ * Granular CEFR proficiency level.
+ * Maps to the coarse `level` field as follows:
+ *   easy   → A1, A2
+ *   medium → B1, B2
+ *   hard   → C1, C2
+ * Individual words may carry an explicit `cefrLevel` for finer-grained
+ * filtering; if omitted, the group is inferred from `level` via CEFR_GROUPS.
+ */
+export type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+
 export interface Word {
   id: number;
   word: string;
   translation: string;
   example: string;
+  /** Coarse difficulty tier — drives SRS scheduling and level selection. */
   level: 'easy' | 'medium' | 'hard';
+  /**
+   * Optional granular CEFR level within the coarse tier.
+   * Omitted on existing words; can be populated per-word as the vocabulary grows.
+   */
+  cefrLevel?: CEFRLevel;
 }
 
 export const vocabulary: Word[] = [
@@ -324,3 +341,30 @@ export const getRandomWords = (words: Word[], count: number, exclude?: Word[]): 
   const shuffled = [...available].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 };
+
+// ─── CEFR helpers (forward-compatible, no impact on existing code) ────────────
+
+/**
+ * Maps each coarse difficulty tier to its CEFR group.
+ * Used to derive a CEFR level when a word has no explicit `cefrLevel`.
+ */
+export const CEFR_GROUPS: Record<Word['level'], CEFRLevel[]> = {
+  easy:   ['A1', 'A2'],
+  medium: ['B1', 'B2'],
+  hard:   ['C1', 'C2'],
+};
+
+/**
+ * Returns all vocabulary words that belong to the given CEFR level.
+ * Words with an explicit `cefrLevel` are matched directly.
+ * Words without one fall back to the `CEFR_GROUPS` mapping.
+ */
+export const getWordsByCEFR = (cefr: CEFRLevel): Word[] =>
+  vocabulary.filter(w =>
+    w.cefrLevel
+      ? w.cefrLevel === cefr
+      : CEFR_GROUPS[w.level].includes(cefr),
+  );
+
+/** Total number of words in the vocabulary — use this instead of any hardcoded number. */
+export const VOCABULARY_COUNT = vocabulary.length;
