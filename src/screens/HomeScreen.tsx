@@ -310,28 +310,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             </Animated.View>
           )}
 
-          {/* ── Sentence Builder ── */}
-          {learnedWords.length > 0 && (
-            <Animated.View style={slideStyle(card2Anim)}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('SentenceBuilder')}
-              activeOpacity={0.85}
-              style={[styles.actionCard, { backgroundColor: theme.surface, borderColor: '#C4B5FD', ...shadows.sm }]}
-            >
-              <View style={[styles.actionIcon, { backgroundColor: '#EDE9FE', borderWidth: 1.5, borderColor: '#7C3AED4D' }]}>
-                <MaterialCommunityIcons name="pencil" size={24} color="#7C3AED" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.actionTitle, { color: theme.text }]}>Cümle Kur</Text>
-                <Text style={[styles.actionSub, { color: theme.textSecondary }]}>
-                  Öğrendiğin kelimelerle cümle yaz ve XP kazan
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={theme.textTertiary} />
-            </TouchableOpacity>
-            </Animated.View>
-          )}
-
           {/* ── Difficult Words Quick Quiz ── */}
           <Animated.View style={slideStyle(card3Anim)}>
           <TouchableOpacity
@@ -375,6 +353,26 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   )}
                 </ScrollView>
               )}
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={theme.textTertiary} />
+          </TouchableOpacity>
+          </Animated.View>
+
+          {/* ── Sentence Builder ── */}
+          <Animated.View style={slideStyle(card2Anim)}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('SentenceBuilder')}
+            activeOpacity={0.85}
+            style={[styles.actionCard, { backgroundColor: theme.surface, borderColor: '#C4B5FD', ...shadows.sm }]}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: '#EDE9FE', borderWidth: 1.5, borderColor: '#7C3AED4D' }]}>
+              <MaterialCommunityIcons name="pencil" size={24} color="#7C3AED" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.actionTitle, { color: theme.text }]}>Cümle Kur</Text>
+              <Text style={[styles.actionSub, { color: theme.textSecondary }]}>
+                Öğrendiğin kelimelerle cümle oluştur
+              </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.textTertiary} />
           </TouchableOpacity>
