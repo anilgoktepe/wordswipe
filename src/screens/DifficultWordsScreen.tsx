@@ -13,6 +13,7 @@ import { useApp, WordProgress } from '../context/AppContext';
 import { getLocalWords, Word } from '../services/vocabularyService';
 import { Button } from '../components/Button';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
+import { FREE_SESSION_CAP } from '../utils/monetization';
 
 const vocabulary = getLocalWords();
 
@@ -145,9 +146,13 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
     : activeTab === 'difficult' ? difficultList
     :                             learnedList;
 
+  const isPremium = state.isPremium;
+
   const handlePractice = () => {
     if (displayWords.length === 0) return;
-    const shuffled = [...displayWords].sort(() => Math.random() - 0.5).slice(0, 20);
+    // Premium: full word list (unlimited).  Free: capped at FREE_SESSION_CAP.
+    const max = isPremium ? displayWords.length : FREE_SESSION_CAP;
+    const shuffled = [...displayWords].sort(() => Math.random() - 0.5).slice(0, max);
     dispatch({ type: 'SET_SESSION_WORDS', words: shuffled });
     navigation.navigate('Flashcard');
   };
@@ -276,7 +281,7 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
             />
             <View style={styles.footer}>
               <Button
-                title={`Pratik Yap (${Math.min(displayWords.length, 20)})`}
+                title={`Pratik Yap (${isPremium ? displayWords.length : Math.min(displayWords.length, FREE_SESSION_CAP)})`}
                 onPress={handlePractice}
                 theme={theme}
                 size="lg"

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   Dimensions,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -16,6 +17,12 @@ import { useApp } from '../context/AppContext';
 import { Button } from '../components/Button';
 import { getLocalWords } from '../services/vocabularyService';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
+import {
+  ALL_LESSON_SIZES,
+  FREE_SESSION_CAP,
+  showRewardedAd,
+} from '../utils/monetization';
+import { PremiumGateModal } from '../components/MonetizationModals';
 
 const { width } = Dimensions.get('window');
 const vocabulary = getLocalWords();
@@ -111,11 +118,42 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const p = state.wordProgress[w.id];
     return p !== undefined && (p.correctCount > 0 || p.wrongCount > 0);
   }).length;
-  const lessonSize = state.lessonSize ?? 20;
+  const lessonSize    = state.lessonSize ?? 20;
   const todayProgress = Math.min(state.dailyProgress, lessonSize);
-  const totalToday = lessonSize;
+  const totalToday    = lessonSize;
 
-  const LESSON_SIZES = [5, 8, 10, 15, 20];
+  // ── Monetization local state ─────────────────────────────────────────────
+  const isPremium = state.isPremium;
+
+  // Bonus-words rewarded ad: free users can watch an ad to unlock +5 words
+  // for the very next lesson they start.  Resets to false after being consumed
+  // or when the component unmounts (it's an in-session perk, not persisted).
+  const [bonusWordsActive, setBonusWordsActive] = useState(false);
+  const [bonusAdLoading,   setBonusAdLoading]   = useState(false);
+
+  // Premium gate modal
+  const [premiumModal, setPremiumModal] = useState<{
+    visible: boolean;
+    featureTitle: string;
+    featureDescription: string;
+  }>({ visible: false, featureTitle: '', featureDescription: '' });
+
+  const showPremiumModal = useCallback((title: string, desc: string) => {
+    setPremiumModal({ visible: true, featureTitle: title, featureDescription: desc });
+  }, []);
+
+  // Effective per-session word cap for free users.
+  // Premium → no cap (use full pool).
+  // Bonus active → cap raised by 5 for one session.
+  const effectiveCap = isPremium
+    ? Infinity
+    : bonusWordsActive ? FREE_SESSION_CAP + 5 : FREE_SESSION_CAP;
+
+  // Compute the display word count for the CTA badge, respecting the cap.
+  const rawDailyWords = getDailyWords();
+  const cappedDailyWords = isPremium
+    ? rawDailyWords
+    : rawDailyWords.slice(0, effectiveCap);
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -124,25 +162,49 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     return 'İyi akşamlar 👋';
   };
 
+  // ── Session handlers with free-tier caps ────────────────────────────────
+
   const handleStartLesson = () => {
-    const words = getDailyWords();
+    const words = cappedDailyWords;
     if (words.length === 0) return;
     dispatch({ type: 'SET_SESSION_WORDS', words });
+    // Consume the bonus if it was active
+    if (bonusWordsActive) setBonusWordsActive(false);
     navigation.navigate('Flashcard');
   };
 
   const handleDifficultWords = () => {
     if (difficultWords.length === 0) return;
-    dispatch({ type: 'SET_SESSION_WORDS', words: difficultWords });
+    // Free users: cap difficult-word review at FREE_SESSION_CAP
+    const words = isPremium
+      ? difficultWords
+      : difficultWords.slice(0, FREE_SESSION_CAP);
+    dispatch({ type: 'SET_SESSION_WORDS', words });
     navigation.navigate('Quiz');
   };
 
   const handleReinforceLearnedWords = () => {
     if (learnedWords.length === 0) return;
-    const shuffled = [...learnedWords].sort(() => Math.random() - 0.5).slice(0, 20);
+    // Premium: full learned-word pool (unlimited).  Free: capped at FREE_SESSION_CAP.
+    const max = isPremium ? learnedWords.length : FREE_SESSION_CAP;
+    const shuffled = [...learnedWords].sort(() => Math.random() - 0.5).slice(0, max);
     dispatch({ type: 'SET_SESSION_WORDS', words: shuffled });
     navigation.navigate('Quiz');
   };
+
+  // ── Bonus words rewarded ad ──────────────────────────────────────────────
+  // Free users who have completed at least part of a lesson today can watch
+  // a rewarded ad to extend the next lesson by +5 words.
+  const handleBonusWordsAd = useCallback(() => {
+    setBonusAdLoading(true);
+    showRewardedAd((rewarded) => {
+      setBonusAdLoading(false);
+      if (rewarded) {
+        dispatch({ type: 'RECORD_AD_SHOWN' });
+        setBonusWordsActive(true);
+      }
+    });
+  }, [dispatch]);
 
   const progressPct = totalToday > 0 ? (todayProgress / totalToday) * 100 : 0;
 
@@ -222,39 +284,66 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.ctaHeader}>
               <Text style={[styles.ctaTitle, { color: theme.text }]}>Bugünün dersi hazır!</Text>
               <View style={[styles.wordCountBadge, { backgroundColor: theme.primaryLight }]}>
-                <Text style={[styles.wordCountText, { color: theme.primary }]}>{dailyWords.length} kelime</Text>
+                <Text style={[styles.wordCountText, { color: theme.primary }]}>{cappedDailyWords.length} kelime</Text>
               </View>
             </View>
             <Text style={[styles.ctaSubtitle, { color: theme.textSecondary }]}>
               Yeni kelimeleri öğrenmek için swipe yap veya butona bas
             </Text>
 
-            {/* Lesson size picker */}
+            {/* Lesson size picker — 15 / 20 are premium-gated for free users */}
             <View style={styles.sizePicker}>
-              <Text style={[styles.sizeLabel, { color: theme.textSecondary }]}>Ders büyüklüğü:</Text>
+              <View style={styles.sizeLabelRow}>
+                <Text style={[styles.sizeLabel, { color: theme.textSecondary }]}>Ders büyüklüğü:</Text>
+                {!isPremium && (
+                  <View style={styles.freeCapBadge}>
+                    <Text style={[styles.freeCapText, { color: theme.textTertiary }]}>Ücretsiz: maks {FREE_SESSION_CAP}</Text>
+                  </View>
+                )}
+              </View>
               <View style={styles.sizeOptions}>
-                {LESSON_SIZES.map(size => (
-                  <TouchableOpacity
-                    key={size}
-                    onPress={() => dispatch({ type: 'SET_LESSON_SIZE', size })}
-                    style={[
-                      styles.sizeOption,
-                      {
-                        backgroundColor: lessonSize === size ? theme.primary : theme.surfaceSecondary,
-                        borderColor: lessonSize === size ? theme.primary : theme.border,
-                      },
-                    ]}
-                  >
-                    <Text
+                {ALL_LESSON_SIZES.map(size => {
+                  const isLocked  = !isPremium && size > FREE_SESSION_CAP;
+                  const isSelected = lessonSize === size && !isLocked;
+                  return (
+                    <TouchableOpacity
+                      key={size}
+                      onPress={() => {
+                        if (isLocked) {
+                          showPremiumModal(
+                            `${size} Kelimelik Ders`,
+                            `${size} kelimelik dersler Premium üyelere açık. Premium'a geçerek daha uzun derslerle daha hızlı öğren.`,
+                          );
+                          return;
+                        }
+                        dispatch({ type: 'SET_LESSON_SIZE', size });
+                      }}
                       style={[
-                        styles.sizeOptionText,
-                        { color: lessonSize === size ? '#fff' : theme.textSecondary },
+                        styles.sizeOption,
+                        {
+                          backgroundColor: isSelected
+                            ? theme.primary
+                            : isLocked
+                              ? theme.surfaceSecondary
+                              : theme.surfaceSecondary,
+                          borderColor: isSelected
+                            ? theme.primary
+                            : isLocked ? theme.border : theme.border,
+                          opacity: isLocked ? 0.65 : 1,
+                        },
                       ]}
                     >
-                      {size}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text style={[styles.sizeOptionText, {
+                        color: isSelected ? '#fff' : theme.textSecondary,
+                      }]}>
+                        {size}
+                      </Text>
+                      {isLocked && (
+                        <Ionicons name="lock-closed" size={9} color={theme.textTertiary} style={{ marginTop: 1 }} />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
 
@@ -266,6 +355,28 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               style={{ marginTop: spacing.lg }}
               icon={<Ionicons name="play" size={20} color="#fff" />}
             />
+
+            {/* ── Bonus +5 words rewarded ad (free users, post-lesson) ── */}
+            {!isPremium && todayProgress > 0 && !bonusWordsActive && !bonusAdLoading && (
+              <TouchableOpacity onPress={handleBonusWordsAd} style={styles.bonusAdLink}>
+                <Ionicons name="play-circle-outline" size={15} color="#7C3AED" />
+                <Text style={[styles.bonusAdLinkText, { color: '#7C3AED' }]}>
+                  +5 Bonus Kelime — Reklam İzle
+                </Text>
+              </TouchableOpacity>
+            )}
+            {!isPremium && bonusAdLoading && (
+              <View style={styles.bonusAdLoading}>
+                <ActivityIndicator size="small" color="#7C3AED" />
+                <Text style={[styles.bonusAdLinkText, { color: '#7C3AED' }]}>Reklam yükleniyor…</Text>
+              </View>
+            )}
+            {!isPremium && bonusWordsActive && (
+              <View style={[styles.bonusActiveBadge, { backgroundColor: '#EDE9FE' }]}>
+                <Ionicons name="checkmark-circle" size={14} color="#7C3AED" />
+                <Text style={[styles.bonusAdLinkText, { color: '#7C3AED' }]}>+5 bonus kelime aktif!</Text>
+              </View>
+            )}
           </View>
           </Animated.View>
 
@@ -401,6 +512,19 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
+
+      {/* ── Premium gate modal ── */}
+      <PremiumGateModal
+        visible={premiumModal.visible}
+        featureTitle={premiumModal.featureTitle}
+        featureDescription={premiumModal.featureDescription}
+        theme={theme}
+        onClose={() => setPremiumModal(m => ({ ...m, visible: false }))}
+        onUpgrade={() => {
+          setPremiumModal(m => ({ ...m, visible: false }));
+          navigation.navigate('Settings');
+        }}
+      />
     </View>
   );
 };
@@ -573,11 +697,26 @@ const styles = StyleSheet.create({
   sizePicker: {
     marginTop: spacing.md,
   },
+  sizeLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+  },
   sizeLabel: {
     fontSize: 12,
     fontWeight: '600',
     fontFamily: 'Inter_600SemiBold',
-    marginBottom: spacing.xs,
+  },
+  freeCapBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+    backgroundColor: 'transparent',
+  },
+  freeCapText: {
+    fontSize: 10,
+    fontWeight: '600',
   },
   sizeOptions: {
     flexDirection: 'row',
@@ -589,11 +728,45 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1.5,
     alignItems: 'center',
+    gap: 2,
   },
   sizeOptionText: {
     fontSize: 13,
     fontWeight: '700',
     fontFamily: 'Inter_700Bold',
+  },
+
+  /* Bonus words ad row */
+  bonusAdLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  bonusAdLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  bonusActiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.full,
+    marginTop: spacing.xs,
+    alignSelf: 'center',
+  },
+  bonusAdLinkText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
 
   /* Learned card */

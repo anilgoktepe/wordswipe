@@ -91,6 +91,12 @@ export interface AppState {
   dailyAdsShown: number;
   /** Date string matching dailyAdsShown — resets counter on a new day */
   adsDate: string;
+
+  // ── AI analysis gate ───────────────────────────────────────────────────────
+  /** How many rewarded detailed AI analyses a free user has unlocked today */
+  dailyAiAnalysesUsed: number;
+  /** Date string matching dailyAiAnalysesUsed — resets counter on a new day */
+  aiAnalysisDate: string;
 }
 
 // ─── Actions (unchanged surface API so all screens keep working) ─────────────
@@ -108,7 +114,8 @@ type Action =
   | { type: 'SET_LESSON_SIZE'; size: number }
   | { type: 'LOAD_STATE'; state: Partial<AppState> }
   | { type: 'RESET_PROGRESS' }
-  | { type: 'RECORD_AD_SHOWN' };
+  | { type: 'RECORD_AD_SHOWN' }
+  | { type: 'RECORD_AI_ANALYSIS_USED' };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -131,6 +138,8 @@ const initialState: AppState = {
   isPremium: false,
   dailyAdsShown: 0,
   adsDate: new Date().toDateString(),
+  dailyAiAnalysesUsed: 0,
+  aiAnalysisDate: new Date().toDateString(),
 };
 
 /** Build an empty progress entry for a word that has never been seen */
@@ -380,9 +389,12 @@ function reducer(state: AppState, action: Action): AppState {
         todayDate:       today,
         dailyLearnedIds: isNewDay    ? [] : (loaded.dailyLearnedIds ?? []),
         // Ad state
-        isPremium:       loaded.isPremium    ?? false,
-        dailyAdsShown:   isNewAdsDay ? 0  : (loaded.dailyAdsShown   ?? 0),
-        adsDate:         today,
+        isPremium:             loaded.isPremium             ?? false,
+        dailyAdsShown:         isNewAdsDay ? 0 : (loaded.dailyAdsShown   ?? 0),
+        adsDate:               today,
+        // AI analysis gate — reset on a new day
+        dailyAiAnalysesUsed:   isNewAdsDay ? 0 : (loaded.dailyAiAnalysesUsed ?? 0),
+        aiAnalysisDate:        today,
       };
     }
 
@@ -392,6 +404,15 @@ function reducer(state: AppState, action: Action): AppState {
       // Reset counter if somehow called on a new day before LOAD_STATE fires
       const base = state.adsDate === today ? state.dailyAdsShown : 0;
       return { ...state, dailyAdsShown: base + 1, adsDate: today };
+    }
+
+    // ── Rewarded AI analysis tracking ────────────────────────────────────────
+    // Increments the daily counter each time a free user unlocks one detailed
+    // AI analysis via a rewarded ad.  Counter resets on a new calendar day.
+    case 'RECORD_AI_ANALYSIS_USED': {
+      const today = new Date().toDateString();
+      const base = state.aiAnalysisDate === today ? state.dailyAiAnalysesUsed : 0;
+      return { ...state, dailyAiAnalysesUsed: base + 1, aiAnalysisDate: today };
     }
 
     // ── Full reset (keeps level + dark mode + premium status) ────────────────
@@ -404,8 +425,10 @@ function reducer(state: AppState, action: Action): AppState {
         // initialState.todayDate is computed once at module load and can be
         // stale if the app runs past midnight. Always use the real current date
         // so dailyLearnedIds / dailyProgress start clean from the correct day.
-        todayDate: new Date().toDateString(),
-        adsDate:   new Date().toDateString(),
+        todayDate:          new Date().toDateString(),
+        adsDate:            new Date().toDateString(),
+        aiAnalysisDate:     new Date().toDateString(),
+        dailyAiAnalysesUsed: 0,
       };
 
     default:

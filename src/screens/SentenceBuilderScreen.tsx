@@ -19,11 +19,16 @@ import { getLocalWords, Word } from '../services/vocabularyService';
 import { analyzeSentence, AnalysisResult } from '../services/sentenceAnalysisService';
 import { callPremiumAnalysis, PremiumAnalysisResult } from '../services/premiumAnalysisService';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
+import {
+  FREE_SENTENCE_SESSION_CAP,
+  FREE_DAILY_AI_ANALYSES,
+  showRewardedAd,
+} from '../utils/monetization';
+import { AiAnalysisGateModal } from '../components/MonetizationModals';
 
 const vocabulary = getLocalWords();
 
-// Max words per session — keeps sessions short and focused.
-const SESSION_MAX = 10;
+// Premium users get the entire learned-word pool — no cap applied.
 
 interface Props {
   navigation: any;
@@ -31,10 +36,10 @@ interface Props {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Builds a shuffled queue of up to SESSION_MAX learned words for the session. */
-function buildQueue(learnedIds: number[]): Word[] {
+/** Builds a shuffled queue of up to `max` learned words for the session. */
+function buildQueue(learnedIds: number[], max: number): Word[] {
   const pool = vocabulary.filter(w => learnedIds.includes(w.id));
-  return [...pool].sort(() => Math.random() - 0.5).slice(0, SESSION_MAX);
+  return [...pool].sort(() => Math.random() - 0.5).slice(0, max);
 }
 
 // ─── Screen ────────────────────────────────────────────────────────────────────
@@ -44,9 +49,13 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
   const theme = getTheme(state.darkMode);
 
   const learnedIds = state.learnedWordIds;
+  const isPremium  = state.isPremium;
+
+  // Free users: 5-word queue.  Premium users: full learned-word pool (unlimited).
+  const sessionMax = isPremium ? learnedIds.length : FREE_SENTENCE_SESSION_CAP;
 
   // One-time queue built at mount — does not rebuild on re-render.
-  const [queue]               = useState<Word[]>(() => buildQueue(learnedIds));
+  const [queue]               = useState<Word[]>(() => buildQueue(learnedIds, sessionMax));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sentence, setSentence]         = useState('');
   const [result, setResult]             = useState<AnalysisResult | null>(null);
@@ -58,6 +67,16 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
   // Layer 1 (local) always runs first. Premium is opt-in, user-triggered.
   const [premiumResult, setPremiumResult]       = useState<PremiumAnalysisResult | null>(null);
   const [isPremiumAnalyzing, setIsPremiumAnalyzing] = useState(false);
+
+  // ── AI analysis gate (free users) ────────────────────────────────────────────
+  // Free users see a modal with two paths: watch a rewarded ad (1/day) or
+  // upgrade.  Premium users bypass the gate entirely.
+  const [aiGateVisible,  setAiGateVisible]  = useState(false);
+  const [isWatchingAd,   setIsWatchingAd]   = useState(false);
+  // Has the daily free rewarded analysis already been used?
+  const aiLimitReached =
+    !isPremium &&
+    state.dailyAiAnalysesUsed >= FREE_DAILY_AI_ANALYSES;
 
   const currentWord = queue[currentIndex] ?? null;
   const isFinished  = currentIndex >= queue.length;
@@ -142,6 +161,33 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
     setIsPremiumAnalyzing(false);
   }, [currentWord, sentence, isPremiumAnalyzing]);
 
+  // ── "Detaylı AI Analizi Al" tap handler ──────────────────────────────────
+  // Premium: run analysis directly.
+  // Free + limit not reached: open gate modal (ad or upgrade).
+  // Free + limit reached: open gate modal (upgrade only).
+  const handleAiAnalysisTap = useCallback(() => {
+    if (isPremium) {
+      handlePremiumAnalysis();
+    } else {
+      setAiGateVisible(true);
+    }
+  }, [isPremium, handlePremiumAnalysis]);
+
+  // Called from the gate modal when user opts to watch an ad.
+  const handleWatchAdForAi = useCallback(() => {
+    setIsWatchingAd(true);
+    showRewardedAd((rewarded) => {
+      setIsWatchingAd(false);
+      if (rewarded) {
+        dispatch({ type: 'RECORD_AD_SHOWN' });
+        dispatch({ type: 'RECORD_AI_ANALYSIS_USED' });
+        setAiGateVisible(false);
+        // Slight delay so the modal closes before analysis spinner appears
+        setTimeout(() => handlePremiumAnalysis(), 100);
+      }
+    });
+  }, [dispatch, handlePremiumAnalysis]);
+
   const handleNext = useCallback(() => {
     // ── Award XP based on the FINAL evaluated status ─────────────────────────
     // This is the single XP award point for a word attempt.  Deferring to here
@@ -205,6 +251,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
     setSentence('');
     setResult(null);
     setPremiumResult(null);
+    setAiGateVisible(false);
   }, []);
 
   const handleRestart = useCallback(() => {
@@ -456,11 +503,28 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                   {/* ── Premium AI analysis panel ── */}
                   {!premiumResult && !isPremiumAnalyzing && (
                     <TouchableOpacity
-                      onPress={handlePremiumAnalysis}
-                      style={[styles.premiumBtn, { borderColor: '#7C3AED', backgroundColor: '#EDE9FE' }]}
+                      onPress={handleAiAnalysisTap}
+                      style={[
+                        styles.premiumBtn,
+                        {
+                          borderColor: aiLimitReached ? '#9CA3AF' : '#7C3AED',
+                          backgroundColor: aiLimitReached ? '#F9FAFB' : '#EDE9FE',
+                        },
+                      ]}
                     >
-                      <Ionicons name="sparkles" size={15} color="#7C3AED" />
-                      <Text style={[styles.premiumBtnText, { color: '#7C3AED' }]}>Detaylı AI Analizi Al</Text>
+                      <Ionicons
+                        name={aiLimitReached ? 'lock-closed-outline' : 'sparkles'}
+                        size={15}
+                        color={aiLimitReached ? '#9CA3AF' : '#7C3AED'}
+                      />
+                      <Text style={[
+                        styles.premiumBtnText,
+                        { color: aiLimitReached ? '#9CA3AF' : '#7C3AED' },
+                      ]}>
+                        {aiLimitReached
+                          ? 'AI Analizi — Günlük limit doldu'
+                          : 'Detaylı AI Analizi Al'}
+                      </Text>
                     </TouchableOpacity>
                   )}
 
@@ -582,6 +646,20 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
             )}
           </ScrollView>
         </SafeAreaView>
+
+        {/* ── AI analysis gate modal (free users) ── */}
+        <AiAnalysisGateModal
+          visible={aiGateVisible}
+          isLimitReached={aiLimitReached}
+          isWatchingAd={isWatchingAd}
+          theme={theme}
+          onClose={() => { if (!isWatchingAd) setAiGateVisible(false); }}
+          onWatchAd={handleWatchAdForAi}
+          onUpgrade={() => {
+            setAiGateVisible(false);
+            navigation.navigate('Settings');
+          }}
+        />
       </View>
     </KeyboardAvoidingView>
   );
