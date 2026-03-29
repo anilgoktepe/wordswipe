@@ -27,14 +27,37 @@ type FilterTab = 'all' | 'difficult' | 'learned';
 // These drive the Word Management UI. The internal SRS flags (isDifficult /
 // isLearned) continue to run independently for spaced-repetition scheduling.
 
-/** Struggling: at least one wrong, and wrong count ≥ correct count. */
+/**
+ * ACTIVE difficult pool — used for the word-card badge and HomeScreen quick quiz.
+ *
+ * A word is "actively difficult" while the user has never answered it correctly.
+ * The first correct answer exits the word from this state immediately.
+ * Threshold: wrongCount > 0 AND correctCount === 0.
+ */
 function isDisplayDifficult(wp: WordProgress): boolean {
-  return wp.wrongCount > 0 && wp.wrongCount >= wp.correctCount;
+  return wp.wrongCount > 0 && wp.correctCount === 0;
 }
 
-/** Solid: answered correctly at least twice. */
+/**
+ * HISTORICAL difficult filter — used for the Word Management "Zorlu" tab.
+ *
+ * Any word ever answered incorrectly appears here, even after the user has
+ * since recovered it.  This preserves a full history of words the user has
+ * ever struggled with, separate from the active practice pool.
+ * Threshold: wrongCount > 0 (regardless of correctCount).
+ */
+function isHistoricallyDifficult(wp: WordProgress): boolean {
+  return wp.wrongCount > 0;
+}
+
+/**
+ * Learned / correct filter — used for the Word Management "Öğrenildi" tab.
+ *
+ * A word appears here as soon as it has been answered correctly at least once.
+ * This threshold is intentionally low: one correct answer is meaningful progress.
+ */
 function isDisplayLearned(wp: WordProgress): boolean {
-  return wp.correctCount >= 2;
+  return wp.correctCount >= 1;
 }
 
 // ─── Word Card ────────────────────────────────────────────────────────────────
@@ -43,9 +66,7 @@ const WordCard: React.FC<{
   word: Word;
   progress: WordProgress;
   theme: ReturnType<typeof getTheme>;
-  tab: FilterTab;
-  onRemove: () => void;
-}> = ({ word, progress, theme, tab, onRemove }) => {
+}> = ({ word, progress, theme }) => {
   const [expanded, setExpanded] = useState(false);
   const difficult = isDisplayDifficult(progress);
   const learned   = isDisplayLearned(progress);
@@ -87,16 +108,6 @@ const WordCard: React.FC<{
             <Text style={[styles.statNum, { color: '#DC2626' }]}>{progress.wrongCount}</Text>
           </View>
         </View>
-
-        {/* Remove — only in Difficult tab */}
-        {tab === 'difficult' && (
-          <TouchableOpacity
-            onPress={onRemove}
-            style={[styles.removeBtn, { backgroundColor: theme.incorrectLight }]}
-          >
-            <Ionicons name="close" size={16} color={theme.incorrect} />
-          </TouchableOpacity>
-        )}
       </View>
 
       {/* Status badge + expand toggle */}
@@ -138,7 +149,7 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
   // A word enters wordProgress the first time it is answered (correctly or not).
   // Once a word is in this set it NEVER disappears — this is the permanent record.
   const seenWords     = vocabulary.filter(w => w.id in state.wordProgress);
-  const difficultList = seenWords.filter(w => isDisplayDifficult(state.wordProgress[w.id]));
+  const difficultList = seenWords.filter(w => isHistoricallyDifficult(state.wordProgress[w.id]));
   const learnedList   = seenWords.filter(w => isDisplayLearned(state.wordProgress[w.id]));
 
   const displayWords =
@@ -150,15 +161,45 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
 
   const handlePractice = () => {
     if (displayWords.length === 0) return;
-    // Premium: full word list (unlimited).  Free: capped at FREE_SESSION_CAP.
-    const max = isPremium ? displayWords.length : FREE_SESSION_CAP;
-    const shuffled = [...displayWords].sort(() => Math.random() - 0.5).slice(0, max);
-    dispatch({ type: 'SET_SESSION_WORDS', words: shuffled });
-    navigation.navigate('Flashcard');
-  };
 
-  const handleRemove = (wordId: number) => {
-    dispatch({ type: 'REMOVE_DIFFICULT_WORD', wordId });
+    // Premium: full word list.  Free: capped at FREE_SESSION_CAP per session.
+    const max = isPremium ? displayWords.length : FREE_SESSION_CAP;
+
+    // ── True non-repeating cycle ──────────────────────────────────────────
+    //
+    // `practiceSeenIds` tracks every word practiced in the current cycle.
+    // Words not yet in that set are "unseen" and form the next draw pool.
+    // Once the pool is fully exhausted (unseen is empty), the cycle resets
+    // automatically and starts over from the full pool.
+    //
+    // The IDs are intersected with the CURRENT displayWords so that pool
+    // changes mid-cycle (words entering/leaving) are handled naturally:
+    // newly-difficult words appear immediately; graduated words disappear.
+    //
+    // practiceSeenIds persists in AppContext (AsyncStorage), so the cycle
+    // survives navigation away and app restarts.
+
+    const currentIds   = new Set(displayWords.map(w => w.id));
+    // Only count "seen" IDs that are still part of the active pool
+    const seenInPool   = new Set(state.practiceSeenIds.filter(id => currentIds.has(id)));
+
+    const unseenWords  = displayWords.filter(w => !seenInPool.has(w.id));
+    const cycleExhausted = unseenWords.length === 0;
+
+    // If exhausted, reset and use the full pool; otherwise use what's left
+    const drawPool  = cycleExhausted ? displayWords : unseenWords;
+    const batchSize = Math.min(max, drawPool.length);
+    const batch     = [...drawPool].sort(() => Math.random() - 0.5).slice(0, batchSize);
+    const batchIds  = batch.map(w => w.id);
+
+    // Update the seen set: reset on cycle exhaustion, otherwise accumulate
+    const newSeenIds = cycleExhausted
+      ? batchIds
+      : [...seenInPool, ...batchIds];
+
+    dispatch({ type: 'SET_PRACTICE_SEEN_IDS', ids: newSeenIds });
+    dispatch({ type: 'SET_SESSION_WORDS', words: batch });
+    navigation.navigate('Flashcard');
   };
 
   const tabs: { key: FilterTab; label: string; count: number }[] = [
@@ -258,7 +299,7 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={[styles.emptySub, { color: theme.textSecondary }]}>
               {activeTab === 'difficult'
                 ? 'Yanlış yaptığın kelimeler burada görünecek'
-                : 'Sınavda en az 2 kez doğru bilince buraya taşınır'}
+                : 'Bir kelimeyi doğru yanıtlayınca burada görünecek'}
             </Text>
           </View>
         ) : (
@@ -274,8 +315,6 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
                   word={item}
                   progress={state.wordProgress[item.id]}
                   theme={theme}
-                  tab={activeTab}
-                  onRemove={() => handleRemove(item.id)}
                 />
               )}
             />
@@ -409,15 +448,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     fontFamily: 'Inter_700Bold',
-  },
-  removeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: spacing.xs,
-    flexShrink: 0,
   },
   wordCardFooter: {
     flexDirection: 'row',

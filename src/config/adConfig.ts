@@ -18,6 +18,9 @@ export const BANNER_UNIT_ID = '';
 /** Never used on web; exists for TypeScript type parity with adConfig.native.ts. */
 export const INTERSTITIAL_UNIT_ID = '';
 
+/** Never used on web; exists for TypeScript type parity with adConfig.native.ts. */
+export const REWARDED_UNIT_ID = '';
+
 /** Total ads (banner + interstitial combined) shown per calendar day per free user. */
 export const MAX_DAILY_ADS = 2;
 

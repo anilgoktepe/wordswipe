@@ -7,9 +7,9 @@
  *                        Has a clear upgrade CTA and a dismiss option.
  *
  *   AiAnalysisGateModal — shown when a free user taps "Detaylı AI Analizi Al".
- *                         Offers two paths: watch a rewarded ad (1/day) or
+ *                         Offers two paths: watch a rewarded ad (up to daily limit) or
  *                         upgrade to Premium.  Internally shows a loading state
- *                         while the mock (or real) ad plays.
+ *                         while the ad plays.
  *
  * Neither modal implements payment or ad SDKs directly.
  * The `onUpgrade` and `onWatchAd` callbacks are the integration points:
@@ -120,10 +120,12 @@ export const PremiumGateModal: React.FC<PremiumGateModalProps> = ({
 
 interface AiAnalysisGateModalProps {
   visible: boolean;
-  /** True when the user has already used their 1 free analysis today */
+  /** True when the user has exhausted their daily free analyses */
   isLimitReached: boolean;
   /** True while the rewarded ad is loading / playing (shows spinner) */
   isWatchingAd: boolean;
+  /** How many free analyses the user still has today (shown in copy) */
+  analysesRemaining: number;
   theme: ModalTheme;
   onClose: () => void;
   /** Parent should call showRewardedAd() then notify this component via isWatchingAd */
@@ -136,6 +138,7 @@ export const AiAnalysisGateModal: React.FC<AiAnalysisGateModalProps> = ({
   visible,
   isLimitReached,
   isWatchingAd,
+  analysesRemaining,
   theme,
   onClose,
   onWatchAd,
@@ -181,8 +184,7 @@ export const AiAnalysisGateModal: React.FC<AiAnalysisGateModalProps> = ({
           /* Limit reached state */
           <>
             <Text style={[styles.cardDesc, { color: theme.textSecondary }]}>
-              Bugünkü ücretsiz AI analizi hakkını kullandın.{'\n'}
-              Yarın 1 hak daha kazanırsın — ya da Premium'a geçerek sınırsız analiz yapabilirsin.
+              Detaylı AI analizine sınırsız erişmek için Premium'a geç.
             </Text>
 
             <TouchableOpacity
@@ -204,8 +206,8 @@ export const AiAnalysisGateModal: React.FC<AiAnalysisGateModalProps> = ({
           /* Normal state — offer ad or upgrade */
           <>
             <Text style={[styles.cardDesc, { color: theme.textSecondary }]}>
-              Günde 1 ücretsiz detaylı AI analizi hakkın var.{'\n'}
-              Reklam izleyerek bugünkü hakkını kullanabilirsin.
+              Cümlenin dilbilgisini, netliğini ve doğallığını öğren — AI sana özelleştirilmiş öneriler sunar.{'\n\n'}
+              Bugün <Text style={{ fontWeight: '700', color: '#7C3AED' }}>{analysesRemaining}</Text> ücretsiz analizin kaldı. Her reklam 1 analiz açar.
             </Text>
 
             {/* Watch Ad option */}

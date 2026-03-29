@@ -97,6 +97,36 @@ export interface AppState {
   dailyAiAnalysesUsed: number;
   /** Date string matching dailyAiAnalysesUsed — resets counter on a new day */
   aiAnalysisDate: string;
+
+  // ── Word Management practice cycle ─────────────────────────────────────────
+  /**
+   * IDs of words already practiced in the current Word Management cycle.
+   * New practice sessions draw from words NOT in this set, producing a
+   * non-repeating cycle through the full pool.  Resets when the pool is
+   * exhausted.  Persisted so the cycle survives navigation and app restarts.
+   */
+  practiceSeenIds: number[];
+
+  // ── Free-tier lesson bonus ─────────────────────────────────────────────────
+  /**
+   * True once a free user has watched the rewarded ad to claim the +5 lesson
+   * extension today.  Resets every calendar day alongside dailyProgress.
+   */
+  dailyLessonBonusClaimed: boolean;
+
+  /**
+   * True once the bonus session has actually been dispatched (SET_SESSION_WORDS
+   * fired from handleStartLesson while bonusWordsActive was true).
+   *
+   * This is the critical gate sentinel.  bonusWordsActive is derived from
+   * dailyProgress < 10, but dailyProgress may not reach 10 if some words in
+   * the bonus session were already counted in dailyLearnedIds (deduplication).
+   * Without this flag the gate stays open, letting the user start unlimited
+   * fresh 5-word sessions as long as dailyProgress < 10.
+   *
+   * Resets every calendar day alongside dailyProgress.
+   */
+  dailyBonusSessionStarted: boolean;
 }
 
 // ─── Actions (unchanged surface API so all screens keep working) ─────────────
@@ -115,7 +145,11 @@ type Action =
   | { type: 'LOAD_STATE'; state: Partial<AppState> }
   | { type: 'RESET_PROGRESS' }
   | { type: 'RECORD_AD_SHOWN' }
-  | { type: 'RECORD_AI_ANALYSIS_USED' };
+  | { type: 'RECORD_AI_ANALYSIS_USED' }
+  | { type: 'SET_PREMIUM'; isPremium: boolean }
+  | { type: 'SET_PRACTICE_SEEN_IDS'; ids: number[] }
+  | { type: 'CLAIM_LESSON_BONUS' }
+  | { type: 'MARK_BONUS_SESSION_STARTED' };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -140,6 +174,9 @@ const initialState: AppState = {
   adsDate: new Date().toDateString(),
   dailyAiAnalysesUsed: 0,
   aiAnalysisDate: new Date().toDateString(),
+  practiceSeenIds: [],
+  dailyLessonBonusClaimed: false,
+  dailyBonusSessionStarted: false,
 };
 
 /** Build an empty progress entry for a word that has never been seen */
@@ -395,6 +432,11 @@ function reducer(state: AppState, action: Action): AppState {
         // AI analysis gate — reset on a new day
         dailyAiAnalysesUsed:   isNewAdsDay ? 0 : (loaded.dailyAiAnalysesUsed ?? 0),
         aiAnalysisDate:        today,
+        // Practice cycle — persisted across restarts; never day-reset
+        practiceSeenIds:       loaded.practiceSeenIds ?? [],
+        // Lesson bonus + bonus-session-started both reset every calendar day
+        dailyLessonBonusClaimed:   isNewDay ? false : (loaded.dailyLessonBonusClaimed   ?? false),
+        dailyBonusSessionStarted:  isNewDay ? false : (loaded.dailyBonusSessionStarted  ?? false),
       };
     }
 
@@ -415,6 +457,32 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, dailyAiAnalysesUsed: base + 1, aiAnalysisDate: today };
     }
 
+    // ── Subscription entitlement ─────────────────────────────────────────────
+    // Called by useSubscription when a purchase or restore completes.
+    // Persisted to AsyncStorage automatically via the state-persistence effect.
+    case 'SET_PREMIUM':
+      return { ...state, isPremium: action.isPremium };
+
+    // ── Word Management practice cycle ────────────────────────────────────────
+    // Tracks which words have been seen in the current cycle so practice
+    // sessions cycle through the full pool before repeating.
+    case 'SET_PRACTICE_SEEN_IDS':
+      return { ...state, practiceSeenIds: action.ids };
+
+    // ── Free-tier daily lesson bonus ──────────────────────────────────────────
+    // Marks that the user has claimed the +5 rewarded extension for today.
+    // Flipping this to true is the only way it changes — the reset happens
+    // every calendar day via LOAD_STATE (piggybacks on the isNewDay check).
+    case 'CLAIM_LESSON_BONUS':
+      return { ...state, dailyLessonBonusClaimed: true };
+
+    // ── Bonus session started ─────────────────────────────────────────────────
+    // Fired by handleStartLesson the moment the bonus session is dispatched.
+    // Once true, the gate treats the bonus path as exhausted for the rest of
+    // the day, regardless of where dailyProgress has landed.
+    case 'MARK_BONUS_SESSION_STARTED':
+      return { ...state, dailyBonusSessionStarted: true };
+
     // ── Full reset (keeps level + dark mode + premium status) ────────────────
     case 'RESET_PROGRESS':
       return {
@@ -429,6 +497,8 @@ function reducer(state: AppState, action: Action): AppState {
         adsDate:            new Date().toDateString(),
         aiAnalysisDate:     new Date().toDateString(),
         dailyAiAnalysesUsed: 0,
+        dailyLessonBonusClaimed: false,
+        dailyBonusSessionStarted: false,
       };
 
     default:

@@ -8,6 +8,7 @@ import {
   Animated,
   Dimensions,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '../context/AppContext';
@@ -18,6 +19,7 @@ import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import { MAX_DAILY_ADS } from '../config/adConfig';
 import { ConfettiEffect } from '../components/ConfettiEffect';
 import { hapticSuccess } from '../utils/haptics';
+import { showRewardedAd, isRewardedAdReady } from '../utils/monetization';
 
 const { width } = Dimensions.get('window');
 const vocabulary = getLocalWords();
@@ -114,19 +116,22 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleRetry = () => {
-    const words = state.sessionWords;
-    dispatch({ type: 'SET_SESSION_WORDS', words });
+  const isPremium = state.isPremium;
+
+  // Track which retry button is currently waiting on an ad ('retry' | 'wrong' | null).
+  // Used to show a loading spinner on the tapped button and disable both while an ad plays.
+  const [adLoading, setAdLoading] = useState<'retry' | 'wrong' | null>(null);
+
+  // ── Navigation helpers ──────────────────────────────────────────────────────
+  // Extracted so the ad callback and the premium (ad-free) path share identical logic.
+
+  const _execRetry = () => {
+    dispatch({ type: 'SET_SESSION_WORDS', words: state.sessionWords });
     dispatch({ type: 'SET_SESSION_RESULTS', results: null });
     navigation.replace('Flashcard');
   };
 
-  const handleNewLesson = () => {
-    dispatch({ type: 'SET_SESSION_RESULTS', results: null });
-    navigation.replace('Main');
-  };
-
-  const handleRetryWrong = () => {
+  const _execRetryWrong = () => {
     // Look up wrong words directly from vocabulary — no dependency on isDifficult flag.
     const wrongWords = vocabulary.filter(w => results?.wrongWordIds?.includes(w.id));
     if (wrongWords.length === 0) return;
@@ -134,6 +139,47 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
     dispatch({ type: 'SET_SESSION_RESULTS', results: null });
     navigation.replace('Flashcard');
   };
+
+  // ── Ad-gate helper ──────────────────────────────────────────────────────────
+  // Follows the same pattern as HomeScreen's handleBonusWordsAd:
+  //   • Premium users → execute immediately, no ad.
+  //   • Ad not ready  → Alert, do nothing (don't silently grant access).
+  //   • Ad plays      → grant only on confirmed reward; ignore skipped/failed.
+  const _withRewardedAd = (key: 'retry' | 'wrong', onGranted: () => void) => {
+    if (isPremium) {
+      onGranted();
+      return;
+    }
+    if (!isRewardedAdReady()) {
+      Alert.alert(
+        'Reklam Hazır Değil',
+        'Reklam henüz yüklenmedi. Birkaç saniye bekleyip tekrar dene.',
+        [{ text: 'Tamam' }],
+      );
+      return;
+    }
+    setAdLoading(key);
+    showRewardedAd((rewarded) => {
+      setAdLoading(null);
+      if (rewarded) {
+        dispatch({ type: 'RECORD_AD_SHOWN' });
+        onGranted();
+      }
+      // rewarded=false: ad skipped or failed → do nothing (access not granted).
+    });
+  };
+
+  // ── Public handlers ─────────────────────────────────────────────────────────
+
+  const handleRetry = () => _withRewardedAd('retry', _execRetry);
+
+  // Ana Sayfaya Dön: clean exit — no ad, no gate, always works.
+  const handleNewLesson = () => {
+    dispatch({ type: 'SET_SESSION_RESULTS', results: null });
+    navigation.replace('Main');
+  };
+
+  const handleRetryWrong = () => _withRewardedAd('wrong', _execRetryWrong);
 
   const getCircleColor = (): [string, string] => {
     if (successRate >= 90) return ['#10B981', '#34D399'];
@@ -202,6 +248,7 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
               style={styles.btn}
               icon={<Ionicons name="home" size={18} color="#fff" />}
             />
+            {/* Extra practice — monetized for free users via rewarded ad */}
             <Button
               title="Tekrar Çalış"
               onPress={handleRetry}
@@ -209,6 +256,8 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
               theme={theme}
               size="lg"
               style={styles.btn}
+              loading={adLoading === 'retry'}
+              disabled={adLoading !== null}
             />
             {(results?.wrongWordIds.length ?? 0) > 0 && (
               <Button
@@ -218,6 +267,8 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
                 theme={theme}
                 size="md"
                 style={styles.btn}
+                loading={adLoading === 'wrong'}
+                disabled={adLoading !== null}
               />
             )}
           </Animated.View>

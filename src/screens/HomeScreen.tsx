@@ -9,6 +9,7 @@ import {
   Dimensions,
   Animated,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -21,6 +22,7 @@ import {
   ALL_LESSON_SIZES,
   FREE_SESSION_CAP,
   showRewardedAd,
+  isRewardedAdReady,
 } from '../utils/monetization';
 import { PremiumGateModal } from '../components/MonetizationModals';
 
@@ -45,7 +47,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   // Entrance animations — staggered fade + slide-up for each card
   const headerAnim  = useRef(new Animated.Value(0)).current;
   const ctaAnim     = useRef(new Animated.Value(0)).current;
-  const card1Anim   = useRef(new Animated.Value(0)).current;
   const card2Anim   = useRef(new Animated.Value(0)).current;
   const card3Anim   = useRef(new Animated.Value(0)).current;
   const card4Anim   = useRef(new Animated.Value(0)).current;
@@ -65,7 +66,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     Animated.stagger(60, [
       makeAnim(headerAnim, 0),
       makeAnim(ctaAnim, 0),
-      makeAnim(card1Anim, 0),
       makeAnim(card2Anim, 0),
       makeAnim(card3Anim, 0),
       makeAnim(card4Anim, 0),
@@ -95,41 +95,49 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   });
   const theme = getTheme(state.darkMode);
 
-  const dailyWords = getDailyWords();
-
-  // User-facing classification: raw counts, not internal SRS flags.
-  // isDifficult / isLearned continue to drive SRS scheduling internally,
-  // but the UI shows what actually matches the user's expectation:
-  //   difficult = wrong more than (or equal to) correct, with ≥1 wrong
-  //   learned   = answered correctly at least twice
-  const difficultWords = vocabulary.filter(w => {
-    const wp = state.wordProgress[w.id];
-    return wp ? wp.wrongCount > 0 && wp.wrongCount >= wp.correctCount : false;
-  });
-  const learnedWords = vocabulary.filter(w => {
-    const wp = state.wordProgress[w.id];
-    return wp ? wp.correctCount >= 2 : false;
-  });
-  // Count only words the user has actually answered at least once.
-  // Words seeded into wordProgress at session start (correctCount === 0 AND
-  // wrongCount === 0) are excluded — the counter only moves when the user
-  // interacts with a card.
-  const seenCount = vocabulary.filter(w => {
-    const p = state.wordProgress[w.id];
-    return p !== undefined && (p.correctCount > 0 || p.wrongCount > 0);
-  }).length;
-  const lessonSize    = state.lessonSize ?? 20;
-  const todayProgress = Math.min(state.dailyProgress, lessonSize);
-  const totalToday    = lessonSize;
-
-  // ── Monetization local state ─────────────────────────────────────────────
+  // ── Monetization local state — must be before session-size derivations ───
   const isPremium = state.isPremium;
 
-  // Bonus-words rewarded ad: free users can watch an ad to unlock +5 words
-  // for the very next lesson they start.  Resets to false after being consumed
-  // or when the component unmounts (it's an in-session perk, not persisted).
-  const [bonusWordsActive, setBonusWordsActive] = useState(false);
-  const [bonusAdLoading,   setBonusAdLoading]   = useState(false);
+  // ── Free-tier daily lesson bonus ─────────────────────────────────────────
+  // The rewarded +5 is a one-time daily extension, not a repeatable reset.
+  // All ad-offer UI, tap-handler guards, and reward-callback checks must
+  // derive from a single computed truth so they can never drift apart.
+
+  // bonusWordsActive — bonus was claimed today, the bonus session has NOT yet
+  //   been started, and the daily cap has not yet been reached.
+  //   Drives effectiveCap (+5 words) and the handleStartLesson gate bypass.
+  //
+  //   The !dailyBonusSessionStarted check is the key fix: dailyProgress alone
+  //   cannot reliably gate re-entry because getDailyWords() targets lessonSize=5
+  //   and some returned words may already be in dailyLearnedIds (deduplication),
+  //   meaning dailyProgress may never actually reach FREE_SESSION_CAP+5.
+  //   Tracking the dispatch of the bonus session (not just correct-answer count)
+  //   closes that gap: once the session is started, re-entry is always blocked.
+  const bonusWordsActive = !isPremium
+    && state.dailyLessonBonusClaimed
+    && !state.dailyBonusSessionStarted
+    && state.dailyProgress < FREE_SESSION_CAP + 5;
+
+  // canOfferLessonBonusAd — the ONLY condition under which it is valid to
+  //   show and play the rewarded lesson-bonus ad.  All three checks must pass:
+  //
+  //   (1) !dailyLessonBonusClaimed  — bonus not yet used today
+  //   (2) dailyProgress >= FREE_SESSION_CAP    — base session is complete,
+  //                                              so there is an extension to offer
+  //   (3) dailyProgress < FREE_SESSION_CAP + 5 — still below the bonus ceiling;
+  //                                              if already at/past 10 the reward
+  //                                              can no longer unlock access and
+  //                                              showing the ad would be valueless
+  //
+  // The upper-bound check (3) is the critical fix: without it the ad is offered
+  // even when dailyProgress has already hit 10 via a Zorlandıklarım quiz or
+  // another MARK_WORD_LEARNED path, causing "watch ad → still hit premium gate".
+  const canOfferLessonBonusAd = !isPremium
+    && !state.dailyLessonBonusClaimed
+    && state.dailyProgress >= FREE_SESSION_CAP
+    && state.dailyProgress < FREE_SESSION_CAP + 5;
+
+  const [bonusAdLoading, setBonusAdLoading] = useState(false);
 
   // Premium gate modal
   const [premiumModal, setPremiumModal] = useState<{
@@ -142,18 +150,54 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     setPremiumModal({ visible: true, featureTitle: title, featureDescription: desc });
   }, []);
 
-  // Effective per-session word cap for free users.
-  // Premium → no cap (use full pool).
-  // Bonus active → cap raised by 5 for one session.
+  // ── Auto-correct saved lessonSize for free users ─────────────────────────
+  // If the user was previously premium (or has a stale default of 20), and
+  // is now free, quietly reset their lesson size to the free base of 5.
+  const lessonSize = state.lessonSize ?? 20;
+  useEffect(() => {
+    if (!isPremium && lessonSize > FREE_SESSION_CAP) {
+      dispatch({ type: 'SET_LESSON_SIZE', size: FREE_SESSION_CAP });
+    }
+  }, [isPremium, lessonSize, dispatch]);
+
+  // ── Session word counts ──────────────────────────────────────────────────
+  // Effective cap: premium = unlimited; bonus active = 10; free base = 5.
   const effectiveCap = isPremium
     ? Infinity
     : bonusWordsActive ? FREE_SESSION_CAP + 5 : FREE_SESSION_CAP;
+
+  // The session size shown in the progress bar.
+  // For premium users: their chosen lessonSize.
+  // For free users: 10 if the bonus has been claimed (shows accurate progress
+  //   toward the full 10-word daily cap), 5 otherwise.
+  //   Intentionally uses dailyLessonBonusClaimed rather than bonusWordsActive
+  //   so the bar stays at /10 even after the bonus session is started
+  //   (bonusWordsActive becomes false then, but the cap is still 10 for the day).
+  const effectiveLessonSize = isPremium
+    ? lessonSize
+    : (state.dailyLessonBonusClaimed ? FREE_SESSION_CAP + 5 : FREE_SESSION_CAP);
+  const todayProgress = Math.min(state.dailyProgress, effectiveLessonSize);
+  const totalToday    = effectiveLessonSize;
 
   // Compute the display word count for the CTA badge, respecting the cap.
   const rawDailyWords = getDailyWords();
   const cappedDailyWords = isPremium
     ? rawDailyWords
     : rawDailyWords.slice(0, effectiveCap);
+
+  // ── User-facing word classifications (raw counts, not internal SRS flags) ─
+  // difficult = wrong at least once AND never yet answered correctly.
+  //             Matches isDisplayDifficult() in DifficultWordsScreen: the first
+  //             correct answer immediately exits the word from the difficult pool.
+  // seenCount = words answered at least once (not just seeded at session start)
+  const difficultWords = vocabulary.filter(w => {
+    const wp = state.wordProgress[w.id];
+    return wp ? wp.wrongCount > 0 && wp.correctCount === 0 : false;
+  });
+  const seenCount = vocabulary.filter(w => {
+    const p = state.wordProgress[w.id];
+    return p !== undefined && (p.correctCount > 0 || p.wrongCount > 0);
+  }).length;
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -162,14 +206,31 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     return 'İyi akşamlar 👋';
   };
 
-  // ── Session handlers with free-tier caps ────────────────────────────────
+  // ── Session handlers with free-tier caps ─────────────────────────────────
 
   const handleStartLesson = () => {
+    // Free-user daily cap: 5 base + optional rewarded +5 = 10 max per day.
+    // Block when dailyProgress has reached or passed the base cap AND the
+    // bonus bypass is no longer active.
+    // bonusWordsActive is false when: bonus not claimed, OR bonus session
+    // already started, OR dailyProgress >= 10 — all three cases should block.
+    if (!isPremium && state.dailyProgress >= FREE_SESSION_CAP && !bonusWordsActive) {
+      showPremiumModal(
+        'Günlük Limit Doldu',
+        'Bugünkü ücretsiz dersini tamamladın. Yarın yeni kelimeler seni bekliyor ya da Premium\'a geçerek sınırsız öğren.',
+      );
+      return;
+    }
     const words = cappedDailyWords;
     if (words.length === 0) return;
+    // Mark the bonus session as started the moment it is dispatched.
+    // This closes the re-entry window: once fired, bonusWordsActive becomes
+    // false on the next render and the gate blocks all subsequent starts,
+    // even if dailyProgress has not yet reached FREE_SESSION_CAP + 5.
+    if (!isPremium && bonusWordsActive) {
+      dispatch({ type: 'MARK_BONUS_SESSION_STARTED' });
+    }
     dispatch({ type: 'SET_SESSION_WORDS', words });
-    // Consume the bonus if it was active
-    if (bonusWordsActive) setBonusWordsActive(false);
     navigation.navigate('Flashcard');
   };
 
@@ -183,28 +244,63 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     navigation.navigate('Quiz');
   };
 
-  const handleReinforceLearnedWords = () => {
-    if (learnedWords.length === 0) return;
-    // Premium: full learned-word pool (unlimited).  Free: capped at FREE_SESSION_CAP.
-    const max = isPremium ? learnedWords.length : FREE_SESSION_CAP;
-    const shuffled = [...learnedWords].sort(() => Math.random() - 0.5).slice(0, max);
-    dispatch({ type: 'SET_SESSION_WORDS', words: shuffled });
-    navigation.navigate('Quiz');
-  };
-
-  // ── Bonus words rewarded ad ──────────────────────────────────────────────
-  // Free users who have completed at least part of a lesson today can watch
-  // a rewarded ad to extend the next lesson by +5 words.
-  const handleBonusWordsAd = useCallback(() => {
+  // ── Bonus words rewarded ad ───────────────────────────────────────────────
+  // Extends the very next free lesson by +5 words (5 → 10).
+  //
+  // Three layers of eligibility enforcement — all derived from canOfferLessonBonusAd:
+  //
+  //   Layer 1 (UI)      — button only renders when canOfferLessonBonusAd is true.
+  //   Layer 2 (tap)     — guard at the top of this handler; handles stale renders.
+  //   Layer 3 (reward)  — re-check at the moment the reward callback fires so that
+  //                       even a race (e.g. progress changed while ad was playing)
+  //                       cannot produce a valueless claim.
+  //
+  // Not wrapped in useCallback so the closure always captures the latest state,
+  // preventing stale reads of dailyProgress / dailyLessonBonusClaimed.
+  const handleBonusWordsAd = () => {
+    // Layer 2: tap-time guard — must be eligible at the moment of the tap.
+    if (!canOfferLessonBonusAd) {
+      // Ineligible (e.g. stale render): show the gate instead of the ad.
+      showPremiumModal(
+        'Günlük Limit Doldu',
+        'Bugünkü ücretsiz dersini tamamladın. Yarın yeni kelimeler seni bekliyor ya da Premium\'a geçerek sınırsız öğren.',
+      );
+      return;
+    }
+    if (!isRewardedAdReady()) {
+      Alert.alert(
+        'Reklam Hazır Değil',
+        'Reklam henüz yüklenmedi. Birkaç saniye bekleyip tekrar dene.',
+        [{ text: 'Tamam' }],
+      );
+      return;
+    }
     setBonusAdLoading(true);
     showRewardedAd((rewarded) => {
       setBonusAdLoading(false);
       if (rewarded) {
-        dispatch({ type: 'RECORD_AD_SHOWN' });
-        setBonusWordsActive(true);
+        // Layer 3: reward-time re-verification.
+        // Confirm the bonus can still be honored before dispatching.
+        // dailyProgress should not have changed during ad play (no game
+        // interactions are possible while a full-screen ad is shown), but
+        // this guard ensures correctness even in unexpected edge cases.
+        if (
+          !state.dailyLessonBonusClaimed &&
+          state.dailyProgress < FREE_SESSION_CAP + 5
+        ) {
+          dispatch({ type: 'RECORD_AD_SHOWN' });
+          dispatch({ type: 'CLAIM_LESSON_BONUS' });
+        } else {
+          // Eligibility was lost while the ad played — show the premium gate
+          // rather than silently doing nothing after the user watched an ad.
+          showPremiumModal(
+            'Günlük Limit Doldu',
+            'Reklam oynarken günlük limite ulaşıldı. Premium\'a geçerek sınırsız öğren.',
+          );
+        }
       }
     });
-  }, [dispatch]);
+  };
 
   const progressPct = totalToday > 0 ? (todayProgress / totalToday) * 100 : 0;
 
@@ -312,7 +408,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                         if (isLocked) {
                           showPremiumModal(
                             `${size} Kelimelik Ders`,
-                            `${size} kelimelik dersler Premium üyelere açık. Premium'a geçerek daha uzun derslerle daha hızlı öğren.`,
+                            `8, 10, 15 ve 20 kelimelik dersler Premium üyeler için açık. Premium'a geçerek daha uzun oturumlarla daha hızlı ilerle.`,
                           );
                           return;
                         }
@@ -356,8 +452,9 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               icon={<Ionicons name="play" size={20} color="#fff" />}
             />
 
-            {/* ── Bonus +5 words rewarded ad (free users, post-lesson) ── */}
-            {!isPremium && todayProgress > 0 && !bonusWordsActive && !bonusAdLoading && (
+            {/* ── Bonus +5 words rewarded ad (free users, after base session) ── */}
+            {/* Offer: shown only when base 5 are done and bonus not yet claimed  */}
+            {canOfferLessonBonusAd && !bonusAdLoading && (
               <TouchableOpacity onPress={handleBonusWordsAd} style={styles.bonusAdLink}>
                 <Ionicons name="play-circle-outline" size={15} color="#7C3AED" />
                 <Text style={[styles.bonusAdLinkText, { color: '#7C3AED' }]}>
@@ -365,13 +462,15 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 </Text>
               </TouchableOpacity>
             )}
+            {/* Loading: shown while the ad is fetching/playing */}
             {!isPremium && bonusAdLoading && (
               <View style={styles.bonusAdLoading}>
                 <ActivityIndicator size="small" color="#7C3AED" />
                 <Text style={[styles.bonusAdLinkText, { color: '#7C3AED' }]}>Reklam yükleniyor…</Text>
               </View>
             )}
-            {!isPremium && bonusWordsActive && (
+            {/* Active badge: bonus claimed, extra words not yet played */}
+            {bonusWordsActive && (
               <View style={[styles.bonusActiveBadge, { backgroundColor: '#EDE9FE' }]}>
                 <Ionicons name="checkmark-circle" size={14} color="#7C3AED" />
                 <Text style={[styles.bonusAdLinkText, { color: '#7C3AED' }]}>+5 bonus kelime aktif!</Text>
@@ -381,46 +480,6 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </Animated.View>
 
           {/* ── Öğrendiklerim ── */}
-          {learnedWords.length > 0 && (
-            <Animated.View style={slideStyle(card1Anim)}>
-            <TouchableOpacity
-              onPress={handleReinforceLearnedWords}
-              activeOpacity={0.9}
-              style={[styles.learnedCard, { backgroundColor: theme.surface, borderColor: theme.cardBorder, ...shadows.sm }]}
-            >
-              <View style={styles.learnedHeader}>
-                <View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <MaterialCommunityIcons name="book-open" size={18} color={theme.text} />
-                    <Text style={[styles.learnedTitle, { color: theme.text }]}>Öğrendiklerim</Text>
-                  </View>
-                  <Text style={[styles.learnedSubtitle, { color: theme.textSecondary }]}>
-                    {learnedWords.length} kelime · Pekiştirmek için dokun
-                  </Text>
-                </View>
-                <View style={[styles.reinforceBadge, { backgroundColor: '#43D99D22' }]}>
-                  <Text style={{ color: '#43D99D', fontSize: 11, fontWeight: '700', fontFamily: 'Inter_700Bold' }}>
-                    TEKRAR ET
-                  </Text>
-                </View>
-              </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-                {learnedWords.slice(-8).reverse().map(word => (
-                  <View key={word.id} style={[styles.wordChip, { backgroundColor: theme.primaryLight }]}>
-                    <Text style={[styles.wordChipText, { color: theme.primary }]}>{word.word}</Text>
-                    <Text style={[styles.wordChipMeaning, { color: theme.textSecondary }]}>{word.translation}</Text>
-                  </View>
-                ))}
-                {learnedWords.length > 8 && (
-                  <View style={[styles.wordChip, { backgroundColor: theme.surfaceSecondary }]}>
-                    <Text style={[styles.wordChipText, { color: theme.textSecondary }]}>+{learnedWords.length - 8}</Text>
-                  </View>
-                )}
-              </ScrollView>
-            </TouchableOpacity>
-            </Animated.View>
-          )}
-
           {/* ── Difficult Words Quick Quiz ── */}
           <Animated.View style={slideStyle(card3Anim)}>
           <TouchableOpacity
@@ -522,7 +581,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         onClose={() => setPremiumModal(m => ({ ...m, visible: false }))}
         onUpgrade={() => {
           setPremiumModal(m => ({ ...m, visible: false }));
-          navigation.navigate('Settings');
+          navigation.navigate('Premium');
         }}
       />
     </View>

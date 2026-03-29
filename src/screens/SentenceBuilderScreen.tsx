@@ -11,18 +11,25 @@ import {
   Platform,
   Animated,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { getLocalWords, Word } from '../services/vocabularyService';
-import { analyzeSentence, AnalysisResult } from '../services/sentenceAnalysisService';
-import { callPremiumAnalysis, PremiumAnalysisResult } from '../services/premiumAnalysisService';
+import { analyzeSentenceLocal, LocalAnalysisResult } from '../services/sentenceAnalysisService';
+import {
+  analyzeSentenceDetailed,
+  DetailedAnalysisResult,
+  LocalAnalysisSummary,
+  ConfidenceLevel,
+} from '../services/detailedAnalysisService';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import {
   FREE_SENTENCE_SESSION_CAP,
   FREE_DAILY_AI_ANALYSES,
   showRewardedAd,
+  isRewardedAdReady,
 } from '../utils/monetization';
 import { AiAnalysisGateModal } from '../components/MonetizationModals';
 
@@ -58,15 +65,15 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
   const [queue]               = useState<Word[]>(() => buildQueue(learnedIds, sessionMax));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sentence, setSentence]         = useState('');
-  const [result, setResult]             = useState<AnalysisResult | null>(null);
+  const [result, setResult]             = useState<LocalAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing]   = useState(false);
   const [totalXp, setTotalXp]           = useState(0);
   const [completed, setCompleted]       = useState(0); // words answered (valid)
 
   // ── Premium AI layer ─────────────────────────────────────────────────────────
   // Layer 1 (local) always runs first. Premium is opt-in, user-triggered.
-  const [premiumResult, setPremiumResult]       = useState<PremiumAnalysisResult | null>(null);
-  const [isPremiumAnalyzing, setIsPremiumAnalyzing] = useState(false);
+  const [detailedResult, setDetailedResult]       = useState<DetailedAnalysisResult | null>(null);
+  const [isDetailedAnalyzing, setIsDetailedAnalyzing] = useState(false);
 
   // ── AI analysis gate (free users) ────────────────────────────────────────────
   // Free users see a modal with two paths: watch a rewarded ad (1/day) or
@@ -77,28 +84,59 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
   const aiLimitReached =
     !isPremium &&
     state.dailyAiAnalysesUsed >= FREE_DAILY_AI_ANALYSES;
+  const analysesRemaining = Math.max(0, FREE_DAILY_AI_ANALYSES - state.dailyAiAnalysesUsed);
 
   const currentWord = queue[currentIndex] ?? null;
   const isFinished  = currentIndex >= queue.length;
 
   // ── Effective result status ───────────────────────────────────────────────
-  // Layer 1 (local rules) may pass a sentence that Layer 2 (premium AI)
-  // later flags as a grammar error.  The status drives both the visual state
-  // of the result card AND the XP amount awarded when the user advances.
-  // XP is NOT awarded at submit time — it is deferred to handleNext so that
-  // premium analysis can influence the final grade before XP is dispatched.
+  // Single source of truth for the entire result UI.
   //
-  //   perfect → green  (10 XP) — word used AND no grammar errors detected
-  //   partial → amber  ( 5 XP) — word used BUT premium AI found a grammar error
-  //   fail    → red    ( 0 XP) — word not used / sentence fundamentally invalid
+  // Design contract:
+  //   • Without detailed analysis: local result is authoritative.
+  //   • With detailed analysis: take the WORSE of the two verdicts.
+  //     – Detailed AI can downgrade (find errors local missed) → partial/fail.
+  //     – Detailed AI can NOT upgrade a locally-detected grammar error to perfect.
+  //     – Exception: if local failed only because the target word was absent and
+  //       detailed confirms the word IS present, trust detailed's verdict.
+  //
+  //   perfect → green  (10 XP) — word used AND no grammar errors
+  //   partial → amber  ( 5 XP) — word used BUT detailed AI found a grammar error
+  //   fail    → red    ( 0 XP) — word missing / local grammar rule fired
   const effectiveStatus: 'perfect' | 'partial' | 'fail' = (() => {
     if (!result) return 'fail'; // result card not shown yet — value unused
-    if (premiumResult) {
-      if (!premiumResult.usedTargetWord) return 'fail';
-      if (premiumResult.grammarIssues.some(i => i.severity === 'error')) return 'partial';
-      return 'perfect';
+    if (!detailedResult) return result.status;
+
+    // If local didn't detect the target word at all, trust the AI's verdict —
+    // it may use better lemmatisation / word-family matching.
+    if (!result.usedTargetWord) return detailedResult.status;
+
+    // Word was found locally: take the WORSE of the two statuses.
+    // This prevents the AI from silencing an error the local engine caught.
+    const rank = (s: 'perfect' | 'partial' | 'fail') =>
+      s === 'perfect' ? 2 : s === 'partial' ? 1 : 0;
+    const worse = Math.min(rank(result.status), rank(detailedResult.status));
+    return (['fail', 'partial', 'perfect'] as const)[worse];
+  })();
+
+  // ── Display feedback ──────────────────────────────────────────────────────
+  // Single string shown as the primary heading of the result card.
+  // Must always match `effectiveStatus` — never show "Mükemmel!" on a red card.
+  const displayFeedback: string = (() => {
+    if (!result) return '';
+    if (effectiveStatus === 'partial') {
+      // 'partial' can only originate from the detailed AI layer.
+      return detailedResult?.shortFeedbackTr
+        ?? 'Kelimeyi doğru kullandın ama cümlede düzeltilmesi gereken bir nokta var.';
     }
-    return result.isValid ? 'perfect' : 'fail';
+    if (effectiveStatus === 'fail') {
+      // Prefer local's specific grammar-error message when local also failed.
+      if (result.status === 'fail') return result.feedbackTr;
+      // Local was OK but detailed downgraded to fail — use detailed's explanation.
+      return detailedResult?.shortFeedbackTr ?? result.feedbackTr;
+    }
+    // perfect — local success message is always accurate here.
+    return result.feedbackTr;
   })();
 
   // Colour tokens for the three states — used in the result card only.
@@ -137,29 +175,50 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
 
   // ── Actions ─────────────────────────────────────────────────────────────────
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(() => {
     if (!sentence.trim() || isAnalyzing || !currentWord) return;
 
     setIsAnalyzing(true);
-    // Pass the single current word as the target — the service handles arrays of any length.
-    const analysis = await analyzeSentence({ selectedWords: [currentWord], sentence });
+    const analysis = analyzeSentenceLocal({ targetWord: currentWord.word, sentence });
     setResult(analysis);
-    // XP is NOT awarded here. It is deferred to handleNext so that the premium
+    // XP is NOT awarded here. It is deferred to handleNext so that the detailed
     // analysis (if the user triggers it) can influence the final grade first.
     setIsAnalyzing(false);
   }, [sentence, currentWord, isAnalyzing]);
 
-  const handlePremiumAnalysis = useCallback(async () => {
-    if (!currentWord || isPremiumAnalyzing) return;
-    setIsPremiumAnalyzing(true);
-    const analysis = await callPremiumAnalysis({
-      targetWord: currentWord.word,
+  const handleDetailedAnalysis = useCallback(async () => {
+    if (!currentWord || isDetailedAnalyzing || !result) return;
+    setIsDetailedAnalyzing(true);
+
+    // Convert the numeric confidence from Layer 1 (0–1) to the enum the
+    // request contract requires.
+    const toConfidenceLevel = (c: number): ConfidenceLevel =>
+      c >= 0.7 ? 'high' : c >= 0.4 ? 'medium' : 'low';
+
+    // Build the Layer-1 summary forwarded to the backend so it does not have
+    // to re-run basic grammar checks.
+    const localAnalysis: LocalAnalysisSummary = {
+      status:         result.status,
+      usedTargetWord: result.usedTargetWord,
+      targetWordMode: result.targetWordMode,
+      score:          result.score,
+      confidence:     toConfidenceLevel(result.confidence),
+      issues: result.issues.map(i => ({
+        type:     'grammar',
+        severity: i.severity === 'error' ? ('error' as const) : ('suggestion' as const),
+        messageTr: i.messageTr,
+      })),
+    };
+
+    const analysis = await analyzeSentenceDetailed({
+      targetWord:    currentWord.word,
       sentence,
-      userLevel: currentWord.level,
+      userLevel:     currentWord.level,
+      localAnalysis,
     });
-    setPremiumResult(analysis);
-    setIsPremiumAnalyzing(false);
-  }, [currentWord, sentence, isPremiumAnalyzing]);
+    setDetailedResult(analysis);
+    setIsDetailedAnalyzing(false);
+  }, [currentWord, sentence, result, isDetailedAnalyzing]);
 
   // ── "Detaylı AI Analizi Al" tap handler ──────────────────────────────────
   // Premium: run analysis directly.
@@ -167,14 +226,26 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
   // Free + limit reached: open gate modal (upgrade only).
   const handleAiAnalysisTap = useCallback(() => {
     if (isPremium) {
-      handlePremiumAnalysis();
+      handleDetailedAnalysis();
     } else {
       setAiGateVisible(true);
     }
-  }, [isPremium, handlePremiumAnalysis]);
+  }, [isPremium, handleDetailedAnalysis]);
 
   // Called from the gate modal when user opts to watch an ad.
   const handleWatchAdForAi = useCallback(() => {
+    // Guard: check readiness before entering the spinner state.
+    // Without this, an unavailable ad would cause an instant false result
+    // and the modal would flicker back to its normal state with no feedback.
+    if (!isRewardedAdReady()) {
+      Alert.alert(
+        'Reklam Hazır Değil',
+        'Reklam henüz yüklenmedi. Birkaç saniye bekleyip tekrar dene.',
+        [{ text: 'Tamam' }],
+      );
+      return;
+    }
+
     setIsWatchingAd(true);
     showRewardedAd((rewarded) => {
       setIsWatchingAd(false);
@@ -183,10 +254,12 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
         dispatch({ type: 'RECORD_AI_ANALYSIS_USED' });
         setAiGateVisible(false);
         // Slight delay so the modal closes before analysis spinner appears
-        setTimeout(() => handlePremiumAnalysis(), 100);
+        setTimeout(() => handleDetailedAnalysis(), 100);
       }
+      // rewarded = false: user dismissed without watching full ad.
+      // The modal stays open — user can try again or choose to upgrade.
     });
-  }, [dispatch, handlePremiumAnalysis]);
+  }, [dispatch, handleDetailedAnalysis]);
 
   const handleNext = useCallback(() => {
     // ── Award XP based on the FINAL evaluated status ─────────────────────────
@@ -201,29 +274,24 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
       let xpEarned = 0;
       let countAsCompleted = false;
 
-      if (premiumResult) {
-        // Premium ran — use its verdict.
-        if (!premiumResult.usedTargetWord) {
-          // fail — word not detected by premium
-          xpEarned = 0;
-        } else if (premiumResult.grammarIssues.some(i => i.severity === 'error')) {
-          // partial — word used but grammar error
-          xpEarned = 5;
-          countAsCompleted = true;
-        } else {
-          // perfect
-          xpEarned = 10;
-          countAsCompleted = true;
-        }
-      } else {
-        // Premium not run — rely on Layer-1 result.
-        if (result.isValid) {
-          // perfect (no premium to say otherwise)
-          xpEarned = 10;
-          countAsCompleted = true;
-        }
-        // else fail → 0 XP
+      // XP uses the same "worse-of-two" merge as the render-time effectiveStatus.
+      const _rank = (s: 'perfect' | 'partial' | 'fail') =>
+        s === 'perfect' ? 2 : s === 'partial' ? 1 : 0;
+      const _finalStatus: 'perfect' | 'partial' | 'fail' = (() => {
+        if (!detailedResult) return result.status;
+        if (!result.usedTargetWord) return detailedResult.status;
+        const worse = Math.min(_rank(result.status), _rank(detailedResult.status));
+        return (['fail', 'partial', 'perfect'] as const)[worse];
+      })();
+
+      if (_finalStatus === 'perfect') {
+        xpEarned = 10;
+        countAsCompleted = true;
+      } else if (_finalStatus === 'partial') {
+        xpEarned = 5;
+        countAsCompleted = true;
       }
+      // fail → 0 XP, countAsCompleted stays false
 
       if (xpEarned > 0) {
         dispatch({ type: 'ADD_XP', amount: xpEarned });
@@ -236,21 +304,21 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
 
     setSentence('');
     setResult(null);
-    setPremiumResult(null);
+    setDetailedResult(null);
     setCurrentIndex(prev => prev + 1);
-  }, [result, premiumResult, dispatch]);
+  }, [result, detailedResult, dispatch]);
 
   const handleSkip = useCallback(() => {
     setSentence('');
     setResult(null);
-    setPremiumResult(null);
+    setDetailedResult(null);
     setCurrentIndex(prev => prev + 1);
   }, []);
 
   const handleRetry = useCallback(() => {
     setSentence('');
     setResult(null);
-    setPremiumResult(null);
+    setDetailedResult(null);
     setAiGateVisible(false);
   }, []);
 
@@ -460,12 +528,10 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                     style={{ alignSelf: 'center' }}
                   />
 
-                  {/* Feedback — partial overrides with a fixed message so the
-                      Layer-1 "Mükemmel!" is never shown when AI found an error */}
+                  {/* Feedback — always derived from displayFeedback which is
+                      guaranteed to match effectiveStatus (no green text on red card) */}
                   <Text style={[styles.resultFeedback, { color: statusColor }]}>
-                    {effectiveStatus === 'partial'
-                      ? 'Kelimeyi doğru kullandın ama cümlede düzeltilmesi gereken bir nokta var.'
-                      : result.feedback}
+                    {displayFeedback}
                   </Text>
 
                   {/* XP preview — shown once a result is available so the user
@@ -492,16 +558,34 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                     <Text style={{ color: theme.text, fontSize: 15, fontStyle: 'italic' }}>"{sentence}"</Text>
                   </View>
 
-                  {/* Corrected version (only if different) */}
-                  {result.correctedSentence && (
-                    <View style={[styles.correctedBox, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '40' }]}>
-                      <Text style={[styles.boxLabel, { color: theme.primary }]}>✏️ Düzeltilmiş hali:</Text>
-                      <Text style={{ color: theme.text, fontSize: 15 }}>{result.correctedSentence}</Text>
-                    </View>
-                  )}
+                  {/* Corrected version — prefer local's grammar-fix sentence when
+                      local caught an error; suppress if detailed panel shows its own. */}
+                  {(() => {
+                    // When local detected a grammar error, its corrected sentence is
+                    // the authoritative fix — always show it regardless of detailed result.
+                    if (result.status === 'fail' && result.correctedSentence) {
+                      return (
+                        <View style={[styles.correctedBox, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '40' }]}>
+                          <Text style={[styles.boxLabel, { color: theme.primary }]}>✏️ Düzeltilmiş hali:</Text>
+                          <Text style={{ color: theme.text, fontSize: 15 }}>{result.correctedSentence}</Text>
+                        </View>
+                      );
+                    }
+                    // Local was fine (cosmetic only) — only show if detailed hasn't run
+                    // (detailed panel will render its own corrected sentence if it has one).
+                    if (!detailedResult && result.correctedSentence) {
+                      return (
+                        <View style={[styles.correctedBox, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '40' }]}>
+                          <Text style={[styles.boxLabel, { color: theme.primary }]}>✏️ Düzeltilmiş hali:</Text>
+                          <Text style={{ color: theme.text, fontSize: 15 }}>{result.correctedSentence}</Text>
+                        </View>
+                      );
+                    }
+                    return null;
+                  })()}
 
                   {/* ── Premium AI analysis panel ── */}
-                  {!premiumResult && !isPremiumAnalyzing && (
+                  {!detailedResult && !isDetailedAnalyzing && (
                     <TouchableOpacity
                       onPress={handleAiAnalysisTap}
                       style={[
@@ -528,7 +612,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                     </TouchableOpacity>
                   )}
 
-                  {isPremiumAnalyzing && (
+                  {isDetailedAnalyzing && (
                     <View style={styles.premiumLoading}>
                       <ActivityIndicator size="small" color="#7C3AED" />
                       <Text style={{ color: '#7C3AED', fontSize: 13, fontWeight: '600', marginLeft: 8 }}>
@@ -537,7 +621,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
                   )}
 
-                  {premiumResult && (
+                  {detailedResult && (
                     <View style={[styles.premiumPanel, { backgroundColor: theme.surface, borderColor: '#7C3AED40' }]}>
                       {/* Panel header + score */}
                       <View style={styles.premiumHeader}>
@@ -549,32 +633,32 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                           styles.scoreBadge,
                           {
                             backgroundColor:
-                              premiumResult.score >= 85 ? theme.correct  + '25' :
-                              premiumResult.score >= 65 ? '#F59E0B25' : theme.incorrect + '25',
+                              detailedResult.score >= 85 ? theme.correct  + '25' :
+                              detailedResult.score >= 65 ? '#F59E0B25' : theme.incorrect + '25',
                           },
                         ]}>
                           <Text style={[
                             styles.scoreBadgeText,
                             {
                               color:
-                                premiumResult.score >= 85 ? theme.correct :
-                                premiumResult.score >= 65 ? '#B45309'  : theme.incorrect,
+                                detailedResult.score >= 85 ? theme.correct :
+                                detailedResult.score >= 65 ? '#B45309'  : theme.incorrect,
                             },
                           ]}>
-                            {premiumResult.score}/100
+                            {detailedResult.score}/100
                           </Text>
                         </View>
                       </View>
 
                       {/* Turkish feedback */}
                       <Text style={[styles.premiumFeedback, { color: theme.text }]}>
-                        {premiumResult.feedbackTr}
+                        {detailedResult.shortFeedbackTr}
                       </Text>
 
                       {/* Grammar issues */}
-                      {premiumResult.grammarIssues.length > 0 && (
+                      {detailedResult.issues.length > 0 && (
                         <View style={styles.issueList}>
-                          {premiumResult.grammarIssues.map((issue, i) => (
+                          {detailedResult.issues.map((issue, i) => (
                             <View key={i} style={styles.issueRow}>
                               <Ionicons
                                 name={
@@ -592,7 +676,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                                 color: issue.severity === 'error'   ? theme.incorrect :
                                        issue.severity === 'warning' ? '#B45309'       : theme.textSecondary,
                               }]}>
-                                {issue.description}
+                                {issue.messageTr}
                               </Text>
                             </View>
                           ))}
@@ -600,19 +684,19 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                       )}
 
                       {/* AI corrected sentence (only if different from local corrected) */}
-                      {premiumResult.correctedSentence && (
+                      {detailedResult.correctedSentence && (
                         <View style={[styles.premiumBox, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '30' }]}>
                           <Text style={[styles.boxLabel, { color: theme.primary }]}>✏️ Düzeltilmiş hali:</Text>
-                          <Text style={{ color: theme.text, fontSize: 14 }}>{premiumResult.correctedSentence}</Text>
+                          <Text style={{ color: theme.text, fontSize: 14 }}>{detailedResult.correctedSentence}</Text>
                         </View>
                       )}
 
                       {/* More natural alternative — populated by real AI backend */}
-                      {premiumResult.moreNaturalSentence && (
+                      {detailedResult.naturalAlternative && (
                         <View style={[styles.premiumBox, { backgroundColor: '#FEF3C720', borderColor: '#F59E0B40' }]}>
                           <Text style={[styles.boxLabel, { color: '#B45309' }]}>💡 Daha doğal bir ifade:</Text>
                           <Text style={{ color: theme.text, fontSize: 14, fontStyle: 'italic' }}>
-                            {premiumResult.moreNaturalSentence}
+                            {detailedResult.naturalAlternative}
                           </Text>
                         </View>
                       )}
@@ -652,12 +736,13 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
           visible={aiGateVisible}
           isLimitReached={aiLimitReached}
           isWatchingAd={isWatchingAd}
+          analysesRemaining={analysesRemaining}
           theme={theme}
           onClose={() => { if (!isWatchingAd) setAiGateVisible(false); }}
           onWatchAd={handleWatchAdForAi}
           onUpgrade={() => {
             setAiGateVisible(false);
-            navigation.navigate('Settings');
+            navigation.navigate('Premium');
           }}
         />
       </View>

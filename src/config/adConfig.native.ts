@@ -8,7 +8,8 @@
  *
  * 1. Banner unit IDs  → replace PRODUCTION_BANNER_IDS strings below
  * 2. Interstitial IDs → replace PRODUCTION_INTERSTITIAL_IDS strings below
- * 3. App IDs          → set via env vars in app.config.js (never commit):
+ * 3. Rewarded IDs     → replace PRODUCTION_REWARDED_IDS strings below
+ * 4. App IDs          → set via env vars in app.config.js (never commit):
  *      ADMOB_APP_ID_IOS      → ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX
  *      ADMOB_APP_ID_ANDROID  → ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX
  *
@@ -54,6 +55,24 @@ export const INTERSTITIAL_UNIT_ID: string = __DEV__
   : Platform.OS === 'ios'
     ? PRODUCTION_INTERSTITIAL_IDS.ios
     : PRODUCTION_INTERSTITIAL_IDS.android;
+
+// ─── Rewarded unit IDs ────────────────────────────────────────────────────────
+
+const PRODUCTION_REWARDED_IDS = {
+  ios:     'ca-app-pub-XXXXXXXXXXXX/XXXXXXXX',
+  android: 'ca-app-pub-XXXXXXXXXXXX/XXXXXXXX',
+} as const;
+
+/**
+ * Active rewarded ad unit ID.
+ * __DEV__ → Google's official test ID (never charges real money, always fills).
+ * Production → real unit ID registered in AdMob.
+ */
+export const REWARDED_UNIT_ID: string = __DEV__
+  ? TestIds.REWARDED
+  : Platform.OS === 'ios'
+    ? PRODUCTION_REWARDED_IDS.ios
+    : PRODUCTION_REWARDED_IDS.android;
 
 // ─── Frequency caps ───────────────────────────────────────────────────────────
 
