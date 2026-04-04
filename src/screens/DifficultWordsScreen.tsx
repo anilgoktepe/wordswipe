@@ -222,7 +222,7 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
-            <Text style={styles.headerTitle}>Kelime Yönetimi</Text>
+            <Text style={styles.headerTitle}>Kelime Havuzu</Text>
             <Text style={styles.headerSub}>
               {seenWords.length > 0
                 ? `${seenWords.length} kelime görüldü · ${difficultList.length} zorlu`

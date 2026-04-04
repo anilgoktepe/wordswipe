@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
@@ -103,39 +104,30 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   // All ad-offer UI, tap-handler guards, and reward-callback checks must
   // derive from a single computed truth so they can never drift apart.
 
-  // bonusWordsActive — bonus was claimed today, the bonus session has NOT yet
-  //   been started, and the daily cap has not yet been reached.
-  //   Drives effectiveCap (+5 words) and the handleStartLesson gate bypass.
+  // bonusWordsActive — the rewarded bonus was claimed today and the bonus
+  //   session has not yet been dispatched.  Drives effectiveCap (+5 words)
+  //   and the handleStartLesson gate bypass.
   //
-  //   The !dailyBonusSessionStarted check is the key fix: dailyProgress alone
-  //   cannot reliably gate re-entry because getDailyWords() targets lessonSize=5
-  //   and some returned words may already be in dailyLearnedIds (deduplication),
-  //   meaning dailyProgress may never actually reach FREE_SESSION_CAP+5.
-  //   Tracking the dispatch of the bonus session (not just correct-answer count)
-  //   closes that gap: once the session is started, re-entry is always blocked.
+  //   Intentionally has NO dailyProgress check: eligibility is based solely
+  //   on whether the session was started, not on how many words were answered
+  //   correctly.  A user who answered all 5 base words wrong still has a valid
+  //   base session behind them and can use their bonus.
   const bonusWordsActive = !isPremium
     && state.dailyLessonBonusClaimed
-    && !state.dailyBonusSessionStarted
-    && state.dailyProgress < FREE_SESSION_CAP + 5;
+    && !state.dailyBonusSessionStarted;
 
   // canOfferLessonBonusAd — the ONLY condition under which it is valid to
-  //   show and play the rewarded lesson-bonus ad.  All three checks must pass:
+  //   show and play the rewarded lesson-bonus ad.  Both checks must pass:
   //
-  //   (1) !dailyLessonBonusClaimed  — bonus not yet used today
-  //   (2) dailyProgress >= FREE_SESSION_CAP    — base session is complete,
-  //                                              so there is an extension to offer
-  //   (3) dailyProgress < FREE_SESSION_CAP + 5 — still below the bonus ceiling;
-  //                                              if already at/past 10 the reward
-  //                                              can no longer unlock access and
-  //                                              showing the ad would be valueless
-  //
-  // The upper-bound check (3) is the critical fix: without it the ad is offered
-  // even when dailyProgress has already hit 10 via a Zorlandıklarım quiz or
-  // another MARK_WORD_LEARNED path, causing "watch ad → still hit premium gate".
+  //   (1) !dailyLessonBonusClaimed  — bonus not yet claimed today
+  //   (2) dailyBaseSessionStarted   — base session has been started (something
+  //                                   to extend); replaces the old
+  //                                   dailyProgress >= FREE_SESSION_CAP check
+  //                                   so that eligibility is not tied to how
+  //                                   many words the user got right first-attempt.
   const canOfferLessonBonusAd = !isPremium
     && !state.dailyLessonBonusClaimed
-    && state.dailyProgress >= FREE_SESSION_CAP
-    && state.dailyProgress < FREE_SESSION_CAP + 5;
+    && state.dailyBaseSessionStarted;
 
   const [bonusAdLoading, setBonusAdLoading] = useState(false);
 
@@ -214,7 +206,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     // bonus bypass is no longer active.
     // bonusWordsActive is false when: bonus not claimed, OR bonus session
     // already started, OR dailyProgress >= 10 — all three cases should block.
-    if (!isPremium && state.dailyProgress >= FREE_SESSION_CAP && !bonusWordsActive) {
+    if (!isPremium && state.dailyBaseSessionStarted && !bonusWordsActive) {
       showPremiumModal(
         'Günlük Limit Doldu',
         'Bugünkü ücretsiz dersini tamamladın. Yarın yeni kelimeler seni bekliyor ya da Premium\'a geçerek sınırsız öğren.',
@@ -223,12 +215,18 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     }
     const words = cappedDailyWords;
     if (words.length === 0) return;
-    // Mark the bonus session as started the moment it is dispatched.
-    // This closes the re-entry window: once fired, bonusWordsActive becomes
-    // false on the next render and the gate blocks all subsequent starts,
-    // even if dailyProgress has not yet reached FREE_SESSION_CAP + 5.
     if (!isPremium && bonusWordsActive) {
+      // Mark the bonus session as started the moment it is dispatched.
+      // This closes the re-entry window: once fired, bonusWordsActive becomes
+      // false on the next render and the gate blocks all subsequent starts,
+      // even if dailyProgress has not yet reached FREE_SESSION_CAP + 5.
       dispatch({ type: 'MARK_BONUS_SESSION_STARTED' });
+    } else if (!isPremium && !state.dailyBaseSessionStarted) {
+      // Mark the base session as started. This is the reliable gate sentinel:
+      // dailyProgress alone cannot be trusted because it only increments on
+      // first-attempt-correct answers, so a session with any wrong answer
+      // would leave dailyProgress < FREE_SESSION_CAP and allow re-entry.
+      dispatch({ type: 'MARK_BASE_SESSION_STARTED' });
     }
     dispatch({ type: 'SET_SESSION_WORDS', words });
     navigation.navigate('Flashcard');
@@ -281,13 +279,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
       if (rewarded) {
         // Layer 3: reward-time re-verification.
         // Confirm the bonus can still be honored before dispatching.
-        // dailyProgress should not have changed during ad play (no game
-        // interactions are possible while a full-screen ad is shown), but
-        // this guard ensures correctness even in unexpected edge cases.
-        if (
-          !state.dailyLessonBonusClaimed &&
-          state.dailyProgress < FREE_SESSION_CAP + 5
-        ) {
+        // No game interactions are possible while a full-screen ad is shown,
+        // but this guard ensures correctness even in unexpected edge cases.
+        // Uses session flags only — not dailyProgress — so eligibility is
+        // never affected by first-attempt-correct counts.
+        if (!state.dailyLessonBonusClaimed && state.dailyBaseSessionStarted) {
           dispatch({ type: 'RECORD_AD_SHOWN' });
           dispatch({ type: 'CLAIM_LESSON_BONUS' });
         } else {
@@ -331,7 +327,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 ) : null}
               </View>
               <View style={styles.logoBadge}>
-                <Text style={styles.logoText}>WS</Text>
+                <Image
+                  source={require('../../assets/header-logo.png')}
+                  style={styles.logoImage}
+                />
               </View>
             </View>
 
@@ -559,7 +558,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <MaterialCommunityIcons name="format-list-bulleted" size={24} color="#6C63FF" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.actionTitle, { color: theme.text }]}>Kelime Yönetimi</Text>
+              <Text style={[styles.actionTitle, { color: theme.text }]}>Kelime Havuzu</Text>
               <Text style={[styles.actionSub, { color: theme.textSecondary }]}>
                 {seenCount > 0
                   ? `${seenCount} kelime görüldü · ${difficultWords.length > 0 ? `${difficultWords.length} zorlu` : 'Zor yok'}`
@@ -642,16 +641,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    overflow: 'hidden',
   },
-  logoText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-    fontFamily: 'Inter_800ExtraBold',
+  logoImage: {
+    width: 44,
+    height: 44,
   },
 
   /* Stats row */

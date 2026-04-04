@@ -655,10 +655,18 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                         {detailedResult.shortFeedbackTr}
                       </Text>
 
-                      {/* Grammar issues */}
-                      {detailedResult.issues.length > 0 && (
+                      {/* Grammar issues — deduplicated: skip any issue whose text
+                          is already shown as the primary displayFeedback heading,
+                          and remove duplicate messages within the list itself. */}
+                      {detailedResult.issues.filter((iss, idx, arr) =>
+                        arr.findIndex(o => o.messageTr === iss.messageTr) === idx &&
+                        iss.messageTr !== displayFeedback
+                      ).length > 0 && (
                         <View style={styles.issueList}>
-                          {detailedResult.issues.map((issue, i) => (
+                          {detailedResult.issues.filter((iss, idx, arr) =>
+                            arr.findIndex(o => o.messageTr === iss.messageTr) === idx &&
+                            iss.messageTr !== displayFeedback
+                          ).map((issue, i) => (
                             <View key={i} style={styles.issueRow}>
                               <Ionicons
                                 name={

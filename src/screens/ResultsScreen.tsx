@@ -28,7 +28,7 @@ const motivationalMessages = [
   { min: 90, text: '🏆 Muhteşem! Gerçek bir kelime ustasısın!' },
   { min: 70, text: '🚀 Harika gidiyorsun! Böyle devam et!' },
   { min: 50, text: '💪 İyi iş! Her gün biraz daha iyisin.' },
-  { min: 0, text: '🌱 Güzel başlangıç! Pratik seni güçlendirir.' },
+  { min: 0, text: '💡 Zor kelimeler en çok tekrarla yerleşir. Hemen bir daha dene!' },
 ];
 
 interface Props {

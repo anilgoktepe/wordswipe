@@ -109,6 +109,22 @@ export interface AppState {
 
   // ── Free-tier lesson bonus ─────────────────────────────────────────────────
   /**
+   * True once the FREE base session has been dispatched today (SET_SESSION_WORDS
+   * fired from handleStartLesson for the first daily free lesson).
+   *
+   * This is the gate sentinel for the base lesson.  We cannot use
+   * dailyProgress >= FREE_SESSION_CAP for gating because dailyProgress only
+   * increments on FIRST-ATTEMPT-CORRECT answers (QuizScreen dispatches
+   * MARK_WORD_LEARNED only when isFirstAttempt is true).  A user who answers
+   * any word wrong on first attempt will finish a 5-word session with
+   * dailyProgress < 5, meaning both the repeat-session gate and the rewarded-ad
+   * CTA condition would silently fail for the rest of the day.
+   *
+   * Resets every calendar day alongside dailyProgress.
+   */
+  dailyBaseSessionStarted: boolean;
+
+  /**
    * True once a free user has watched the rewarded ad to claim the +5 lesson
    * extension today.  Resets every calendar day alongside dailyProgress.
    */
@@ -118,11 +134,8 @@ export interface AppState {
    * True once the bonus session has actually been dispatched (SET_SESSION_WORDS
    * fired from handleStartLesson while bonusWordsActive was true).
    *
-   * This is the critical gate sentinel.  bonusWordsActive is derived from
-   * dailyProgress < 10, but dailyProgress may not reach 10 if some words in
-   * the bonus session were already counted in dailyLearnedIds (deduplication).
-   * Without this flag the gate stays open, letting the user start unlimited
-   * fresh 5-word sessions as long as dailyProgress < 10.
+   * Guards against repeated bonus session re-entry when dailyProgress
+   * stalls below FREE_SESSION_CAP+5 due to deduplication in dailyLearnedIds.
    *
    * Resets every calendar day alongside dailyProgress.
    */
@@ -149,7 +162,8 @@ type Action =
   | { type: 'SET_PREMIUM'; isPremium: boolean }
   | { type: 'SET_PRACTICE_SEEN_IDS'; ids: number[] }
   | { type: 'CLAIM_LESSON_BONUS' }
-  | { type: 'MARK_BONUS_SESSION_STARTED' };
+  | { type: 'MARK_BONUS_SESSION_STARTED' }
+  | { type: 'MARK_BASE_SESSION_STARTED' };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -175,6 +189,7 @@ const initialState: AppState = {
   dailyAiAnalysesUsed: 0,
   aiAnalysisDate: new Date().toDateString(),
   practiceSeenIds: [],
+  dailyBaseSessionStarted: false,
   dailyLessonBonusClaimed: false,
   dailyBonusSessionStarted: false,
 };
@@ -434,7 +449,8 @@ function reducer(state: AppState, action: Action): AppState {
         aiAnalysisDate:        today,
         // Practice cycle — persisted across restarts; never day-reset
         practiceSeenIds:       loaded.practiceSeenIds ?? [],
-        // Lesson bonus + bonus-session-started both reset every calendar day
+        // Lesson bonus + session-started flags all reset every calendar day
+        dailyBaseSessionStarted:   isNewDay ? false : (loaded.dailyBaseSessionStarted   ?? false),
         dailyLessonBonusClaimed:   isNewDay ? false : (loaded.dailyLessonBonusClaimed   ?? false),
         dailyBonusSessionStarted:  isNewDay ? false : (loaded.dailyBonusSessionStarted  ?? false),
       };
@@ -483,6 +499,15 @@ function reducer(state: AppState, action: Action): AppState {
     case 'MARK_BONUS_SESSION_STARTED':
       return { ...state, dailyBonusSessionStarted: true };
 
+    // ── Base session started ──────────────────────────────────────────────────
+    // Fired by handleStartLesson the moment the first daily free lesson is
+    // dispatched. Replaces dailyProgress >= FREE_SESSION_CAP as the gate
+    // sentinel because dailyProgress only increments on first-attempt-correct
+    // answers — any wrong answer in a 5-word session leaves dailyProgress < 5,
+    // which would silently allow re-entry and break the bonus ad CTA condition.
+    case 'MARK_BASE_SESSION_STARTED':
+      return { ...state, dailyBaseSessionStarted: true };
+
     // ── Full reset (keeps level + dark mode + premium status) ────────────────
     case 'RESET_PROGRESS':
       return {
@@ -497,6 +522,7 @@ function reducer(state: AppState, action: Action): AppState {
         adsDate:            new Date().toDateString(),
         aiAnalysisDate:     new Date().toDateString(),
         dailyAiAnalysesUsed: 0,
+        dailyBaseSessionStarted: false,
         dailyLessonBonusClaimed: false,
         dailyBonusSessionStarted: false,
       };

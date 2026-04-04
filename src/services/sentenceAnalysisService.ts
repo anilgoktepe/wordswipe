@@ -253,6 +253,18 @@ const WRONG_PREP_RULES: WrongPrepRule[] = [
     replacement: '$1 from',
     feedback:    '"graduate to" hatalı — "graduate" preposition olarak "from" alır. Doğru örnek: "She graduated from university."',
   },
+  {
+    // "describe about X" → "describe X"
+    pattern:     /\b(describ(?:e|es|ed|ing))\s+about\b/gi,
+    replacement: '$1',
+    feedback:    '"describe about" hatalı — "describe" doğrudan nesne alır, "about" eklenmez. Doğru: "describe the situation".',
+  },
+  {
+    // "emphasize on/about X" → "emphasize X"
+    pattern:     /\b(emphasiz(?:e|es|ed|ing))\s+(?:on|about)\b/gi,
+    replacement: '$1',
+    feedback:    '"emphasize on/about" hatalı — "emphasize" doğrudan nesne alır. Doğru: "emphasize the importance".',
+  },
 ];
 
 // ─── Rule 3 — 3rd-person singular subject–verb agreement ──────────────────────
@@ -781,6 +793,7 @@ function _checkDifferentWithPrep(
  */
 const COMMON_MISSPELLINGS: readonly WrongPrepRule[] = [
   // ── High-frequency function words / connectors ───────────────────────────
+  { pattern: /\bti\b/gi,          replacement: 'to',           feedback: '"ti" yazım hatası — doğrusu "to".' },
   { pattern: /\bevert\b/gi,       replacement: 'every',        feedback: '"evert" yazım hatası — doğrusu "every".' },
   { pattern: /\bevrey\b/gi,       replacement: 'every',        feedback: '"evrey" yazım hatası — doğrusu "every".' },
   { pattern: /\balot\b/gi,        replacement: 'a lot',        feedback: '"alot" tek kelime yazılmaz — doğrusu "a lot".' },
@@ -944,6 +957,349 @@ function levenshtein(a: string, b: string): number {
 
 // ─── Grammar orchestrator ─────────────────────────────────────────────────────
 
+// ─── Rule 14 — invalid "require + to-infinitive" argument structure ──────────
+
+/**
+ * Detects active-voice "require + to + [word]" which is invalid English.
+ *
+ * "require" is transitive: it takes a direct object ("require help") or a
+ * "require someone to do something" structure.  Using it with a direct
+ * to-infinitive ("require to go", "require to gym") is a structural error.
+ *
+ * Excluded (valid):
+ *   - Passive: "is/are/was/were required to [verb]"   → standard usage
+ *   - Passive infinitive: "requires to be [done]"     → "requires to be" skipped
+ */
+function _checkVerbArgumentErrors(
+  sentence: string,
+): { feedback: string; corrected?: string } | null {
+  // Match "require/requires" + "to" + any word that is NOT "be"
+  // (passive infinitive "requires to be done" is valid and excluded).
+  const hasActiveRequireTo =
+    /\brequires?\s+to\s+(?!be\b)[a-z]/i.test(sentence);
+  const isPassive =
+    /\b(?:is|are|was|were|be|been)\s+required\s+to\b/i.test(sentence);
+
+  if (hasActiveRequireTo && !isPassive) {
+    return {
+      feedback:
+        '"require to [eylem/nesne]" yapısı İngilizce\'de kullanılmaz. ' +
+        '"require" doğrudan nesne alır ("require help", "require attention") ' +
+        'ya da "require someone to do something" kalıbı kullanılır.',
+      // No auto-correction: the correct restructuring depends on the
+      // intended meaning and cannot be determined from the sentence alone.
+    };
+  }
+
+  return null;
+}
+
+// ─── Rule 15 — verb + wrong complement structure (general table) ─────────────
+
+/**
+ * Data-driven table of verbs whose complements are structurally restricted.
+ *
+ * Two categories:
+ *
+ *   A. Transitive-direct verbs — take a plain noun/pronoun object; inserting
+ *      "to" before the object is always wrong.
+ *      e.g. "achieve to success" → "achieve success"
+ *
+ *   B. Gerund-only verbs — complement must be [verb]-ing, not "to + infinitive".
+ *      e.g. "enjoy to swimming" → "enjoy swimming"
+ *           "avoid to make"     → "avoid make"  (partial fix; still flagged)
+ *
+ * Replacement always removes the offending "to" so the multi-pass correction
+ * loop in _applyAllCorrections can continue fixing any remaining errors.
+ *
+ * Add new entries here to extend coverage — no other code changes needed.
+ */
+const VERB_STRUCTURE_RULES: readonly {
+  pattern:     RegExp;
+  replacement: string;
+  feedback:    string;
+}[] = [
+  // ── Category A: transitive-direct verbs ──────────────────────────────────
+  {
+    pattern:     /\b(achiev(?:e|es|ed|ing))\s+to\b/gi,
+    replacement: '$1',
+    feedback:    '"achieve to …" hatalı. "Achieve" doğrudan nesne alır. Doğru: "achieve success", "achieve your goals".',
+  },
+
+  // ── Category C: transitive verbs where "to + reflexive pronoun" is wrong ──
+  // These verbs take the reflexive pronoun as a *direct object* (no preposition).
+  // "develop to myself" → "develop myself", "improve to yourself" → "improve yourself"
+  // Excluded on purpose: prove/talk/say/speak/admit/promise (all valid with "to + reflexive").
+  {
+    pattern: /\b(develop(?:s|ed|ing)?|improve(?:s|d|ing)?|push(?:es|ed|ing)?|challenge(?:s|d|ing)?|train(?:s|ed|ing)?|motivate(?:s|d|ing)?|force(?:s|d|ing)?|build(?:s|ing)?|strengthen(?:s|ed|ing)?|expand(?:s|ed|ing)?|boost(?:s|ed|ing)?|enhance(?:s|d|ing)?)\s+to\s+(myself|yourself|himself|herself|itself|ourselves|yourselves|themselves)\b/gi,
+    replacement: '$1 $2',
+    feedback: '"[fiil] to [zamir]" yapısı hatalı — bu fiil doğrudan nesne alır, arasına "to" girmez. Doğru: "[fiil] [zamir]" (örn. "develop myself", "improve yourself", "push yourself").',
+  },
+
+  // ── Category B: gerund-only verbs ─────────────────────────────────────────
+  {
+    pattern:     /\b(enjoy(?:s|ed|ing)?)\s+to\s+/gi,
+    replacement: '$1 ',
+    feedback:    '"enjoy to …" hatalı. "Enjoy" gerund (fiil+-ing) alır. Doğru: "enjoy swimming", "enjoy reading".',
+  },
+  {
+    pattern:     /\b(avoid(?:s|ed|ing)?)\s+to\s+/gi,
+    replacement: '$1 ',
+    feedback:    '"avoid to …" hatalı. "Avoid" gerund alır. Doğru: "avoid making mistakes", "avoid eating junk food".',
+  },
+  {
+    pattern:     /\b(finish(?:es|ed|ing)?)\s+to\s+/gi,
+    replacement: '$1 ',
+    feedback:    '"finish to …" hatalı. "Finish" gerund alır. Doğru: "finish working", "finish reading the book".',
+  },
+  {
+    pattern:     /\b(miss(?:es|ed|ing)?)\s+to\s+/gi,
+    replacement: '$1 ',
+    feedback:    '"miss to …" hatalı. "Miss" gerund alır. Doğru: "miss seeing you", "miss going there".',
+  },
+  {
+    // "imagine to be" is excluded — "imagine to be" can appear in valid passive
+    // constructions; only flag "imagine to [non-be word]".
+    pattern:     /\b(imagine(?:s|d|ing)?)\s+to\s+(?!be\b)/gi,
+    replacement: '$1 ',
+    feedback:    '"imagine to …" hatalı. "Imagine" gerund alır. Doğru: "imagine doing", "imagine living there".',
+  },
+  {
+    pattern:     /\b(risk(?:s|ed|ing)?)\s+to\s+/gi,
+    replacement: '$1 ',
+    feedback:    '"risk to …" hatalı. "Risk" gerund alır. Doğru: "risk losing", "risk making a mistake".',
+  },
+  {
+    pattern:     /\b(deny|denies|denied|denying)\s+to\s+/gi,
+    replacement: '$1 ',
+    feedback:    '"deny to …" hatalı. "Deny" gerund alır. Doğru: "deny doing", "deny having taken it".',
+  },
+  {
+    pattern:     /\b(practis(?:e|es|ed|ing)|practic(?:e|es|ed|ing))\s+to\s+/gi,
+    replacement: '$1 ',
+    feedback:    '"practise/practice to …" hatalı. Bu fiiller gerund alır. Doğru: "practise speaking", "practice writing".',
+  },
+  // ── Category B continued ──────────────────────────────────────────────────
+  {
+    pattern:     /\b(postpone(?:s|d|ing)?)\s+to\s+/gi,
+    replacement: '$1 ',
+    feedback:    '"postpone to …" hatalı. "Postpone" gerund alır. Doğru: "postpone doing", "postpone making the decision".',
+  },
+  {
+    pattern:     /\b(delay(?:s|ed|ing)?)\s+to\s+/gi,
+    replacement: '$1 ',
+    feedback:    '"delay to …" hatalı. "Delay" gerund alır. Doğru: "delay doing", "delay starting".',
+  },
+  {
+    // Exclude indirect-object use: "recommend to him/her/them/us/me/you/it"
+    // and determiner-led noun phrases: "recommend to the/a/an/their…"
+    pattern:     /\b(recommend(?:s|ed|ing)?)\s+to\s+(?!him\b|her\b|them\b|us\b|me\b|you\b|it\b|the\b|a\b|an\b|my\b|your\b|his\b|our\b|their\b|this\b|that\b)/gi,
+    replacement: '$1 ',
+    feedback:    '"recommend to [eylem]" hatalı. "Recommend" gerund veya "that" cümlesi alır. Doğru: "recommend doing", "recommend going".',
+  },
+  {
+    // Exclude indirect-object use: "suggest to him/her/them/us/me/you/it"
+    // and determiner-led noun phrases: "suggest to the/a/an/their…"
+    pattern:     /\b(suggest(?:s|ed|ing)?)\s+to\s+(?!him\b|her\b|them\b|us\b|me\b|you\b|it\b|the\b|a\b|an\b|my\b|your\b|his\b|our\b|their\b|this\b|that\b)/gi,
+    replacement: '$1 ',
+    feedback:    '"suggest to [eylem]" hatalı. "Suggest" gerund veya "that" cümlesi alır. Doğru: "suggest going", "suggest doing it".',
+  },
+  {
+    // Exclude "consider X to be Y" and "consider X to have done Y" (valid constructions)
+    pattern:     /\b(consider(?:s|ed|ing)?)\s+to\s+(?!be\b|have\b)/gi,
+    replacement: '$1 ',
+    feedback:    '"consider to [eylem]" hatalı. "Consider" gerund alır. Doğru: "consider doing", "consider starting a new project".',
+  },
+  {
+    pattern:     /\b(dislik(?:e|es|ed|ing))\s+to\s+/gi,
+    replacement: '$1 ',
+    feedback:    '"dislike to …" hatalı. "Dislike" gerund alır. Doğru: "dislike doing", "dislike working late".',
+  },
+  {
+    pattern:     /\b(quit(?:s|ted|ting)?)\s+to\s+/gi,
+    replacement: '$1 ',
+    feedback:    '"quit to …" hatalı. "Quit" gerund alır. Doğru: "quit doing", "quit smoking".',
+  },
+  {
+    pattern:     /\b(mind(?:s|ed|ing)?)\s+to\s+/gi,
+    replacement: '$1 ',
+    feedback:    '"mind to …" hatalı. "Mind" gerund alır. Doğru: "Do you mind opening the window?", "I don\'t mind helping".',
+  },
+];
+
+/**
+ * Checks the sentence against the VERB_STRUCTURE_RULES table.
+ * Returns the first matching rule's error, or null when no errors are found.
+ */
+function _checkVerbStructure(
+  sentence: string,
+): { feedback: string; corrected: string } | null {
+  for (const rule of VERB_STRUCTURE_RULES) {
+    rule.pattern.lastIndex = 0;
+    if (rule.pattern.test(sentence)) {
+      rule.pattern.lastIndex = 0;
+      const fixed = sentence.replace(rule.pattern, rule.replacement);
+      return {
+        feedback:  rule.feedback,
+        corrected: cosmeticFix(fixed) ?? fixed,
+      };
+    }
+  }
+  return null;
+}
+
+// ─── Rule 16 — gerund-requiring preposition constructions ────────────────────
+
+/**
+ * Many English adjective/verb + preposition constructions require a gerund
+ * (-ing form) after the preposition.  Turkish EFL learners frequently use the
+ * base verb form instead.
+ *
+ *   "interested in learn"    → "interested in learning"
+ *   "good at swim"           → "good at swimming"
+ *   "responsible for manage" → "responsible for managing"
+ *   "instead of go"          → "instead of going"
+ *   "without ask permission" → "without asking permission"
+ *   "look forward to see"    → "look forward to seeing"
+ *
+ * Strategy:
+ *   Each trigger is a preposition or adjective+preposition phrase.  After the
+ *   trigger, if the next word is a member of GERUND_CHECK_VERBS (a curated set
+ *   of unambiguously verbal base forms) AND does not already end in -ing, the
+ *   rule fires and auto-corrects by converting the base form to its gerund.
+ *
+ *   GERUND_CHECK_VERBS deliberately excludes words that are also common nouns
+ *   after these prepositions ("work", "support", "help", "care", "control") to
+ *   keep the false-positive rate near zero.
+ */
+const GERUND_CHECK_VERBS: ReadonlySet<string> = new Set([
+  // Core action verbs — unambiguously verbal after gerund-requiring prepositions
+  'go', 'do', 'see', 'ask', 'try', 'pay', 'say',
+  'come', 'run', 'eat', 'drink', 'sleep', 'walk', 'swim', 'fly', 'drive',
+  'wait', 'read', 'write', 'speak', 'listen', 'learn', 'study', 'teach',
+  'understand', 'explain', 'describe', 'discuss', 'argue', 'decide', 'choose',
+  'apply', 'achieve', 'improve', 'develop', 'grow', 'build', 'create', 'solve',
+  'manage', 'produce', 'perform', 'analyze', 'evaluate', 'demonstrate',
+  'implement', 'organize', 'prepare', 'present', 'communicate', 'negotiate',
+  'collaborate', 'participate', 'contribute', 'interact', 'engage', 'compete',
+  'succeed', 'fail', 'progress', 'increase', 'decrease', 'reduce', 'maintain',
+  'complete', 'finish', 'start', 'begin', 'continue', 'repeat', 'practice',
+  'practise', 'explore', 'discover', 'identify', 'define', 'compare', 'connect',
+  'share', 'join', 'meet', 'visit', 'lead', 'follow', 'respond', 'adapt',
+  'overcome', 'handle', 'express', 'focus', 'think', 'remember', 'move',
+  'travel', 'translate', 'pronounce', 'review', 'measure', 'monitor',
+  'receive', 'send',
+]);
+
+/**
+ * Converts a verb base form to its simple gerund (-ing) form.
+ * CVC doubling is applied only for short words (≤ 4 chars) to avoid
+ * incorrectly doubling longer words like "develop" → "developping".
+ */
+function _toSimpleGerund(verb: string): string {
+  const v = verb.toLowerCase();
+  if (v.endsWith('ie'))  return v.slice(0, -2) + 'ying';
+  if (v.endsWith('e') && v.length > 2 && !v.endsWith('ee') && !v.endsWith('oe'))
+    return v.slice(0, -1) + 'ing';
+  if (v.length <= 4 && /[^aeiou][aeiou][bcdfghjklmnpqrstvz]$/.test(v))
+    return v + v.slice(-1) + 'ing';
+  return v + 'ing';
+}
+
+interface PrepGerundTrigger {
+  pattern:    RegExp;
+  /** Called with (triggerPhrase, baseVerb) — both already lowercased. */
+  feedbackFn: (triggerPhrase: string, verb: string) => string;
+}
+
+const PREP_GERUND_TRIGGERS: readonly PrepGerundTrigger[] = [
+  {
+    // "interested in learn" → "interested in learning"
+    pattern:    /\b(interested\s+in)\s+([a-z]{2,})\b/gi,
+    feedbackFn: (t, v) =>
+      `"${t} ${v}" hatalı — "${t}" sonrasında gerund (-ing) gelir. Doğru: "${t} ${_toSimpleGerund(v)}".`,
+  },
+  {
+    // "good/bad/great/terrible/skilled/talented/experienced at [verb]"
+    pattern:    /\b((?:good|bad|great|terrible|skilled|talented|experienced)\s+at)\s+([a-z]{2,})\b/gi,
+    feedbackFn: (t, v) =>
+      `"${t} ${v}" hatalı — "at" sonrasında gerund (-ing) gelir. Doğru: "${t} ${_toSimpleGerund(v)}".`,
+  },
+  {
+    // "responsible/famous/known/criticized/rewarded/punished/blamed for [verb]"
+    pattern:    /\b((?:responsible|famous|known|criticized|rewarded|punished|blamed)\s+for)\s+([a-z]{2,})\b/gi,
+    feedbackFn: (t, v) =>
+      `"${t} ${v}" hatalı — "for" sonrasında gerund (-ing) gelir. Doğru: "${t} ${_toSimpleGerund(v)}".`,
+  },
+  {
+    // "tired/sick/afraid/scared/capable/incapable/proud/ashamed/fond of [verb]"
+    pattern:    /\b((?:tired|sick|afraid|scared|capable|incapable|proud|ashamed|fond)\s+of)\s+([a-z]{2,})\b/gi,
+    feedbackFn: (t, v) =>
+      `"${t} ${v}" hatalı — "of" sonrasında gerund (-ing) gelir. Doğru: "${t} ${_toSimpleGerund(v)}".`,
+  },
+  {
+    // "instead of [verb]"
+    pattern:    /\b(instead\s+of)\s+([a-z]{2,})\b/gi,
+    feedbackFn: (t, v) =>
+      `"${t} ${v}" hatalı — "instead of" sonrasında gerund (-ing) gelir. Doğru: "${t} ${_toSimpleGerund(v)}".`,
+  },
+  {
+    // "without [verb]" — GERUND_CHECK_VERBS excludes common nouns like "help", "support"
+    pattern:    /\b(without)\s+([a-z]{2,})\b/gi,
+    feedbackFn: (t, v) =>
+      `"without ${v}" hatalı — "without" sonrasında gerund (-ing) gelir. Doğru: "without ${_toSimpleGerund(v)}".`,
+  },
+  {
+    // "before/after [verb]" — GERUND_CHECK_VERBS excludes time nouns like "work", "class"
+    pattern:    /\b(before|after)\s+([a-z]{2,})\b/gi,
+    feedbackFn: (t, v) =>
+      `"${t} ${v}" yapısında gerund (-ing) kullanılmalı. Doğru: "${t} ${_toSimpleGerund(v)}".`,
+  },
+  {
+    // "look(ing/s/ed) forward to [verb]" — always requires gerund, never infinitive
+    pattern:    /\b(look(?:ing|s|ed)?\s+forward\s+to)\s+([a-z]{2,})\b/gi,
+    feedbackFn: (t, v) =>
+      `"${t} ${v}" hatalı — "look forward to" sonrasında gerund (-ing) gelir. Doğru: "${t} ${_toSimpleGerund(v)}".`,
+  },
+  {
+    // "am/is/are/was/were/be/been used to [verb]" — "be used to" requires gerund
+    // (distinct from habitual-past "used to + base verb", which has no "be" preceding)
+    pattern:    /\b((?:am|is|are|was|were|be|been)\s+used\s+to)\s+([a-z]{2,})\b/gi,
+    feedbackFn: (t, v) =>
+      `"${t} ${v}" hatalı — "be used to" sonrasında gerund (-ing) gelir. Doğru: "${t} ${_toSimpleGerund(v)}".`,
+  },
+];
+
+/**
+ * Checks the sentence against PREP_GERUND_TRIGGERS.
+ * Fires when a known base-form verb (from GERUND_CHECK_VERBS) follows a
+ * gerund-requiring preposition phrase and the verb is NOT already in -ing form.
+ * Returns null when no error is found.
+ */
+function _checkPrepGerundErrors(
+  sentence: string,
+): { feedback: string; corrected: string } | null {
+  for (const trigger of PREP_GERUND_TRIGGERS) {
+    trigger.pattern.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    // Use exec loop so multiple occurrences are tried; first base-verb match wins.
+    while ((m = trigger.pattern.exec(sentence)) !== null) {
+      const candidateWord = m[2].toLowerCase();
+      if (GERUND_CHECK_VERBS.has(candidateWord) && !candidateWord.endsWith('ing')) {
+        const gerund    = _toSimpleGerund(candidateWord);
+        const feedback  = trigger.feedbackFn(m[1].toLowerCase(), candidateWord);
+        // Replace just the base verb with its gerund, preserving everything else.
+        const corrected =
+          sentence.slice(0, m.index + m[0].length - m[2].length) +
+          gerund +
+          sentence.slice(m.index + m[0].length);
+        return { feedback, corrected: cosmeticFix(corrected) ?? corrected };
+      }
+    }
+  }
+  return null;
+}
+
 /**
  * Runs all grammar-rule checks against `sentence` in priority order.
  * Returns the first error found, or null when no errors are detected.
@@ -1024,6 +1380,18 @@ function _checkGrammar(
   // ── Rule 13: wrong preposition with group-membership nouns ────────────────
   const r13 = _checkGroupMembershipPrep(sentence);
   if (r13) return r13;
+
+  // ── Rule 14: invalid "require + to-infinitive" argument structure ─────────
+  const r14 = _checkVerbArgumentErrors(sentence);
+  if (r14) return r14;
+
+  // ── Rule 15: verb + wrong complement structure ────────────────────────────
+  const r15 = _checkVerbStructure(sentence);
+  if (r15) return r15;
+
+  // ── Rule 16: gerund-requiring preposition constructions ───────────────────
+  const r16 = _checkPrepGerundErrors(sentence);
+  if (r16) return r16;
 
   return null;
 }
