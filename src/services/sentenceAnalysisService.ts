@@ -23,6 +23,9 @@
  *          — now also catches "A apple" when capitalised at sentence start
  *      10.  Irregular past after "to"/negatives ("to went", "didn't came")
  *      11.  Wrong preposition after "different"  ("different culture with her")
+ *      17.  Function-word / auxiliary typos       ("I con support you" → "can")
+ *           Two tiers: unambiguous misspellings (Tier 1, plain word-boundary) and
+ *           contextually constrained modal-slot typos (Tier 2, subject+typo+verb).
  *   - Fuzzy target-word detection: if the user wrote a near-misspelling of the
  *     target word, a "Bunu mu demek istedin?" hint is returned instead of a
  *     generic "word not found" message.
@@ -994,158 +997,248 @@ function _checkVerbArgumentErrors(
   return null;
 }
 
-// ─── Rule 15 — verb + wrong complement structure (general table) ─────────────
+// ─── Rule 15 — verb + wrong complement structure ─────────────────────────────
+//
+// Three verb categories, each backed by a single list.
+//
+//   Category A  Transitive-direct verbs: must take a plain noun/pronoun object.
+//               Inserting "to" before the object is always wrong.
+//               "achieve to success" → "achieve success"
+//               EXTEND: add one entry to TRANSITIVE_DIRECT_VERBS.
+//
+//   Category B  Gerund-only verbs: complement must be [verb]-ing.
+//               "suggest to go" → "suggest going"
+//               EXTEND: add one entry to GERUND_ONLY_VERBS.
+//               That single addition updates BOTH error detection AND
+//               correction (gerund completion) automatically.
+//
+//   Category C  Reflexive pronoun errors: verb takes reflexive as direct object,
+//               not with "to" as a preposition.
+//               "develop to myself" → "develop myself"
+//               EXTEND: add one verb stem to REFLEXIVE_DIRECT_VERB_STEMS.
+//
+// Design principle: each category is a plain data list.
+// The shared logic (pattern building, replacement, gerund completion) lives
+// in code, not duplicated across entries.  Adding a new verb never requires
+// touching any function body.
+
+// ── Category A ────────────────────────────────────────────────────────────────
+
+interface TransitiveDirectVerbConfig {
+  /** Base form of the verb (inflections are inferred automatically). */
+  stem: string;
+  feedbackTr: string;
+}
 
 /**
- * Data-driven table of verbs whose complements are structurally restricted.
+ * Verbs that require a plain noun/pronoun direct object.
+ * "achieve to X" is always wrong — the "to" does not belong here.
  *
- * Two categories:
- *
- *   A. Transitive-direct verbs — take a plain noun/pronoun object; inserting
- *      "to" before the object is always wrong.
- *      e.g. "achieve to success" → "achieve success"
- *
- *   B. Gerund-only verbs — complement must be [verb]-ing, not "to + infinitive".
- *      e.g. "enjoy to swimming" → "enjoy swimming"
- *           "avoid to make"     → "avoid make"  (partial fix; still flagged)
- *
- * Replacement always removes the offending "to" so the multi-pass correction
- * loop in _applyAllCorrections can continue fixing any remaining errors.
- *
- * Add new entries here to extend coverage — no other code changes needed.
+ * To add a new verb: append one entry. No other change needed.
  */
-const VERB_STRUCTURE_RULES: readonly {
-  pattern:     RegExp;
-  replacement: string;
-  feedback:    string;
-}[] = [
-  // ── Category A: transitive-direct verbs ──────────────────────────────────
-  {
-    pattern:     /\b(achiev(?:e|es|ed|ing))\s+to\b/gi,
-    replacement: '$1',
-    feedback:    '"achieve to …" hatalı. "Achieve" doğrudan nesne alır. Doğru: "achieve success", "achieve your goals".',
-  },
-
-  // ── Category C: transitive verbs where "to + reflexive pronoun" is wrong ──
-  // These verbs take the reflexive pronoun as a *direct object* (no preposition).
-  // "develop to myself" → "develop myself", "improve to yourself" → "improve yourself"
-  // Excluded on purpose: prove/talk/say/speak/admit/promise (all valid with "to + reflexive").
-  {
-    pattern: /\b(develop(?:s|ed|ing)?|improve(?:s|d|ing)?|push(?:es|ed|ing)?|challenge(?:s|d|ing)?|train(?:s|ed|ing)?|motivate(?:s|d|ing)?|force(?:s|d|ing)?|build(?:s|ing)?|strengthen(?:s|ed|ing)?|expand(?:s|ed|ing)?|boost(?:s|ed|ing)?|enhance(?:s|d|ing)?)\s+to\s+(myself|yourself|himself|herself|itself|ourselves|yourselves|themselves)\b/gi,
-    replacement: '$1 $2',
-    feedback: '"[fiil] to [zamir]" yapısı hatalı — bu fiil doğrudan nesne alır, arasına "to" girmez. Doğru: "[fiil] [zamir]" (örn. "develop myself", "improve yourself", "push yourself").',
-  },
-
-  // ── Category B: gerund-only verbs ─────────────────────────────────────────
-  {
-    pattern:     /\b(enjoy(?:s|ed|ing)?)\s+to\s+/gi,
-    replacement: '$1 ',
-    feedback:    '"enjoy to …" hatalı. "Enjoy" gerund (fiil+-ing) alır. Doğru: "enjoy swimming", "enjoy reading".',
-  },
-  {
-    pattern:     /\b(avoid(?:s|ed|ing)?)\s+to\s+/gi,
-    replacement: '$1 ',
-    feedback:    '"avoid to …" hatalı. "Avoid" gerund alır. Doğru: "avoid making mistakes", "avoid eating junk food".',
-  },
-  {
-    pattern:     /\b(finish(?:es|ed|ing)?)\s+to\s+/gi,
-    replacement: '$1 ',
-    feedback:    '"finish to …" hatalı. "Finish" gerund alır. Doğru: "finish working", "finish reading the book".',
-  },
-  {
-    pattern:     /\b(miss(?:es|ed|ing)?)\s+to\s+/gi,
-    replacement: '$1 ',
-    feedback:    '"miss to …" hatalı. "Miss" gerund alır. Doğru: "miss seeing you", "miss going there".',
-  },
-  {
-    // "imagine to be" is excluded — "imagine to be" can appear in valid passive
-    // constructions; only flag "imagine to [non-be word]".
-    pattern:     /\b(imagine(?:s|d|ing)?)\s+to\s+(?!be\b)/gi,
-    replacement: '$1 ',
-    feedback:    '"imagine to …" hatalı. "Imagine" gerund alır. Doğru: "imagine doing", "imagine living there".',
-  },
-  {
-    pattern:     /\b(risk(?:s|ed|ing)?)\s+to\s+/gi,
-    replacement: '$1 ',
-    feedback:    '"risk to …" hatalı. "Risk" gerund alır. Doğru: "risk losing", "risk making a mistake".',
-  },
-  {
-    pattern:     /\b(deny|denies|denied|denying)\s+to\s+/gi,
-    replacement: '$1 ',
-    feedback:    '"deny to …" hatalı. "Deny" gerund alır. Doğru: "deny doing", "deny having taken it".',
-  },
-  {
-    pattern:     /\b(practis(?:e|es|ed|ing)|practic(?:e|es|ed|ing))\s+to\s+/gi,
-    replacement: '$1 ',
-    feedback:    '"practise/practice to …" hatalı. Bu fiiller gerund alır. Doğru: "practise speaking", "practice writing".',
-  },
-  // ── Category B continued ──────────────────────────────────────────────────
-  {
-    pattern:     /\b(postpone(?:s|d|ing)?)\s+to\s+/gi,
-    replacement: '$1 ',
-    feedback:    '"postpone to …" hatalı. "Postpone" gerund alır. Doğru: "postpone doing", "postpone making the decision".',
-  },
-  {
-    pattern:     /\b(delay(?:s|ed|ing)?)\s+to\s+/gi,
-    replacement: '$1 ',
-    feedback:    '"delay to …" hatalı. "Delay" gerund alır. Doğru: "delay doing", "delay starting".',
-  },
-  {
-    // Exclude indirect-object use: "recommend to him/her/them/us/me/you/it"
-    // and determiner-led noun phrases: "recommend to the/a/an/their…"
-    pattern:     /\b(recommend(?:s|ed|ing)?)\s+to\s+(?!him\b|her\b|them\b|us\b|me\b|you\b|it\b|the\b|a\b|an\b|my\b|your\b|his\b|our\b|their\b|this\b|that\b)/gi,
-    replacement: '$1 ',
-    feedback:    '"recommend to [eylem]" hatalı. "Recommend" gerund veya "that" cümlesi alır. Doğru: "recommend doing", "recommend going".',
-  },
-  {
-    // Exclude indirect-object use: "suggest to him/her/them/us/me/you/it"
-    // and determiner-led noun phrases: "suggest to the/a/an/their…"
-    pattern:     /\b(suggest(?:s|ed|ing)?)\s+to\s+(?!him\b|her\b|them\b|us\b|me\b|you\b|it\b|the\b|a\b|an\b|my\b|your\b|his\b|our\b|their\b|this\b|that\b)/gi,
-    replacement: '$1 ',
-    feedback:    '"suggest to [eylem]" hatalı. "Suggest" gerund veya "that" cümlesi alır. Doğru: "suggest going", "suggest doing it".',
-  },
-  {
-    // Exclude "consider X to be Y" and "consider X to have done Y" (valid constructions)
-    pattern:     /\b(consider(?:s|ed|ing)?)\s+to\s+(?!be\b|have\b)/gi,
-    replacement: '$1 ',
-    feedback:    '"consider to [eylem]" hatalı. "Consider" gerund alır. Doğru: "consider doing", "consider starting a new project".',
-  },
-  {
-    pattern:     /\b(dislik(?:e|es|ed|ing))\s+to\s+/gi,
-    replacement: '$1 ',
-    feedback:    '"dislike to …" hatalı. "Dislike" gerund alır. Doğru: "dislike doing", "dislike working late".',
-  },
-  {
-    pattern:     /\b(quit(?:s|ted|ting)?)\s+to\s+/gi,
-    replacement: '$1 ',
-    feedback:    '"quit to …" hatalı. "Quit" gerund alır. Doğru: "quit doing", "quit smoking".',
-  },
-  {
-    pattern:     /\b(mind(?:s|ed|ing)?)\s+to\s+/gi,
-    replacement: '$1 ',
-    feedback:    '"mind to …" hatalı. "Mind" gerund alır. Doğru: "Do you mind opening the window?", "I don\'t mind helping".',
-  },
+const TRANSITIVE_DIRECT_VERBS: readonly TransitiveDirectVerbConfig[] = [
+  { stem: 'achieve',  feedbackTr: '"achieve to …" hatalı. "Achieve" doğrudan nesne alır. Doğru: "achieve success", "achieve your goals".' },
+  { stem: 'reach',    feedbackTr: '"reach to …" hatalı. "Reach" doğrudan nesne alır. Doğru: "reach the goal", "reach an agreement".' },
+  { stem: 'enter',    feedbackTr: '"enter to …" hatalı. "Enter" doğrudan nesne alır. Doğru: "enter the room", "enter the competition".' },
+  { stem: 'attend',   feedbackTr: '"attend to …" hatalı (when meaning "go to"). "Attend" doğrudan nesne alır. Doğru: "attend the meeting".' },
+  { stem: 'resemble', feedbackTr: '"resemble to …" hatalı. "Resemble" doğrudan nesne alır. Doğru: "resemble her mother".' },
 ];
 
+// Pre-compiled patterns derived from TRANSITIVE_DIRECT_VERBS.
+// Each pattern captures the inflected verb so the replacement drops only "to".
+const _TRANSITIVE_DIRECT_PATTERNS: ReadonlyArray<{ pattern: RegExp; config: TransitiveDirectVerbConfig }> =
+  TRANSITIVE_DIRECT_VERBS.map(config => ({
+    pattern: new RegExp(`\\b(${config.stem}(?:s|es|ed|ing)?)\\s+to\\b`, 'gi'),
+    config,
+  }));
+
+function _checkTransitiveDirectErrors(
+  sentence: string,
+): { feedback: string; corrected: string } | null {
+  for (const { pattern, config } of _TRANSITIVE_DIRECT_PATTERNS) {
+    pattern.lastIndex = 0;
+    if (pattern.test(sentence)) {
+      pattern.lastIndex = 0;
+      const fixed = sentence.replace(pattern, '$1');
+      return { feedback: config.feedbackTr, corrected: cosmeticFix(fixed) ?? fixed };
+    }
+  }
+  return null;
+}
+
+// ── Category B ────────────────────────────────────────────────────────────────
+
+interface GerundOnlyVerbConfig {
+  /** Base form of the verb (inflections inferred automatically). */
+  stem: string;
+  /**
+   * Words that are VALID immediately after "to" for this verb.
+   * Used to exclude indirect-object constructions and other valid patterns.
+   * e.g. "suggest to him" (valid), "consider to be" (valid).
+   */
+  excludeAfterTo?: readonly string[];
+  feedbackTr: string;
+}
+
 /**
- * Checks the sentence against the VERB_STRUCTURE_RULES table.
- * Returns the first matching rule's error, or null when no errors are found.
+ * Verbs whose complement MUST be gerund (-ing), not "to + infinitive".
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * EXTENDING THIS LIST:
+ *   Add one entry here.  That is the ONLY change required to extend Category B.
+ *   Both error detection AND the gerund-completion correction update automatically.
+ *   No regex changes.  No function changes.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+const GERUND_ONLY_VERBS: readonly GerundOnlyVerbConfig[] = [
+  { stem: 'enjoy',     feedbackTr: '"enjoy to …" hatalı. "Enjoy" gerund (fiil+-ing) alır. Doğru: "enjoy swimming", "enjoy reading".' },
+  { stem: 'avoid',     feedbackTr: '"avoid to …" hatalı. "Avoid" gerund alır. Doğru: "avoid making mistakes", "avoid eating junk food".' },
+  { stem: 'finish',    feedbackTr: '"finish to …" hatalı. "Finish" gerund alır. Doğru: "finish working", "finish reading the book".' },
+  { stem: 'miss',      feedbackTr: '"miss to …" hatalı. "Miss" gerund alır. Doğru: "miss seeing you", "miss going there".' },
+  { stem: 'imagine',   excludeAfterTo: ['be'], feedbackTr: '"imagine to …" hatalı. "Imagine" gerund alır. Doğru: "imagine doing", "imagine living there".' },
+  { stem: 'risk',      feedbackTr: '"risk to …" hatalı. "Risk" gerund alır. Doğru: "risk losing", "risk making a mistake".' },
+  { stem: 'deny',      feedbackTr: '"deny to …" hatalı. "Deny" gerund alır. Doğru: "deny doing", "deny having taken it".' },
+  { stem: 'practise',  feedbackTr: '"practise to …" hatalı. "Practise" gerund alır. Doğru: "practise speaking", "practise writing".' },
+  { stem: 'practice',  feedbackTr: '"practice to …" hatalı. "Practice" gerund alır. Doğru: "practice speaking", "practice writing".' },
+  { stem: 'postpone',  feedbackTr: '"postpone to …" hatalı. "Postpone" gerund alır. Doğru: "postpone doing", "postpone making the decision".' },
+  { stem: 'delay',     feedbackTr: '"delay to …" hatalı. "Delay" gerund alır. Doğru: "delay doing", "delay starting".' },
+  { stem: 'recommend', excludeAfterTo: ['him','her','them','us','me','you','it','the','a','an','my','your','his','our','their','this','that'], feedbackTr: '"recommend to [eylem]" hatalı. "Recommend" gerund veya "that" cümlesi alır. Doğru: "recommend doing", "recommend going".' },
+  { stem: 'suggest',   excludeAfterTo: ['him','her','them','us','me','you','it','the','a','an','my','your','his','our','their','this','that'], feedbackTr: '"suggest to [eylem]" hatalı. "Suggest" gerund veya "that" cümlesi alır. Doğru: "suggest going", "suggest doing it".' },
+  { stem: 'consider',  excludeAfterTo: ['be','have'], feedbackTr: '"consider to [eylem]" hatalı. "Consider" gerund alır. Doğru: "consider doing", "consider starting a new project".' },
+  { stem: 'dislike',   feedbackTr: '"dislike to …" hatalı. "Dislike" gerund alır. Doğru: "dislike doing", "dislike working late".' },
+  { stem: 'quit',      feedbackTr: '"quit to …" hatalı. "Quit" gerund alır. Doğru: "quit doing", "quit smoking".' },
+  { stem: 'mind',      feedbackTr: '"mind to …" hatalı. "Mind" gerund alır. Doğru: "Do you mind opening the window?", "I don\'t mind helping".' },
+  { stem: 'keep',      feedbackTr: '"keep to …" hatalı (when not meaning "keep to a schedule"). "Keep" + eylem için gerund alır. Doğru: "keep doing", "keep trying".' },
+  { stem: 'admit',     feedbackTr: '"admit to [infinitive]" hatalı eylem kalıbı. "Admit" gerund alır. Doğru: "admit doing", "admit having taken it".' },
+  { stem: 'tolerate',  feedbackTr: '"tolerate to …" hatalı. "Tolerate" gerund alır. Doğru: "tolerate waiting", "tolerate being ignored".' },
+];
+
+// Pre-compile one check pattern per verb from the list above.
+// Pattern: \b(stem + inflection)\s+to\s+[optional exclusion lookahead]
+const _GERUND_ONLY_PATTERNS: ReadonlyArray<{ pattern: RegExp; config: GerundOnlyVerbConfig }> =
+  GERUND_ONLY_VERBS.map(config => {
+    const exclusion = config.excludeAfterTo?.length
+      ? `(?!${config.excludeAfterTo.map(w => `${w}\\b`).join('|')})`
+      : '';
+    return {
+      pattern: new RegExp(`\\b(${config.stem}(?:s|es|ed|ing)?)\\s+to\\s+${exclusion}`, 'gi'),
+      config,
+    };
+  });
+
+/**
+ * Gerund-completion pattern — derived from the SAME GERUND_ONLY_VERBS list.
+ *
+ * Used after the "to" has been removed to convert a bare following verb to
+ * its -ing form.  Single source of truth: when a stem is added to
+ * GERUND_ONLY_VERBS, it is included here automatically at module load.
+ */
+const _GERUND_COMPLETION_PATTERN: RegExp = (() => {
+  const stems = GERUND_ONLY_VERBS.map(c => c.stem).join('|');
+  return new RegExp(`\\b(${stems})(s|es|ed|ing)?\\s+([a-z]{2,})\\b`, 'gi');
+})();
+
+/**
+ * After removing "to" from a gerund-only verb construction, the following
+ * verb remains in bare form.  This pass converts it to gerund (-ing) when
+ * the word is in GERUND_CHECK_VERBS (the recognised base-form verb set).
+ *
+ *   "I suggest go there"     → "I suggest going there"   ✓
+ *   "She avoids take risks"  → "She avoids taking risks" ✓  (inflection kept)
+ *   "I suggest the plan"     → unchanged                 ✓  (not a verb)
+ *   "I suggest going there"  → unchanged                 ✓  (already gerund)
+ *
+ * Words not in GERUND_CHECK_VERBS are left untouched.  The correction-validity
+ * gate (validateCorrectedSentence) will then suppress display of anything
+ * still broken.
+ */
+function _completeBareVerbToGerund(sentence: string): string {
+  _GERUND_COMPLETION_PATTERN.lastIndex = 0;
+  return sentence.replace(
+    _GERUND_COMPLETION_PATTERN,
+    (match, gerundVerb, inflection, nextWord) => {
+      const lower = nextWord.toLowerCase();
+      if (lower.endsWith('ing')) return match; // already gerund — leave unchanged
+      if (GERUND_CHECK_VERBS.has(lower)) {
+        return `${gerundVerb}${inflection ?? ''} ${_toSimpleGerund(lower)}`;
+      }
+      return match;
+    },
+  );
+}
+
+function _checkGerundOnlyErrors(
+  sentence: string,
+): { feedback: string; corrected: string } | null {
+  for (const { pattern, config } of _GERUND_ONLY_PATTERNS) {
+    pattern.lastIndex = 0;
+    if (pattern.test(sentence)) {
+      pattern.lastIndex = 0;
+      // Remove the spurious "to " then attempt gerund completion.
+      const fixed = _completeBareVerbToGerund(sentence.replace(pattern, '$1 '));
+      return { feedback: config.feedbackTr, corrected: cosmeticFix(fixed) ?? fixed };
+    }
+  }
+  return null;
+}
+
+// ── Category C ────────────────────────────────────────────────────────────────
+
+/**
+ * Verbs that take a reflexive pronoun as a DIRECT object (no preposition).
+ * "develop to myself" is wrong — the correct form is "develop myself".
+ *
+ * Intentionally excluded: prove, talk, say, speak, admit, promise
+ * (all grammatically valid with "to + reflexive").
+ *
+ * To add a new verb: append its base form here.  No other change needed.
+ */
+const REFLEXIVE_DIRECT_VERB_STEMS: readonly string[] = [
+  'develop', 'improve', 'push', 'challenge', 'train', 'motivate', 'force',
+  'build', 'strengthen', 'expand', 'boost', 'enhance', 'stretch', 'discipline',
+  'express', 'assert', 'compose', 'prepare', 'apply', 'dedicate',
+];
+
+const _REFLEXIVE_PRONOUNS = 'myself|yourself|himself|herself|itself|ourselves|yourselves|themselves';
+
+/** Pre-compiled from REFLEXIVE_DIRECT_VERB_STEMS at module load. */
+const _REFLEXIVE_DIRECT_PATTERN: RegExp = (() => {
+  const stems = REFLEXIVE_DIRECT_VERB_STEMS.join('|');
+  return new RegExp(
+    `\\b((?:${stems})(?:s|es|ed|ing)?)\\s+to\\s+(${_REFLEXIVE_PRONOUNS})\\b`,
+    'gi',
+  );
+})();
+
+function _checkReflexiveDirectErrors(
+  sentence: string,
+): { feedback: string; corrected: string } | null {
+  _REFLEXIVE_DIRECT_PATTERN.lastIndex = 0;
+  if (_REFLEXIVE_DIRECT_PATTERN.test(sentence)) {
+    _REFLEXIVE_DIRECT_PATTERN.lastIndex = 0;
+    const fixed = sentence.replace(_REFLEXIVE_DIRECT_PATTERN, '$1 $2');
+    return {
+      feedback:  '"[fiil] to [zamir]" yapısı hatalı — bu fiil doğrudan nesne alır, arasına "to" girmez. Doğru: "[fiil] [zamir]" (örn. "develop myself", "improve yourself", "push yourself").',
+      corrected: cosmeticFix(fixed) ?? fixed,
+    };
+  }
+  return null;
+}
+
+// ── Rule 15 dispatch ──────────────────────────────────────────────────────────
+
+/**
+ * Checks the sentence against all three verb-structure categories.
+ * Returns the first error found, or null when no errors are detected.
  */
 function _checkVerbStructure(
   sentence: string,
 ): { feedback: string; corrected: string } | null {
-  for (const rule of VERB_STRUCTURE_RULES) {
-    rule.pattern.lastIndex = 0;
-    if (rule.pattern.test(sentence)) {
-      rule.pattern.lastIndex = 0;
-      const fixed = sentence.replace(rule.pattern, rule.replacement);
-      return {
-        feedback:  rule.feedback,
-        corrected: cosmeticFix(fixed) ?? fixed,
-      };
-    }
-  }
-  return null;
+  return (
+    _checkTransitiveDirectErrors(sentence) ??
+    _checkGerundOnlyErrors(sentence)       ??
+    _checkReflexiveDirectErrors(sentence)
+  );
 }
 
 // ─── Rule 16 — gerund-requiring preposition constructions ────────────────────
@@ -1189,6 +1282,10 @@ const GERUND_CHECK_VERBS: ReadonlySet<string> = new Set([
   'overcome', 'handle', 'express', 'focus', 'think', 'remember', 'move',
   'travel', 'translate', 'pronounce', 'review', 'measure', 'monitor',
   'receive', 'send',
+  // Commonly used verb bases after gerund-taking verbs; noun-ambiguity is very
+  // low in these positions so they are safe to add.
+  'make', 'take', 'get', 'leave', 'keep', 'put', 'give', 'find', 'stop',
+  'buy', 'sell', 'lose', 'change', 'check',
 ]);
 
 /**
@@ -1300,6 +1397,127 @@ function _checkPrepGerundErrors(
   return null;
 }
 
+// ─── Rule 17 — function-word / auxiliary typo detection ─────────────────────
+//
+// Many EFL/ESL learners type near-miss spellings of high-frequency grammar words:
+//   "I con support you"   (con  → can)
+//   "shoud I go?"         (shoud → should)
+//   "she doesnt like it"  (doesnt → doesn't)
+//
+// Architecture — two tiers:
+//
+//   Tier 1  Unambiguous misspellings: the wrong form is NOT a valid English word
+//           in any context.  Safe to replace anywhere with a plain word-boundary
+//           match.  Single data entry = one correction pair.  No code changes needed.
+//
+//   Tier 2  Context-gated modal typos: the wrong form IS a real English word
+//           (e.g. "con" = swindle/disadvantage) so a bare replacement would create
+//           false positives.  These are only corrected inside the canonical auxiliary
+//           slot:  [subject pronoun]  [typo]  [base verb].
+//           Single data entry = one correction pair.  No code changes needed.
+
+/**
+ * Tier-1 function-word misspellings — safe everywhere.
+ *
+ * To add a new typo pair: append one entry.  The misspelling MUST NOT be a
+ * valid English word that could legitimately appear in the same position.
+ */
+const FUNCTION_WORD_TYPOS: readonly { pattern: RegExp; replacement: string; feedback: string }[] = [
+  // ── Modal typos ──────────────────────────────────────────────────────────────
+  { pattern: /\bshoud\b/gi,    replacement: 'should',    feedback: '"shoud" yazım hatası — doğrusu "should".' },
+  { pattern: /\bwoud\b/gi,     replacement: 'would',     feedback: '"woud" yazım hatası — doğrusu "would".' },
+  { pattern: /\bcoud\b/gi,     replacement: 'could',     feedback: '"coud" yazım hatası — doğrusu "could".' },
+  { pattern: /\bmigh\b/gi,     replacement: 'might',     feedback: '"migh" yazım hatası — doğrusu "might".' },
+  { pattern: /\bshal\b/gi,     replacement: 'shall',     feedback: '"shal" yazım hatası — doğrusu "shall".' },
+  // ── Negated contractions (missing apostrophe — not real English words) ───────
+  { pattern: /\bdont\b/gi,     replacement: "don't",     feedback: '"dont" yazım hatası — doğrusu "don\'t".' },
+  { pattern: /\bdoesnt\b/gi,   replacement: "doesn't",   feedback: '"doesnt" yazım hatası — doğrusu "doesn\'t".' },
+  { pattern: /\bdidnt\b/gi,    replacement: "didn't",    feedback: '"didnt" yazım hatası — doğrusu "didn\'t".' },
+  { pattern: /\bwouldnt\b/gi,  replacement: "wouldn't",  feedback: '"wouldnt" yazım hatası — doğrusu "wouldn\'t".' },
+  { pattern: /\bcouldnt\b/gi,  replacement: "couldn't",  feedback: '"couldnt" yazım hatası — doğrusu "couldn\'t".' },
+  { pattern: /\bshouldnt\b/gi, replacement: "shouldn't", feedback: '"shouldnt" yazım hatası — doğrusu "shouldn\'t".' },
+  { pattern: /\bisnt\b/gi,     replacement: "isn't",     feedback: '"isnt" yazım hatası — doğrusu "isn\'t".' },
+  { pattern: /\barent\b/gi,    replacement: "aren't",    feedback: '"arent" yazım hatası — doğrusu "aren\'t".' },
+  { pattern: /\bwasnt\b/gi,    replacement: "wasn't",    feedback: '"wasnt" yazım hatası — doğrusu "wasn\'t".' },
+  { pattern: /\bwerent\b/gi,   replacement: "weren't",   feedback: '"werent" yazım hatası — doğrusu "weren\'t".' },
+  { pattern: /\bhavent\b/gi,   replacement: "haven't",   feedback: '"havent" yazım hatası — doğrusu "haven\'t".' },
+  { pattern: /\bhasnt\b/gi,    replacement: "hasn't",    feedback: '"hasnt" yazım hatası — doğrusu "hasn\'t".' },
+  { pattern: /\bhadnt\b/gi,    replacement: "hadn't",    feedback: '"hadnt" yazım hatası — doğrusu "hadn\'t".' },
+  // ── Be-verb typos ────────────────────────────────────────────────────────────
+  // "iz" is not standard English; safe to rewrite as "is" in learner writing.
+  { pattern: /\biz\b/gi,       replacement: 'is',        feedback: '"iz" yazım hatası — doğrusu "is".' },
+  // "iam" (no space) is a very common mobile-keyboard typo for "I am".
+  { pattern: /\biam\b/gi,      replacement: 'I am',      feedback: '"iam" yazım hatası — doğrusu "I am".' },
+  // ── Have-form typos ──────────────────────────────────────────────────────────
+  { pattern: /\bhav\b/gi,      replacement: 'have',      feedback: '"hav" yazım hatası — doğrusu "have".' },
+];
+
+/**
+ * Tier-2 modal-position typos — context-gated.
+ *
+ * Applied ONLY when the typo appears in: [subject pronoun] [typo] [verb].
+ * This prevents false positives where the misspelling is a real English word
+ * (e.g. "con" can mean "swindle" or "disadvantage").
+ *
+ * To add a new entry: append { wrong, right, feedbackTr }.  No code changes.
+ */
+interface _ModalPositionTypo { wrong: string; right: string; feedbackTr: string; }
+const _MODAL_POSITION_TYPOS: readonly _ModalPositionTypo[] = [
+  {
+    wrong:      'con',
+    right:      'can',
+    feedbackTr: '"con" yazım hatası — doğrusu "can" (modal fiil). Doğru örnek: "I can support you."',
+  },
+];
+
+/** Subject pronouns that can precede a modal auxiliary. */
+const _AUX_SUBJECT = 'I|you|he|she|it|we|they';
+
+function _checkModalPositionTypos(
+  sentence: string,
+): { feedback: string; corrected: string } | null {
+  for (const { wrong, right, feedbackTr } of _MODAL_POSITION_TYPOS) {
+    // Match: [subject] [typo] [base-verb] — the base verb must be at least 2 chars.
+    const re = new RegExp(
+      `\\b(${_AUX_SUBJECT})\\s+(${wrong})\\s+([a-z]{2,})\\b`,
+      'gi',
+    );
+    re.lastIndex = 0;
+    const m = re.exec(sentence);
+    if (m) {
+      re.lastIndex = 0;
+      const fixed = sentence.replace(re, (_, subj, _w, verb) => `${subj} ${right} ${verb}`);
+      return { feedback: feedbackTr, corrected: cosmeticFix(fixed) ?? fixed };
+    }
+  }
+  return null;
+}
+
+/**
+ * Checks the sentence for high-frequency grammar-word / auxiliary typos.
+ *
+ * Tier 1 (unambiguous misspellings) runs first.
+ * Tier 2 (context-gated modal slot) runs if Tier 1 finds nothing.
+ *
+ * Multi-pass correction handles cascades automatically: e.g.
+ *   "he dont know"
+ *   → Pass 1 (Rule 17): dont → don't  → "he don't know"
+ *   → Pass 2 (Rule 5):  he don't → he doesn't  → "he doesn't know"  ✓
+ */
+function _checkFunctionWordTypos(
+  sentence: string,
+): { feedback: string; corrected: string } | null {
+  for (const rule of FUNCTION_WORD_TYPOS) {
+    rule.pattern.lastIndex = 0;
+    if (rule.pattern.test(sentence)) {
+      rule.pattern.lastIndex = 0;
+      const fixed = sentence.replace(rule.pattern, rule.replacement);
+      return { feedback: rule.feedback, corrected: cosmeticFix(fixed) ?? fixed };
+    }
+  }
+  return _checkModalPositionTypos(sentence);
+}
+
 /**
  * Runs all grammar-rule checks against `sentence` in priority order.
  * Returns the first error found, or null when no errors are detected.
@@ -1393,6 +1611,10 @@ function _checkGrammar(
   const r16 = _checkPrepGerundErrors(sentence);
   if (r16) return r16;
 
+  // ── Rule 17: function-word / auxiliary typos ──────────────────────────────
+  const r17 = _checkFunctionWordTypos(sentence);
+  if (r17) return r17;
+
   return null;
 }
 
@@ -1443,6 +1665,27 @@ function _applyAllCorrections(sentence: string): string | undefined {
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
+
+/**
+ * Validates that a proposed corrected sentence is itself free of detectable
+ * grammar errors.
+ *
+ * A correction produced by local rules can sometimes be incomplete — for
+ * example, removing "to" from a gerund-verb construction may leave a bare
+ * verb if the following word is not in the recognised set.  Call this before
+ * displaying a corrected sentence so the UI never shows a still-broken result.
+ *
+ *   validateCorrectedSentence("I suggest going there.") → true  (safe to show)
+ *   validateCorrectedSentence("I suggest go there.")   → false (still broken)
+ *
+ * Returns true  — no grammar errors detected; safe to display.
+ * Returns false — errors remain; suppress the correction and fall back to an
+ *                 example sentence from the word data instead.
+ */
+export function validateCorrectedSentence(corrected: string): boolean {
+  if (!corrected || !corrected.trim()) return false;
+  return _checkGrammar(corrected) === null;
+}
 
 /**
  * Analyses a user sentence against a set of target words.

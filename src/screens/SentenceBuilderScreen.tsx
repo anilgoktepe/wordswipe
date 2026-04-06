@@ -17,7 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { getLocalWords, Word } from '../services/vocabularyService';
-import { analyzeSentenceLocal, LocalAnalysisResult } from '../services/sentenceAnalysisService';
+import { analyzeSentenceLocal, LocalAnalysisResult, validateCorrectedSentence } from '../services/sentenceAnalysisService';
 import {
   analyzeSentenceDetailed,
   DetailedAnalysisResult,
@@ -284,12 +284,35 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
         return (['fail', 'partial', 'perfect'] as const)[worse];
       })();
 
+      // Detailed verdict + score used for fine-grained XP and SRS gating.
+      //   PERFECT / ACCEPTABLE                → 10 XP, advances SRS
+      //   FLAWED  (minor, score > 20)         →  5 XP, does NOT advance SRS
+      //   FLAWED  (major, score ≤ 20)         →  0 XP, does NOT advance SRS
+      //   REJECTED                             →  0 XP, does NOT advance SRS
+      const _detailedVerdict = detailedResult?.verdict ?? null;
+      const _detailedScore   = detailedResult?.score   ?? 100;
+
       if (_finalStatus === 'perfect') {
-        xpEarned = 10;
-        countAsCompleted = true;
+        // Detailed AI may have downgraded to FLAWED (major) even though local passed.
+        if (_detailedVerdict === 'REJECTED' ||
+            (_detailedVerdict === 'FLAWED' && _detailedScore <= 20)) {
+          xpEarned = 0;
+          countAsCompleted = false;
+        } else {
+          xpEarned = 10;
+          countAsCompleted = true;
+        }
       } else if (_finalStatus === 'partial') {
-        xpEarned = 5;
-        countAsCompleted = true;
+        // partial always maps to FLAWED in the detailed verdict.
+        // Major structural errors (score ≤ 20) earn nothing.
+        if (_detailedVerdict === 'REJECTED' ||
+            (_detailedVerdict === 'FLAWED' && _detailedScore <= 20)) {
+          xpEarned = 0;
+          countAsCompleted = false;
+        } else {
+          xpEarned = 5;
+          countAsCompleted = false; // FLAWED does not advance SRS
+        }
       }
       // fail → 0 XP, countAsCompleted stays false
 
@@ -559,21 +582,44 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                   </View>
 
                   {/* Corrected version — prefer local's grammar-fix sentence when
-                      local caught an error; suppress if detailed panel shows its own. */}
+                      local caught an error; suppress if detailed panel shows its own.
+                      CORRECTION RELIABILITY GATE: before displaying a corrected
+                      sentence, validate that it is itself free of grammar errors.
+                      A wrong correction is worse than no correction — if the local
+                      rule only partially fixed the sentence (e.g. removed "to" but
+                      did not convert the following bare verb to -ing), suppress the
+                      correction and fall back to the word's example sentence. */}
                   {(() => {
+                    // Validate the correction candidate once (used in both branches below).
+                    const correctionIsValid =
+                      !!result.correctedSentence &&
+                      validateCorrectedSentence(result.correctedSentence);
+
                     // When local detected a grammar error, its corrected sentence is
                     // the authoritative fix — always show it regardless of detailed result.
                     if (result.status === 'fail' && result.correctedSentence) {
-                      return (
-                        <View style={[styles.correctedBox, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '40' }]}>
-                          <Text style={[styles.boxLabel, { color: theme.primary }]}>✏️ Düzeltilmiş hali:</Text>
-                          <Text style={{ color: theme.text, fontSize: 15 }}>{result.correctedSentence}</Text>
-                        </View>
-                      );
+                      if (correctionIsValid) {
+                        return (
+                          <View style={[styles.correctedBox, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '40' }]}>
+                            <Text style={[styles.boxLabel, { color: theme.primary }]}>✏️ Düzeltilmiş hali:</Text>
+                            <Text style={{ color: theme.text, fontSize: 15 }}>{result.correctedSentence}</Text>
+                          </View>
+                        );
+                      }
+                      // Correction is still broken — show the word's example instead.
+                      if (currentWord?.example) {
+                        return (
+                          <View style={[styles.correctedBox, { backgroundColor: '#FEF3C720', borderColor: '#F59E0B40' }]}>
+                            <Text style={[styles.boxLabel, { color: '#B45309' }]}>💡 Örnek kullanım:</Text>
+                            <Text style={{ color: theme.text, fontSize: 15, fontStyle: 'italic' }}>{currentWord.example}</Text>
+                          </View>
+                        );
+                      }
+                      return null;
                     }
                     // Local was fine (cosmetic only) — only show if detailed hasn't run
                     // (detailed panel will render its own corrected sentence if it has one).
-                    if (!detailedResult && result.correctedSentence) {
+                    if (!detailedResult && result.correctedSentence && correctionIsValid) {
                       return (
                         <View style={[styles.correctedBox, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '40' }]}>
                           <Text style={[styles.boxLabel, { color: theme.primary }]}>✏️ Düzeltilmiş hali:</Text>
@@ -650,9 +696,19 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                         </View>
                       </View>
 
-                      {/* Turkish feedback */}
+                      {/* Turkish feedback — with false-praise guard:
+                          never show positive message when the verdict is bad. */}
                       <Text style={[styles.premiumFeedback, { color: theme.text }]}>
-                        {detailedResult.shortFeedbackTr}
+                        {(() => {
+                          const fb = detailedResult.shortFeedbackTr;
+                          const isDowngraded = effectiveStatus === 'partial' || effectiveStatus === 'fail';
+                          if (isDowngraded && /great|perfect|excellent|awesome|well done|harika|mükemmel/i.test(fb)) {
+                            return effectiveStatus === 'partial'
+                              ? 'Cümlende yapısal sorun var. Aşağıdaki geri bildirimi kontrol et.'
+                              : 'Cümle önemli değişiklikler gerektiriyor. Tekrar dene.';
+                          }
+                          return fb;
+                        })()}
                       </Text>
 
                       {/* Grammar issues — deduplicated: skip any issue whose text
@@ -691,11 +747,31 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                         </View>
                       )}
 
-                      {/* AI corrected sentence (only if different from local corrected) */}
+                      {/* AI corrected sentence — label varies by correctionType */}
                       {detailedResult.correctedSentence && (
                         <View style={[styles.premiumBox, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '30' }]}>
-                          <Text style={[styles.boxLabel, { color: theme.primary }]}>✏️ Düzeltilmiş hali:</Text>
+                          <Text style={[styles.boxLabel, { color: theme.primary }]}>
+                            {detailedResult.correctionType === 'rewrite'
+                              ? '🔄 Doğru bir yol:'
+                              : detailedResult.correctionType === 'minor_fix'
+                              ? '✏️ Küçük düzeltme:'
+                              : '✏️ Düzeltilmiş hali:'}
+                          </Text>
                           <Text style={{ color: theme.text, fontSize: 14 }}>{detailedResult.correctedSentence}</Text>
+                        </View>
+                      )}
+
+                      {/* Example sentences — shown when verdict is REJECTED and
+                          no corrected sentence is available (real AI backend only) */}
+                      {detailedResult.verdict === 'REJECTED' &&
+                       !detailedResult.correctedSentence &&
+                       detailedResult.exampleSentences &&
+                       detailedResult.exampleSentences.length > 0 && (
+                        <View style={[styles.premiumBox, { backgroundColor: '#FEF3C720', borderColor: '#F59E0B40' }]}>
+                          <Text style={[styles.boxLabel, { color: '#B45309' }]}>💡 Bu kelime nasıl kullanılır:</Text>
+                          {detailedResult.exampleSentences.map((ex, i) => (
+                            <Text key={i} style={{ color: theme.text, fontSize: 14, fontStyle: 'italic' }}>• {ex}</Text>
+                          ))}
                         </View>
                       )}
 

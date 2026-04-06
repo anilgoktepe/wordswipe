@@ -63,6 +63,16 @@ export type TargetWordMode = 'exact' | 'family' | 'missing' | 'typo_suspected';
 
 export type AnalysisStatus = 'perfect' | 'partial' | 'fail';
 
+/**
+ * Four-way evaluation verdict — stricter classification than the 3-way AnalysisStatus.
+ *
+ *   PERFECT    — grammatically correct and natural (score 100)
+ *   ACCEPTABLE — correct structure, surface-only issues like typo/punctuation (score 85–90)
+ *   FLAWED     — structural grammar error: verb pattern, wrong preposition, etc. (score 20–50)
+ *   REJECTED   — target word missing, sentence incoherent, or target word misused (score 0)
+ */
+export type EvaluationVerdict = 'PERFECT' | 'ACCEPTABLE' | 'FLAWED' | 'REJECTED';
+
 export type IssueSeverity = 'error' | 'warning' | 'suggestion';
 
 // ─── Request contract ──────────────────────────────────────────────────────────
@@ -169,6 +179,21 @@ export interface DetailedAnalysisResult {
   issues: DetailedAnalysisIssue[];
   /** Machine-readable classification tags (e.g. ['grammar-error', 'too-short']). */
   tags: string[];
+  /** Four-way evaluation verdict (stricter than the 3-way status). */
+  verdict: EvaluationVerdict;
+  /**
+   * How the corrected sentence was produced.
+   * 'minor_fix'  — only typos / punctuation / capitalisation were changed.
+   * 'rewrite'    — structure was significantly changed to fix a grammar error.
+   * null         — no correction provided (verdict is PERFECT or REJECTED).
+   */
+  correctionType: 'minor_fix' | 'rewrite' | null;
+  /**
+   * 1–2 example sentences showing correct usage.
+   * Only populated when verdict is REJECTED (target word missing/misused).
+   * Always null in mock mode.
+   */
+  exampleSentences: string[] | null;
 }
 
 // ─── Typed error ───────────────────────────────────────────────────────────────
@@ -207,16 +232,30 @@ export class DetailedAnalysisError extends Error {
 export async function analyzeSentenceDetailed(
   input: DetailedAnalysisInput,
 ): Promise<DetailedAnalysisResult> {
+  // ── Pre-validation gate ────────────────────────────────────────────────────
+  // Runs BEFORE any network call.
+  //   skippedAI: true  → hard failure (target word missing / too short).
+  //                       Return immediately, no AI call.
+  //   ruleEngineOverride set → structural grammar error detected by Layer 1.
+  //                       Call AI for better correction/feedback, but the
+  //                       verdict floor is locked — AI cannot upgrade to PERFECT.
+  //   null             → all checks passed, proceed normally.
+  const preResult = _preValidate(input);
+  if (preResult?.skippedAI) {
+    return _preValidateToResult(preResult, input.targetWord);
+  }
+
   if (DETAILED_API_URL) {
     try {
       const raw = await _fetchDetailed(input);
-      return normalizeDetailedAnalysisResult(raw);
+      const aiResult = normalizeDetailedAnalysisResult(raw);
+      return _mergeResults(preResult, aiResult);
     } catch {
       // Network / timeout / parse failure → degrade to mock.
-      return mockDetailedAnalysis(input);
+      return mockDetailedAnalysis(input, preResult);
     }
   }
-  return mockDetailedAnalysis(input);
+  return mockDetailedAnalysis(input, preResult);
 }
 
 // ─── Network layer ─────────────────────────────────────────────────────────────
@@ -363,12 +402,28 @@ export function normalizeDetailedAnalysisResult(raw: unknown): DetailedAnalysisR
     ? (r.tags as unknown[]).filter((t): t is string => typeof t === 'string')
     : [];
 
+  // ── Verdict + new fields ────────────────────────────────────────────────────
+  const _ALLOWED_VERDICTS = new Set<string>(['PERFECT', 'ACCEPTABLE', 'FLAWED', 'REJECTED']);
+  const verdict: EvaluationVerdict = _ALLOWED_VERDICTS.has(r.verdict as string)
+    ? (r.verdict as EvaluationVerdict)
+    : _statusToVerdict(status);
+
+  const correctionType: 'minor_fix' | 'rewrite' | null =
+    r.correctionType === 'minor_fix' || r.correctionType === 'rewrite'
+      ? r.correctionType
+      : null;
+
+  const exampleSentences: string[] | null = Array.isArray(r.exampleSentences)
+    ? (r.exampleSentences as unknown[]).filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
+    : null;
+
   return {
     status, usedTargetWord, targetWordMode,
     score, grammarScore, clarityScore, naturalnessScore,
     confidence, shortFeedbackTr,
     correctedSentence, naturalAlternative,
     issues, tags,
+    verdict, correctionType, exampleSentences,
   };
 }
 
@@ -404,6 +459,7 @@ export function normalizeDetailedAnalysisResult(raw: unknown): DetailedAnalysisR
  */
 export function mockDetailedAnalysis(
   input: DetailedAnalysisInput,
+  preResult: _PreValidateResult | null = null,
 ): DetailedAnalysisResult {
   const { targetWord, sentence, localAnalysis } = input;
   const trimmed   = sentence.trim();
@@ -418,100 +474,121 @@ export function mockDetailedAnalysis(
   const hasPunct   = /[.!?]$/.test(trimmed);
   const tooShort   = wordCount < 4;
   const tooLong    = wordCount > 25;
+  const hasCosmetic = !hasCapital || !hasPunct || tooShort || tooLong;
 
-  // ── Status — derive from localAnalysis; never silently upgrade a local fail ─
+  // ── Verdict determination ─────────────────────────────────────────────────
   //
-  //   Local reported fail AND word IS present → grammar error → 'partial'
-  //   Local reported fail AND word NOT present → missing word → 'fail'
-  //   Local reported perfect → inspect cosmetics only → keep 'perfect'
+  //   Verdict hierarchy (strictest first):
+  //     REJECTED   — target word not found / sentence incoherent
+  //     FLAWED     — structural grammar error (verb pattern, wrong preposition…)
+  //     ACCEPTABLE — grammatically correct but has surface issues (typo/punctuation)
+  //     PERFECT    — grammatically correct and natural
   //
-  const localHasGrammarError =
-    localAnalysis.status === 'fail' && localAnalysis.usedTargetWord;
+  //   If preResult has ruleEngineOverride, the verdict floor is already locked
+  //   (Layer 1 caught a structural error); we cannot upgrade above it.
+  //
+  let verdict: EvaluationVerdict;
 
-  let status: AnalysisStatus;
-  if (!usedTargetWord) {
-    status = 'fail';
-  } else if (localHasGrammarError) {
-    status = 'partial';
+  if (preResult?.ruleEngineOverride) {
+    // Layer 1 detected a structural grammar error — floor is FLAWED.
+    verdict = preResult.ruleEngineOverride;
+  } else if (!usedTargetWord) {
+    verdict = 'REJECTED';
+  } else if (localAnalysis.status === 'fail') {
+    // Grammar error that slipped past preValidate (word present, Layer 1 failed).
+    verdict = 'FLAWED';
+  } else if (hasCosmetic) {
+    verdict = 'ACCEPTABLE';
   } else {
-    status = 'perfect';
+    verdict = 'PERFECT';
   }
+
+  // ── Map verdict → AnalysisStatus + score ─────────────────────────────────
+  const status: AnalysisStatus = _verdictToStatus(verdict);
+
+  const [scoreMin, scoreMax] = _scoreRange(verdict);
+  // For ACCEPTABLE, prefer punctuation-only (90) over mixed cosmetic (85).
+  const rawScore =
+    verdict === 'PERFECT'    ? 100 :
+    verdict === 'ACCEPTABLE' ? (!hasCapital ? 85 : 90) :
+    verdict === 'FLAWED'     ? 20  : 0;
+  const baseScore = _clamp(rawScore, scoreMin, scoreMax);
+
+  // correctionType: how should the UI label the corrected sentence?
+  const correctionType: 'minor_fix' | 'rewrite' | null =
+    verdict === 'FLAWED'     ? 'rewrite'   :
+    verdict === 'ACCEPTABLE' ? 'minor_fix' : null;
 
   // ── Build issues list ─────────────────────────────────────────────────────
   const issues: DetailedAnalysisIssue[] = [];
 
   // Promote every local issue into the richer DetailedAnalysisIssue shape.
-  // 'suggestion' stays 'suggestion'; 'error' stays 'error'.
   for (const li of localAnalysis.issues) {
     issues.push({
-      type:     li.type ?? 'grammar',
-      subtype:  li.subtype,
-      severity: li.severity === 'error' ? 'error' : 'suggestion',
+      type:      li.type ?? 'grammar',
+      subtype:   li.subtype,
+      severity:  li.severity === 'error' ? 'error' : 'suggestion',
       messageTr: li.messageTr,
     });
   }
 
   // Append cosmetic observations not already covered by local issues.
   if (!hasCapital) {
-    issues.push({
-      type: 'style', severity: 'suggestion',
-      messageTr: 'Cümle büyük harfle başlamalıdır.',
-    });
+    issues.push({ type: 'style', severity: 'suggestion', messageTr: 'Cümle büyük harfle başlamalıdır.' });
   }
   if (!hasPunct) {
-    issues.push({
-      type: 'style', severity: 'suggestion',
-      messageTr: 'Cümle sonu noktalama işareti (. ? !) eklenmeli.',
-    });
+    issues.push({ type: 'style', severity: 'suggestion', messageTr: 'Cümle sonu noktalama işareti (. ? !) eklenmeli.' });
   }
   if (tooShort) {
-    issues.push({
-      type: 'clarity', severity: 'suggestion',
-      messageTr: 'Cümle çok kısa — daha fazla bağlam eklenebilir.',
-    });
+    issues.push({ type: 'clarity', severity: 'suggestion', messageTr: 'Cümle çok kısa — daha fazla bağlam eklenebilir.' });
   }
   if (tooLong) {
-    issues.push({
-      type: 'clarity', severity: 'suggestion',
-      messageTr: 'Cümle çok uzun — daha kısa ve net bir ifade tercih edilebilir.',
-    });
+    issues.push({ type: 'clarity', severity: 'suggestion', messageTr: 'Cümle çok uzun — daha kısa ve net bir ifade tercih edilebilir.' });
   }
 
-  // ── Sub-scores ────────────────────────────────────────────────────────────
-  //
-  // Derive from the local score rather than inventing arbitrary numbers.
-  // Grammar errors heavily penalize grammarScore; cosmetic issues are softer.
-  //
-  const base        = localAnalysis.score;
-  const errorCount  = issues.filter(i => i.severity === 'error').length;
+  // Deduplicate issues by messageTr.
+  const _seen = new Set<string>();
+  const dedupIssues = issues.filter(i => {
+    if (_seen.has(i.messageTr)) return false;
+    _seen.add(i.messageTr);
+    return true;
+  });
 
-  const grammarScore    = _clamp(errorCount > 0 ? Math.min(base, 55 - (errorCount - 1) * 10) : Math.min(base + 10, 100), 0, 100);
-  const clarityScore    = _clamp(tooShort || tooLong ? Math.min(base, 70) : Math.min(base + 5, 100), 0, 100);
-  const naturalnessScore = _clamp(!hasPunct || !hasCapital ? Math.min(base, 80) : Math.min(base + 5, 100), 0, 100);
-  const score           = _clamp(Math.round((grammarScore + clarityScore + naturalnessScore) / 3), 0, 100);
+  // ── Sub-scores ────────────────────────────────────────────────────────────
+  const errorCount = dedupIssues.filter(i => i.severity === 'error').length;
+  const grammarScore    = _clamp(errorCount > 0 ? Math.min(baseScore, 55 - (errorCount - 1) * 10) : Math.min(baseScore + 10, 100), 0, 100);
+  const clarityScore    = _clamp(tooShort || tooLong ? Math.min(baseScore, 70) : Math.min(baseScore + 5, 100), 0, 100);
+  const naturalnessScore = _clamp(!hasPunct || !hasCapital ? Math.min(baseScore, 80) : Math.min(baseScore + 5, 100), 0, 100);
+  const score           = _clamp(Math.round((grammarScore + clarityScore + naturalnessScore) / 3), scoreMin, scoreMax);
 
   // ── Short feedback ────────────────────────────────────────────────────────
+  //   Rules:
+  //   • REJECTED  → point out missing word
+  //   • FLAWED    → use first error message (structural); never praise
+  //   • ACCEPTABLE → gentle note about surface fix
+  //   • PERFECT   → positive confirmation
   let shortFeedbackTr: string;
-  if (status === 'fail') {
-    shortFeedbackTr = `"${targetWord}" kelimesini cümlede kullanmalısın.`;
-  } else if (status === 'partial') {
-    // Prefer the first error's message for focus; fall back to a generic summary.
-    const firstError = issues.find(i => i.severity === 'error');
+  if (verdict === 'REJECTED') {
+    shortFeedbackTr = `"${targetWord}" kelimesini cümlende kullanmalısın.`;
+  } else if (verdict === 'FLAWED') {
+    const firstError = dedupIssues.find(i => i.severity === 'error');
     shortFeedbackTr = firstError
       ? firstError.messageTr
-      : 'Kelimeyi doğru kullandın ama cümlede düzeltilmesi gereken bir dilbilgisi hatası var.';
+      : 'Cümlende yapısal bir dilbilgisi hatası var. Aşağıdaki düzeltmeyi incele.';
+  } else if (verdict === 'ACCEPTABLE') {
+    shortFeedbackTr = 'Cümle doğru kurulmuş! Sadece küçük yazım/noktalama düzeltmesi gerekiyor.';
   } else {
     shortFeedbackTr = 'Mükemmel! Cümle doğru ve doğal. ✅';
   }
 
   // ── Tags ──────────────────────────────────────────────────────────────────
   const tags: string[] = [];
-  if (usedTargetWord)          tags.push('target-word-used');
-  if (status === 'perfect')    tags.push('no-errors');
-  if (localHasGrammarError)    tags.push('grammar-error');
-  if (tooShort)                tags.push('too-short');
-  if (tooLong)                 tags.push('too-long');
-  if (!hasCapital || !hasPunct) tags.push('cosmetic-fix-needed');
+  if (usedTargetWord)           tags.push('target-word-used');
+  if (verdict === 'PERFECT')    tags.push('no-errors');
+  if (verdict === 'FLAWED')     tags.push('grammar-error');
+  if (tooShort)                 tags.push('too-short');
+  if (tooLong)                  tags.push('too-long');
+  if (hasCosmetic)              tags.push('cosmetic-fix-needed');
 
   return {
     status,
@@ -521,12 +598,15 @@ export function mockDetailedAnalysis(
     grammarScore,
     clarityScore,
     naturalnessScore,
-    confidence: 'medium', // mock confidence is always 'medium'
+    confidence: 'medium',       // mock confidence is always 'medium'
     shortFeedbackTr,
     correctedSentence:  null,   // defer to Layer-1 correctedSentence
     naturalAlternative: null,   // real AI backend only
-    issues,
+    issues: dedupIssues,
     tags,
+    verdict,
+    correctionType,
+    exampleSentences: null,     // real AI backend only
   };
 }
 
@@ -535,6 +615,189 @@ export function mockDetailedAnalysis(
 /** Clamps `v` to the inclusive range [min, max]. */
 function _clamp(v: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, v));
+}
+
+// ─── Pre-validation ────────────────────────────────────────────────────────────
+
+/**
+ * Internal result from `_preValidate()`.
+ * Does NOT escape the module — only used between `_preValidate`, `_preValidateToResult`,
+ * and `mockDetailedAnalysis`.
+ */
+interface _PreValidateResult {
+  verdict: EvaluationVerdict;
+  score: number;
+  errors: Array<{ type: string; messageTr: string }>;
+  /** True → skip the AI call entirely; return this result as the final answer. */
+  skippedAI: boolean;
+  /**
+   * When set, the AI may still be called for richer correction/feedback,
+   * but its verdict cannot be upgraded above this value.
+   */
+  ruleEngineOverride?: EvaluationVerdict;
+}
+
+/**
+ * Runs fast local checks BEFORE the AI call.
+ *
+ * Returns a `_PreValidateResult` if the sentence has a hard or structural
+ * failure; returns `null` if all checks pass and the AI should run normally.
+ */
+function _preValidate(input: DetailedAnalysisInput): _PreValidateResult | null {
+  const { targetWord, sentence, localAnalysis } = input;
+
+  // Check 1 — Target word must be present (Layer 1 already verified this,
+  //   but guard again so the AI is never called for a missing-word sentence).
+  if (!localAnalysis.usedTargetWord) {
+    return {
+      verdict:    'REJECTED',
+      score:      0,
+      errors:     [{ type: 'target_word_missing', messageTr: `"${targetWord}" kelimesini cümlende kullanmalısın.` }],
+      skippedAI:  true,
+    };
+  }
+
+  // Check 2 — Minimum word count.
+  const wordCount = sentence.trim().split(/\s+/).filter(Boolean).length;
+  if (wordCount < 3) {
+    return {
+      verdict:    'REJECTED',
+      score:      0,
+      errors:     [{ type: 'incoherent', messageTr: 'Cümle çok kısa. Tam bir cümle yaz.' }],
+      skippedAI:  true,
+    };
+  }
+
+  // Check 3 — Layer 1 already detected a structural grammar error.
+  //   The word is present but the sentence is grammatically wrong.
+  //   Lock the verdict floor at FLAWED; still call the AI for correction/feedback.
+  if (localAnalysis.status === 'fail' && localAnalysis.usedTargetWord) {
+    const grammarErrors = localAnalysis.issues.filter(i => i.severity === 'error');
+    return {
+      verdict:              'FLAWED',
+      score:                20,
+      errors:               grammarErrors.map(e => ({ type: e.type ?? 'grammar', messageTr: e.messageTr })),
+      skippedAI:            false,
+      ruleEngineOverride:   'FLAWED',
+    };
+  }
+
+  return null; // All pre-checks passed — proceed to AI / mock.
+}
+
+/**
+ * Converts a hard-gate `_PreValidateResult` (skippedAI = true) into a full
+ * `DetailedAnalysisResult` so the screen receives a properly-typed value.
+ */
+function _preValidateToResult(
+  preResult: _PreValidateResult,
+  targetWord: string,
+): DetailedAnalysisResult {
+  const status = _verdictToStatus(preResult.verdict);
+  const shortFeedbackTr = preResult.verdict === 'REJECTED'
+    ? `"${targetWord}" kelimesini cümlende kullanmalısın.`
+    : 'Cümlende yapısal bir hata var. Aşağıdaki geri bildirimi incele.';
+
+  return {
+    status,
+    usedTargetWord:    preResult.verdict !== 'REJECTED',
+    targetWordMode:    preResult.verdict === 'REJECTED' ? 'missing' : 'exact',
+    score:             preResult.score,
+    grammarScore:      preResult.score,
+    clarityScore:      preResult.score,
+    naturalnessScore:  preResult.score,
+    confidence:        'high',
+    shortFeedbackTr,
+    correctedSentence: null,
+    naturalAlternative: null,
+    issues: preResult.errors.map(e => ({
+      type:      e.type,
+      severity:  'error' as const,
+      messageTr: e.messageTr,
+    })),
+    tags:              preResult.verdict === 'REJECTED' ? ['target-word-missing'] : ['grammar-error'],
+    verdict:           preResult.verdict,
+    correctionType:    null,
+    exampleSentences:  null,
+  };
+}
+
+/**
+ * After receiving an AI response, applies these overrides:
+ *   1. If the rule engine locked a verdict floor, the AI cannot upgrade above it.
+ *   2. Score is clamped to the verdict's allowed range.
+ *   3. Rule-engine errors are prepended to the AI errors list (max 4 items, deduped).
+ */
+function _mergeResults(
+  preResult: _PreValidateResult | null,
+  aiResult: DetailedAnalysisResult,
+): DetailedAnalysisResult {
+  if (!preResult?.ruleEngineOverride) {
+    // No floor set — return AI result as-is (still enforce score range).
+    const [min, max] = _scoreRange(aiResult.verdict);
+    aiResult.score = _clamp(aiResult.score, min, max);
+    return aiResult;
+  }
+
+  const verdictRank: Record<EvaluationVerdict, number> = {
+    REJECTED: 0, FLAWED: 1, ACCEPTABLE: 2, PERFECT: 3,
+  };
+  const ruleRank = verdictRank[preResult.ruleEngineOverride];
+  const aiRank   = verdictRank[aiResult.verdict];
+
+  if (aiRank > ruleRank) {
+    // AI was too optimistic — enforce rule-engine floor.
+    aiResult.verdict = preResult.ruleEngineOverride;
+    aiResult.status  = _verdictToStatus(preResult.ruleEngineOverride);
+    aiResult.score   = Math.min(aiResult.score, preResult.score);
+  }
+
+  // Clamp score to verdict's valid range.
+  const [min, max] = _scoreRange(aiResult.verdict);
+  aiResult.score = _clamp(aiResult.score, min, max);
+
+  // Merge errors: rule errors take priority; AI errors fill remaining slots.
+  const ruleIssues: DetailedAnalysisIssue[] = preResult.errors.map(e => ({
+    type: e.type, severity: 'error' as const, messageTr: e.messageTr,
+  }));
+  const aiIssues = (aiResult.issues || []).filter(
+    e => !ruleIssues.some(re => re.type === e.type),
+  );
+  const merged = [...ruleIssues, ...aiIssues];
+
+  // Deduplicate by messageTr.
+  const seen = new Set<string>();
+  aiResult.issues = merged.filter(e => {
+    if (seen.has(e.messageTr)) return false;
+    seen.add(e.messageTr);
+    return true;
+  }).slice(0, 4);
+
+  return aiResult;
+}
+
+// ─── Verdict / status mapping helpers ─────────────────────────────────────────
+
+/** Maps the 4-way verdict down to the 3-way AnalysisStatus used by the rest of the app. */
+function _verdictToStatus(verdict: EvaluationVerdict): AnalysisStatus {
+  if (verdict === 'PERFECT' || verdict === 'ACCEPTABLE') return 'perfect';
+  if (verdict === 'FLAWED')                              return 'partial';
+  return 'fail';
+}
+
+/** Maps AnalysisStatus back to the most likely verdict (used when backend omits verdict). */
+function _statusToVerdict(status: AnalysisStatus): EvaluationVerdict {
+  if (status === 'perfect') return 'PERFECT';
+  if (status === 'partial') return 'FLAWED';
+  return 'REJECTED';
+}
+
+/** Returns the [min, max] score range allowed for each verdict. */
+function _scoreRange(verdict: EvaluationVerdict): [number, number] {
+  if (verdict === 'PERFECT')    return [100, 100];
+  if (verdict === 'ACCEPTABLE') return [85,  90];
+  if (verdict === 'FLAWED')     return [20,  50];
+  return [0, 0];
 }
 
 /** Safe fallback for shortFeedbackTr when the field is missing / empty. */
