@@ -100,8 +100,9 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
   //     – Exception: if local failed only because the target word was absent and
   //       detailed confirms the word IS present, trust detailed's verdict.
   //
-  //   perfect → green  (10 XP) — word used AND no grammar errors
-  //   partial → amber  ( 5 XP) — word used BUT detailed AI found a grammar error
+  //   perfect → green  (10 XP) — word used AND no structural errors
+  //   partial → amber  ( 5 XP) — word used, verdict ACCEPTABLE (surface issues only: typo/punctuation)
+  //           → red    ( 0 XP) — word used, verdict FLAWED (structural grammar/preposition error)
   //   fail    → red    ( 0 XP) — word missing / local grammar rule fired
   const effectiveStatus: 'perfect' | 'partial' | 'fail' = (() => {
     if (!result) return 'fail'; // result card not shown yet — value unused
@@ -262,14 +263,15 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
   }, [dispatch, handleDetailedAnalysis]);
 
   const handleNext = useCallback(() => {
-    // ── Award XP based on the FINAL evaluated status ─────────────────────────
+    // ── Award XP based on the FINAL evaluated verdict ────────────────────────
     // This is the single XP award point for a word attempt.  Deferring to here
-    // means premium analysis always has a chance to run before XP is committed.
+    // means detailed analysis always has a chance to run before XP is committed.
     //
-    //   perfect (Layer-1 pass, no premium errors)  → 10 XP
-    //   partial (Layer-1 pass, premium found error) →  5 XP
-    //   fail    (word not used / bad sentence)      →  0 XP
-    //   skipped (no result at all)                  →  0 XP
+    //   PERFECT    → 10 XP, SRS advances   (no errors at all)
+    //   ACCEPTABLE →  5 XP, SRS advances   (surface issues only: typo/punctuation)
+    //   FLAWED     →  0 XP, SRS blocked    (ANY structural grammar/preposition error)
+    //   REJECTED   →  0 XP, SRS blocked    (target word missing)
+    //   no verdict →  local fallback only: perfect→10, partial/fail→0
     if (result) {
       let xpEarned = 0;
       let countAsCompleted = false;
@@ -284,35 +286,37 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
         return (['fail', 'partial', 'perfect'] as const)[worse];
       })();
 
-      // Detailed verdict + score used for fine-grained XP and SRS gating.
-      //   PERFECT / ACCEPTABLE                → 10 XP, advances SRS
-      //   FLAWED  (minor, score > 20)         →  5 XP, does NOT advance SRS
-      //   FLAWED  (major, score ≤ 20)         →  0 XP, does NOT advance SRS
-      //   REJECTED                             →  0 XP, does NOT advance SRS
+      // ── Verdict-based XP and SRS gating ──────────────────────────────────
+      //
+      //   The 4-way EvaluationVerdict (from the backend normalizer) is the
+      //   single authority for XP and SRS decisions.  The 3-way _finalStatus
+      //   is only used as a fallback when no detailed analysis has run yet.
+      //
+      //   PERFECT    → 10 XP  • SRS advances   (structurally correct, natural)
+      //   ACCEPTABLE →  5 XP  • SRS advances   (surface issues only: typo/punctuation)
+      //   FLAWED     →  0 XP  • SRS blocked    (structural grammar/preposition error —
+      //                                          ANY structural error, no score threshold)
+      //   REJECTED   →  0 XP  • SRS blocked    (target word missing / incoherent)
+      //   no verdict →  local 3-way fallback   (no detailed analysis ran)
+      //
       const _detailedVerdict = detailedResult?.verdict ?? null;
-      const _detailedScore   = detailedResult?.score   ?? 100;
 
-      if (_finalStatus === 'perfect') {
-        // Detailed AI may have downgraded to FLAWED (major) even though local passed.
-        if (_detailedVerdict === 'REJECTED' ||
-            (_detailedVerdict === 'FLAWED' && _detailedScore <= 20)) {
-          xpEarned = 0;
-          countAsCompleted = false;
-        } else {
-          xpEarned = 10;
+      if (_detailedVerdict !== null) {
+        // Detailed analysis ran — verdict is authoritative.
+        if (_detailedVerdict === 'PERFECT' || _detailedVerdict === 'ACCEPTABLE') {
+          xpEarned         = _detailedVerdict === 'PERFECT' ? 10 : 5;
+          countAsCompleted = true;  // advances SRS
+        }
+        // FLAWED and REJECTED: xpEarned stays 0, countAsCompleted stays false.
+        // No score threshold — ANY FLAWED verdict is 0 XP.
+      } else {
+        // No detailed analysis — fall back to local 3-way status.
+        if (_finalStatus === 'perfect') {
+          xpEarned         = 10;
           countAsCompleted = true;
         }
-      } else if (_finalStatus === 'partial') {
-        // partial always maps to FLAWED in the detailed verdict.
-        // Major structural errors (score ≤ 20) earn nothing.
-        if (_detailedVerdict === 'REJECTED' ||
-            (_detailedVerdict === 'FLAWED' && _detailedScore <= 20)) {
-          xpEarned = 0;
-          countAsCompleted = false;
-        } else {
-          xpEarned = 5;
-          countAsCompleted = false; // FLAWED does not advance SRS
-        }
+        // partial / fail without detailed: 0 XP (conservative — we don't know
+        // whether the partial is structural or surface-level).
       }
       // fail → 0 XP, countAsCompleted stays false
 
@@ -557,18 +561,22 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                     {displayFeedback}
                   </Text>
 
-                  {/* XP preview — shown once a result is available so the user
-                      knows the reward they will receive when advancing.
-                      perfect → 10 XP (green celebration)
-                      partial →  5 XP (amber, muted — grammar fix needed)
-                      fail    → nothing */}
-                  {effectiveStatus === 'perfect' && (
+                  {/* XP preview — shown once a result is available.
+                      PERFECT     → +10 XP green badge
+                      ACCEPTABLE  → +5 XP  amber badge  (surface issues only)
+                      FLAWED      → no badge (structural grammar error → 0 XP)
+                      REJECTED    → no badge (0 XP)
+                      no verdict  → mirrors effectiveStatus (local only, no detailed) */}
+                  {(effectiveStatus === 'perfect' &&
+                    detailedResult?.verdict !== 'FLAWED' &&
+                    detailedResult?.verdict !== 'REJECTED') && (
                     <View style={[styles.xpEarned, { backgroundColor: theme.correct + '20' }]}>
                       <Ionicons name="star" size={14} color={theme.correct} style={{ marginRight: 4 }} />
                       <Text style={[styles.xpEarnedText, { color: theme.correct }]}>+10 XP kazandın!</Text>
                     </View>
                   )}
-                  {effectiveStatus === 'partial' && (
+                  {/* +5 XP only when verdict is explicitly ACCEPTABLE (surface issue, no structural error) */}
+                  {detailedResult?.verdict === 'ACCEPTABLE' && (
                     <View style={[styles.xpEarned, { backgroundColor: '#FEF3C7' }]}>
                       <Ionicons name="star-outline" size={14} color="#B45309" style={{ marginRight: 4 }} />
                       <Text style={[styles.xpEarnedText, { color: '#B45309' }]}>+5 XP (düzelt → +10 XP)</Text>
@@ -747,8 +755,14 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                         </View>
                       )}
 
-                      {/* AI corrected sentence — label varies by correctionType */}
-                      {detailedResult.correctedSentence && (
+                      {/* AI / LT corrected sentence — label varies by correctionType.
+                          CORRECTION RELIABILITY GATE: validate before display.
+                          A correction from the AI or LanguageTool that still contains
+                          a detectable grammar error must not be shown — suppress it
+                          and let the fallback (Layer-1 result or example sentence)
+                          handle the display instead. */}
+                      {detailedResult.correctedSentence &&
+                       validateCorrectedSentence(detailedResult.correctedSentence) && (
                         <View style={[styles.premiumBox, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '30' }]}>
                           <Text style={[styles.boxLabel, { color: theme.primary }]}>
                             {detailedResult.correctionType === 'rewrite'

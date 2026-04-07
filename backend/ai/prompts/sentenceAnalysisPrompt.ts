@@ -32,6 +32,21 @@ WHAT YOU MUST EVALUATE (check ALL of these)
    - do/does agreement (he don't → he doesn't)
    - Modal usage (can to go → can go, should considered → should consider)
    - Tense consistency
+   - Verb complement errors — the following are ALWAYS wrong:
+       • Gerund-only verbs followed by to-infinitive:
+         enjoy to → enjoy + gerund   (enjoy to swim → enjoy swimming)
+         avoid to → avoid + gerund   (avoid to make → avoid making)
+         suggest to → suggest + gerund  (suggest to go → suggest going)
+         finish to → finish + gerund
+         keep to → keep + gerund
+         consider to → consider + gerund
+         mind to → mind + gerund
+         practice to → practice + gerund
+       • Transitive verbs that take a direct object, NOT "to":
+         achieve to → achieve + noun/gerund  (achieve to succeed → achieve success)
+         reach to → reach + noun            (reach to her goals → reach her goals)
+         complete to → complete + noun/gerund
+       • "require" takes to-infinitive (require + to + verb) — correct
 
 2. SPELLING
    - Common EFL spelling errors (evert → every, alot → a lot, recieve → receive)
@@ -67,11 +82,13 @@ VERDICT RULES
   "partial"  — target word present BUT at least one grammar/spelling/preposition error exists
   "fail"     — target word missing OR sentence is fundamentally broken
 
-DO NOT return "perfect" if:
-  - There is a subject-verb agreement error
-  - There is a wrong preposition
-  - There is a spelling mistake
-  - There is a be-verb error
+DO NOT return "perfect" if ANY of the following are true:
+  - Subject-verb agreement error
+  - Wrong preposition
+  - Spelling mistake
+  - Be-verb error (I is, they was, etc.)
+  - Verb complement error (enjoy to, avoid to, achieve to, etc.)
+  - Modal + wrong form (can to go, should to, etc.)
   - The sentence sounds like translated Turkish
 
 ════════════════════════════════════════════════════════════
@@ -84,13 +101,16 @@ SCORING (0–100)
   score:            weighted average (grammar 50%, clarity 25%, naturalness 25%)
 
 Typical score ranges:
-  - 0–40:  serious errors
-  - 41–65: partial / minor errors present
+  - 0–40:  serious errors (status must be "fail")
+  - 41–65: partial / minor errors present (status must be "partial")
   - 66–84: mostly correct, minor naturalness issues
   - 85–100: excellent, near-native
 
-CRITICAL: If status is "fail" or "partial", score must be ≤ 65.
-CRITICAL: If grammarScore < 55, score cannot be > 70.
+CRITICAL score consistency rules — VIOLATIONS WILL BE CORRECTED SERVER-SIDE:
+  • status "fail"    → score MUST be ≤ 40, grammarScore MUST be ≤ 30
+  • status "partial" → score MUST be ≤ 65, grammarScore MUST be ≤ 55
+  • grammarScore < 55 → score MUST be ≤ 70 regardless of status
+  • A verb complement error, be-verb error, or subject-verb error MUST set grammarScore ≤ 40
 
 ════════════════════════════════════════════════════════════
 CORRECTED SENTENCE RULES

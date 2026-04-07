@@ -17,6 +17,21 @@ export type TargetWordMode   = 'exact' | 'family' | 'missing' | 'typo_suspected'
 export type ConfidenceLevel  = 'low' | 'medium' | 'high';
 export type IssueSeverity    = 'error' | 'warning' | 'suggestion';
 
+/**
+ * Four-way evaluation verdict — finer than the 3-way AnalysisStatus.
+ *
+ *   PERFECT    — grammatically correct + natural; full XP.
+ *   ACCEPTABLE — correct structure but surface issues (typo/punctuation); full XP.
+ *   FLAWED     — structural grammar error present; no full XP, no SRS advance.
+ *   REJECTED   — target word missing or sentence incoherent; 0 XP.
+ *
+ * Maps to AnalysisStatus:
+ *   PERFECT / ACCEPTABLE → 'perfect'
+ *   FLAWED               → 'partial'
+ *   REJECTED             → 'fail'
+ */
+export type EvaluationVerdict = 'PERFECT' | 'ACCEPTABLE' | 'FLAWED' | 'REJECTED';
+
 // ─── Request ──────────────────────────────────────────────────────────────────
 
 /**
@@ -112,4 +127,9 @@ export interface DetailedAnalysisResult {
   issues: DetailedIssue[];
   /** Machine-readable classification tags. */
   tags: string[];
+  /**
+   * Four-way verdict for XP / SRS gating on the client.
+   * Computed server-side from status + issue analysis + LT findings.
+   */
+  verdict: EvaluationVerdict;
 }

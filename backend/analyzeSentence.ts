@@ -37,6 +37,7 @@ import {
   normalizeDetailedAnalysisResult,
   buildFallbackResult,
 }                                                   from './ai/normalizeDetailedAnalysisResult';
+import { callLanguageTool }                         from './ai/languageToolService';
 import { log, safeErrorSummary }                    from './logger';
 import { getRequestId }                             from './middleware/requestId';
 import { detailedAnalysisLimiter }                  from './middleware/rateLimiter';
@@ -136,7 +137,14 @@ analyzeSentenceRouter.post('/', async (req: Request, res: Response) => {
     localIssues:    localAnalysis.issues.length,
   });
 
-  // ── 2. Call model ───────────────────────────────────────────────────────────
+  // ── 2. Launch LT + model in parallel ───────────────────────────────────────
+  //
+  //   LanguageTool is launched immediately alongside the model call so that
+  //   both network round-trips happen concurrently.  LT findings are fed into
+  //   the normalizer to enforce a structural-grammar floor the AI cannot override.
+  //
+  const ltPromise = callLanguageTool(sentence, reqId).catch(() => null);
+
   let rawOutput: unknown;
   try {
     rawOutput = await analyzeSentenceWithModel(body);
@@ -153,12 +161,15 @@ analyzeSentenceRouter.post('/', async (req: Request, res: Response) => {
       return;
     }
 
-    // Timeout / provider / empty response → fallback 200 (app stays usable).
+    // Timeout / provider / empty response → fallback 200.
+    // Still await LT before building fallback so structural floor is applied.
+    const ltResult = await ltPromise;
     log.error('model_call_failed', reqId, {
       errorCode:  code,
       durationMs: Date.now() - startedAt,
+      ltMatches:  ltResult?.matches.length ?? 0,
     });
-    const fallback = buildFallbackResult(localAnalysis, targetWord, code);
+    const fallback = buildFallbackResult(localAnalysis, targetWord, code, ltResult);
     log.info('analysis_fallback_served', reqId, {
       reason:     code,
       durationMs: Date.now() - startedAt,
@@ -167,15 +178,25 @@ analyzeSentenceRouter.post('/', async (req: Request, res: Response) => {
     return;
   }
 
-  // ── 3. Normalize model output ───────────────────────────────────────────────
+  // ── 3. Await LT + normalize ─────────────────────────────────────────────────
+  const ltResult = await ltPromise;
+
+  if (ltResult) {
+    log.info('lt_findings', reqId, {
+      structural: ltResult.hasStructuralError,
+      spelling:   ltResult.hasSpellingError,
+      matches:    ltResult.matches.length,
+    });
+  }
+
   let result;
   try {
-    result = normalizeDetailedAnalysisResult(rawOutput, localAnalysis, targetWord);
+    result = normalizeDetailedAnalysisResult(rawOutput, localAnalysis, targetWord, ltResult);
   } catch (err) {
     // normalizeDetailedAnalysisResult is designed not to throw, but guard anyway.
     const { code } = safeErrorSummary(err);
     log.error('normalization_error', reqId, { errorCode: code });
-    const fallback = buildFallbackResult(localAnalysis, targetWord, 'normalize-threw');
+    const fallback = buildFallbackResult(localAnalysis, targetWord, 'normalize-threw', ltResult);
     log.info('analysis_fallback_served', reqId, {
       reason:     'normalize-threw',
       durationMs: Date.now() - startedAt,
@@ -187,12 +208,14 @@ analyzeSentenceRouter.post('/', async (req: Request, res: Response) => {
   // ── 4. Log outcome ──────────────────────────────────────────────────────────
   log.info('analysis_complete', reqId, {
     status:          result.status,
+    verdict:         result.verdict,
     score:           result.score,
     grammarScore:    result.grammarScore,
     confidence:      result.confidence,
     issueCount:      result.issues.length,
     hasCorrected:    result.correctedSentence !== null,
     hasAlternative:  result.naturalAlternative !== null,
+    ltStructural:    ltResult?.hasStructuralError ?? false,
     isFallback:      result.tags.includes('fallback-response'),
     durationMs:      Date.now() - startedAt,
   });

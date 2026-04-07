@@ -8,8 +8,14 @@
  *   Layer 1 — sentenceAnalysisService.ts  (local, instant, always runs)
  *     • Target-word detection (exact / family / typo / missing)
  *     • Minimum-length guard
- *     • 13 rule-based grammar checks
+ *     • 17 rule-based grammar checks (incl. function-word typos)
  *     • Cosmetic fixes + multi-pass correction
+ *
+ *   Layer 1.5 — languageToolService.ts  (optional, parallel with AI)
+ *     • Grammar / agreement / article errors the local rules may miss
+ *     • Turkish-translated feedback for ~25 common LT rule IDs
+ *     • Auto-correction candidate via LT replacement suggestions
+ *     • Structural LT errors lock verdict floor at FLAWED — AI cannot upgrade
  *
  *   Layer 2 — THIS FILE  (optional, user-triggered, backend-gated)
  *     • AI-powered grammar / naturalness / clarity scoring
@@ -41,6 +47,9 @@
  *   Leave it empty ('') to run the deterministic mock instead.
  *   No other code changes needed — the request/response contract is stable.
  */
+
+import { callLanguageTool, LTCallResult } from './languageToolService';
+import { validateCorrectedSentence }       from './sentenceAnalysisService';
 
 // ─── Configuration ─────────────────────────────────────────────────────────────
 
@@ -232,30 +241,64 @@ export class DetailedAnalysisError extends Error {
 export async function analyzeSentenceDetailed(
   input: DetailedAnalysisInput,
 ): Promise<DetailedAnalysisResult> {
-  // ── Pre-validation gate ────────────────────────────────────────────────────
-  // Runs BEFORE any network call.
-  //   skippedAI: true  → hard failure (target word missing / too short).
-  //                       Return immediately, no AI call.
-  //   ruleEngineOverride set → structural grammar error detected by Layer 1.
-  //                       Call AI for better correction/feedback, but the
-  //                       verdict floor is locked — AI cannot upgrade to PERFECT.
-  //   null             → all checks passed, proceed normally.
+  // ── Step 1: Local pre-validation floor ────────────────────────────────────
+  //
+  //   skippedAI: true  → hard failure (target word missing / sentence too short).
+  //                       Return immediately — no network calls needed.
+  //   ruleEngineOverride → structural grammar error from Layer 1.
+  //                       Still call AI/LT for correction/feedback, but verdict
+  //                       floor is locked — nothing can upgrade above FLAWED.
+  //   null              → all checks passed; proceed to network layers.
   const preResult = _preValidate(input);
   if (preResult?.skippedAI) {
     return _preValidateToResult(preResult, input.targetWord);
   }
 
+  // ── Step 2: Launch LanguageTool + AI in parallel ──────────────────────────
+  //
+  //   When a backend URL is configured, the backend already calls LanguageTool
+  //   server-side and folds its findings into the normalization layer.  Calling
+  //   it again client-side would duplicate the LT request and waste the quota.
+  //
+  //   Rule: call client-side LT only when running in mock/local mode (no backend).
+  //
+  const ltPromise: Promise<LTCallResult | null> = DETAILED_API_URL
+    ? Promise.resolve(null)   // backend handles LT — skip client-side call
+    : callLanguageTool(input.sentence).catch(() => null);
+
+  let aiResult: DetailedAnalysisResult | null = null;
   if (DETAILED_API_URL) {
     try {
       const raw = await _fetchDetailed(input);
-      const aiResult = normalizeDetailedAnalysisResult(raw);
-      return _mergeResults(preResult, aiResult);
+      aiResult  = normalizeDetailedAnalysisResult(raw);
     } catch {
-      // Network / timeout / parse failure → degrade to mock.
-      return mockDetailedAnalysis(input, preResult);
+      // Network / timeout / parse failure — continue without AI result.
     }
   }
-  return mockDetailedAnalysis(input, preResult);
+
+  // Await LT (was running concurrently in mock mode; resolves instantly when backend is active).
+  const ltResult = await ltPromise;
+
+  // ── Step 3: Combine floors (Layer 1 pre-validation + LanguageTool) ────────
+  //
+  //   If LT found structural errors (GRAMMAR category matches), the effective
+  //   floor becomes at least FLAWED — same as if Layer 1 had caught the error.
+  //   This prevents a clean Layer-1 result from letting AI award PERFECT when
+  //   LT independently detected a structural grammar problem.
+  const effectiveFloor = _combineFloors(preResult, ltResult);
+
+  // ── Step 4: Build base result ─────────────────────────────────────────────
+  const baseResult: DetailedAnalysisResult = aiResult
+    ? _mergeResults(effectiveFloor, aiResult)
+    : mockDetailedAnalysis(input, effectiveFloor);
+
+  // ── Step 5: Merge LT issues + LT correction into the base result ──────────
+  //
+  //   LT non-structural issues (spelling, style, punctuation) are appended to
+  //   the issues list.  LT structural issues are also added if not already
+  //   covered by the floor.  LT's corrected sentence is used as a fallback
+  //   when the base result has no corrected sentence.
+  return _mergeLTIntoResult(baseResult, ltResult);
 }
 
 // ─── Network layer ─────────────────────────────────────────────────────────────
@@ -774,6 +817,115 @@ function _mergeResults(
   }).slice(0, 4);
 
   return aiResult;
+}
+
+// ─── LanguageTool integration helpers ────────────────────────────────────────
+
+/**
+ * Merges the Layer-1 pre-validation floor with structural errors from
+ * LanguageTool.
+ *
+ * Rules:
+ *   1. If `ltResult` found no structural errors → return `preResult` unchanged.
+ *   2. If `preResult` is REJECTED (word missing) → LT errors are secondary;
+ *      return the REJECTED floor unchanged.
+ *   3. Otherwise → produce a FLAWED floor that combines Layer-1 + LT errors.
+ *
+ * The combined floor is then used in exactly the same way as `preResult` — it
+ * sets the verdict ceiling for `_mergeResults` and `mockDetailedAnalysis`.
+ */
+function _combineFloors(
+  preResult: _PreValidateResult | null,
+  ltResult:  LTCallResult | null,
+): _PreValidateResult | null {
+  // No LT structural errors → nothing to merge.
+  if (!ltResult?.hasStructuralError) return preResult;
+
+  // Word is missing (REJECTED) → LT grammar errors are moot.
+  if (preResult?.verdict === 'REJECTED') return preResult;
+
+  // Build LT structural error list (avoid duplicating messages already in preResult).
+  const existingMessages = new Set((preResult?.errors ?? []).map(e => e.messageTr));
+  const ltErrors = ltResult.matches
+    .filter(m => m.isStructural)
+    .map(m => ({ type: 'grammar', messageTr: m.feedbackTr }))
+    .filter(e => !existingMessages.has(e.messageTr));
+
+  // Combine: take the more restrictive verdict (FLAWED ≥ any existing partial floor).
+  const combined: _PreValidateResult = {
+    verdict:            'FLAWED',
+    score:              Math.min(preResult?.score ?? 20, 20),
+    errors:             [...(preResult?.errors ?? []), ...ltErrors],
+    skippedAI:          false,
+    ruleEngineOverride: 'FLAWED',
+  };
+  return combined;
+}
+
+/**
+ * Appends LanguageTool issues and, optionally, LT's corrected sentence into
+ * an already-built `DetailedAnalysisResult`.
+ *
+ * Structural LT matches (GRAMMAR category) are added as 'error' issues.
+ * Non-structural matches (spelling, punctuation, style) are added as 'suggestion'.
+ *
+ * All additions are deduplicated against existing issues by `messageTr`.
+ *
+ * LT's auto-corrected sentence is used as `correctedSentence` ONLY when:
+ *   – the base result currently has no corrected sentence, AND
+ *   – the LT correction passes `validateCorrectedSentence()`.
+ * This means LT fills the gap in mock mode (where Layer-2 AI returns null for
+ * `correctedSentence`) while never overwriting a correction from Layer-1 or AI.
+ */
+function _mergeLTIntoResult(
+  result:   DetailedAnalysisResult,
+  ltResult: LTCallResult | null,
+): DetailedAnalysisResult {
+  if (!ltResult || ltResult.matches.length === 0) return result;
+
+  // Build LT-derived issues.
+  const newIssues: DetailedAnalysisIssue[] = ltResult.matches.map(m => ({
+    type:      m.issueType === 'spelling' ? 'spelling' : 'grammar',
+    subtype:   m.ruleId.toLowerCase(),
+    severity:  (m.isStructural ? 'error' : 'suggestion') as IssueSeverity,
+    messageTr: m.feedbackTr,
+  }));
+
+  // Deduplicate against existing issues.
+  const seen = new Set(result.issues.map(i => i.messageTr));
+  const deduped = newIssues.filter(i => {
+    if (seen.has(i.messageTr)) return false;
+    seen.add(i.messageTr);
+    return true;
+  });
+
+  // LT correction fallback: use only when Layer-1 / AI provided no correction AND
+  // the LT sentence itself passes our local grammar validator.
+  const correctedSentence: string | null =
+    result.correctedSentence ??
+    (ltResult.correctedSentence &&
+     validateCorrectedSentence(ltResult.correctedSentence)
+       ? ltResult.correctedSentence
+       : null);
+
+  // Update correctionType when LT provides the correction.
+  const correctionType: 'minor_fix' | 'rewrite' | null =
+    correctedSentence && !result.correctedSentence
+      ? (result.verdict === 'FLAWED' ? 'rewrite' : 'minor_fix')
+      : result.correctionType;
+
+  // Add 'lt-analyzed' tag so consumers / analytics can track LT usage.
+  const tags = result.tags.includes('lt-analyzed')
+    ? result.tags
+    : [...result.tags, 'lt-analyzed'];
+
+  return {
+    ...result,
+    correctedSentence,
+    correctionType,
+    issues: [...result.issues, ...deduped],
+    tags,
+  };
 }
 
 // ─── Verdict / status mapping helpers ─────────────────────────────────────────
