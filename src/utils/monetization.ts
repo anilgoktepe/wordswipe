@@ -23,8 +23,9 @@ export const FREE_SESSION_CAP = 5;
 /** Max words in a Sentence Builder queue for free users. */
 export const FREE_SENTENCE_SESSION_CAP = 5;
 
-/** Max rewarded detailed AI analyses a free user may unlock per calendar day. */
-export const FREE_DAILY_AI_ANALYSES = 3;
+/** Max rewarded detailed AI analyses a free user may unlock per calendar day.
+ *  @testphase temporary limit — restore to 3 before production release */
+export const FREE_DAILY_AI_ANALYSES = 20; // test phase: temporary AI ad limit
 
 // ─── Rewarded Ad ─────────────────────────────────────────────────────────────
 //

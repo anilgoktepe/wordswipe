@@ -234,15 +234,19 @@ export function normalizeDetailedAnalysisResult(
   // ── Step 6: merge all issue sources, deduplicated ─────────────────────────
   const issues = _mergeAndDedup(aiIssues, localAnalysis, ltResult);
 
-  // ── Step 7: LT correction fallback ────────────────────────────────────────
+  // ── Step 7: correction candidate ─────────────────────────────────────────
   //
-  //   Use LT's auto-corrected sentence when the AI provided none.
+  //   Prefer AI's correctedSentence; fall back to LT's auto-correction.
+  //   Track the source so the trust gate (Step 8c) can apply the right rules.
   //
-  const finalCorrected: string | null =
-    correctedSentence ??
-    (ltResult?.correctedSentence && ltResult.correctedSentence.trim().length > 0
-      ? ltResult.correctedSentence.trim()
-      : null);
+  let correctionCandidate: string | null = null;
+  let correctionFromLT = false;
+  if (correctedSentence) {
+    correctionCandidate = correctedSentence;
+  } else if (ltResult?.correctedSentence && ltResult.correctedSentence.trim().length > 0) {
+    correctionCandidate = ltResult.correctedSentence.trim();
+    correctionFromLT    = true;
+  }
 
   // ── Step 8: compute 4-way verdict ─────────────────────────────────────────
   //
@@ -263,6 +267,39 @@ export function normalizeDetailedAnalysisResult(
     grammarScore = Math.min(grammarScore, 55);
   }
 
+  // ── Step 8c: LT feedback priority ────────────────────────────────────────
+  //
+  //   When LT found a structural grammar error, its feedback is more precise
+  //   than the AI's generated text (which may be vague or occasionally wrong).
+  //   Override shortFeedbackTr with the first structural LT match's Turkish
+  //   message so the learner sees a deterministic, rule-based explanation.
+  //
+  //   Condition: only when verdict is FLAWED (structural error confirmed) AND
+  //   LT has a structural match with a known Turkish message.  REJECTED keeps
+  //   its own feedback (target word missing — LT is not relevant there).
+  //
+  let finalFeedbackTr = shortFeedbackTr;
+  if (verdict === 'FLAWED' && ltResult?.hasStructuralError) {
+    const ltStructural = ltResult.matches.find(m => m.isStructural && m.feedbackTr.trim().length > 0);
+    if (ltStructural) {
+      finalFeedbackTr = ltStructural.feedbackTr.trim();
+    }
+  }
+
+  // ── Step 8d: correction trust gate ────────────────────────────────────────
+  //
+  //   A wrong correction is worse than no correction (CLAUDE.md product rule).
+  //   Gate runs after verdict is finalised so it has full context.
+  //
+  //   Rule: display correctedSentence only when _isCorrectionTrusted() passes.
+  //   Otherwise null → UI falls back to exampleSentences (if present).
+  //
+  const finalCorrected: string | null =
+    correctionCandidate !== null &&
+    _isCorrectionTrusted(correctionCandidate, verdict, r.confidence, ltResult, correctionFromLT)
+      ? correctionCandidate
+      : null;
+
   // ── Step 9: tag bookkeeping ────────────────────────────────────────────────
   if (ltResult && !tags.includes('lt-analyzed')) tags = [...tags, 'lt-analyzed'];
 
@@ -276,7 +313,7 @@ export function normalizeDetailedAnalysisResult(
     clarityScore,
     naturalnessScore,
     confidence:        r.confidence,
-    shortFeedbackTr,
+    shortFeedbackTr:   finalFeedbackTr,
     correctedSentence: finalCorrected,
     naturalAlternative,
     issues,
@@ -381,11 +418,22 @@ function _mergeAndDedup(
   const merged: DetailedIssue[] = [];
 
   function add(issue: DetailedIssue): void {
-    const key = issue.messageTr.trim().toLowerCase();
-    if (!seen.has(key)) {
-      seen.add(key);
-      merged.push(issue);
-    }
+    const msgKey = issue.messageTr.trim().toLowerCase();
+
+    // Semantic key: type + subtype + span — catches same-error different-wording
+    // across sources (e.g. local Step 2b and AI both describing "has + bare verb"
+    // with different Turkish sentences).  Only applied when all three fields are
+    // non-empty to avoid false collisions on issues that lack span/subtype.
+    const semKey = (issue.type && issue.subtype && issue.span)
+      ? `${issue.type}|${issue.subtype}|${issue.span.toLowerCase()}`
+      : null;
+
+    if (seen.has(msgKey)) return;
+    if (semKey && seen.has(semKey)) return;
+
+    seen.add(msgKey);
+    if (semKey) seen.add(semKey);
+    merged.push(issue);
   }
 
   // 1. Local rule-engine issues (highest trust)
@@ -412,6 +460,114 @@ function _mergeAndDedup(
   }
 
   return merged;
+}
+
+// ─── Correction structural checks ────────────────────────────────────────────
+
+/**
+ * Returns true when the sentence contains a `be-verb + bare verb/noun` pattern
+ * that indicates an incomplete or misleading correction.
+ *
+ * LT's mechanical offset substitution can fix be-verb agreement while leaving
+ * the overall structure wrong:
+ *   "I are support"  → LT fixes "are"→"am" → "I am support"   ← be + bare noun
+ *   "they is learn"  → LT fixes "is"→"are" → "they are learn"  ← be + bare verb
+ *   "he are help"    → LT fixes "are"→"is" → "he is help"      ← be + bare verb
+ *
+ * Pattern: am|is|are|was|were followed immediately by a bare verb/noun token
+ * (no -ing, no past participle -ed, no article/determiner in between).
+ */
+function _hasBeBareverb(sentence: string): boolean {
+  return /\b(?:am|is|are|was|were)\s+(?!(?:a|an|the|my|your|his|her|its|our|their|not|also|still|just|very|being|going|having|getting|making|taking|doing|saying|coming|working|thinking|trying|looking|using|knowing|finding|giving|putting|starting|keeping|running|calling|turning|showing|waiting|playing|moving|standing|changing|bringing|asking|following|carrying|writing|helping|talking|building|reading|living|seeing|sitting|leaving|feeling|meeting|going)\b)\b[a-z]+(?<!ing)(?<!ed)(?<!en)\b/i.test(sentence);
+}
+
+/**
+ * Returns true when the sentence contains a `have/has/had + bare verb` pattern
+ * that indicates an incomplete perfect-tense correction.
+ *
+ * Example:
+ *   "I have increase the budget" → still wrong after be-agreement fix
+ *   "She has achieve her goals"  → still wrong
+ *
+ * Mirrors the client-side `_localHasHaveBareverb` check so that the backend
+ * trust gate and the client display gate are symmetric.
+ */
+function _hasHaveBareverb(sentence: string): boolean {
+  const IRREGULAR_PAST_PARTICIPLES = new Set([
+    'been','gone','done','seen','come','run','won','put','cut','let','set','hit',
+    'hurt','read','shut','known','shown','written','ridden','taken','given',
+    'spoken','broken','chosen','driven','forgotten','risen','fallen','grown',
+    'thrown','built','bought','brought','caught','taught','thought','fought',
+    'meant','sent','spent','left','kept','slept','felt','dealt','held','led',
+    'met','paid','said','sat','stood','lost','heard','found','made','told',
+    'not','also','just','already','never','always',
+  ]);
+  const re = /\b(?:have|has|had)\s+([a-z]+)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(sentence)) !== null) {
+    const word = m[1].toLowerCase();
+    if (IRREGULAR_PAST_PARTICIPLES.has(word)) continue;
+    if (word.endsWith('ed') || word.endsWith('en')) continue;
+    return true;
+  }
+  return false;
+}
+
+// ─── Correction trust gate ────────────────────────────────────────────────────
+
+/**
+ * Returns true only when a correction candidate is safe to display.
+ *
+ * Design principle (CLAUDE.md): a wrong correction is worse than no correction.
+ * No network calls — decision uses data already available at normalisation time.
+ *
+ * Rules by verdict:
+ *   REJECTED — never show a correction (sentence is fundamentally broken).
+ *   PERFECT  — never show a correction (nothing to fix).
+ *   FLAWED / ACCEPTABLE — apply source-specific trust check:
+ *
+ * Structural safety (both sources):
+ *   - be + bare verb: be-agreement fix that leaves verb form wrong
+ *   - have/has/had + bare verb: perfect-tense fix that leaves verb form wrong
+ *   Both checks mirror the client-side validateCorrectedSentence gate so the
+ *   two layers are symmetric and independently safe.
+ *
+ * AI-sourced correction:
+ *   Trusted only when AI confidence is 'high'.
+ *   'medium' or 'low' → AI itself is uncertain → suppress.
+ *
+ * LT-sourced correction (mechanical offset replacement):
+ *   Trusted only when LT had at least one suggestion for every structural match.
+ *   If any structural match has no suggestion, the correction is incomplete and
+ *   may leave grammar errors → suppress.
+ */
+function _isCorrectionTrusted(
+  candidate:    string,
+  verdict:      EvaluationVerdict,
+  aiConfidence: string,
+  ltResult:     LTResult | null | undefined,
+  fromLT:       boolean,
+): boolean {
+  if (verdict === 'REJECTED' || verdict === 'PERFECT') return false;
+
+  // Structural safety checks — applied to ALL sources.
+  // A correction that still contains these patterns is never safe to display,
+  // regardless of confidence or LT suggestion coverage.
+  if (_hasBeBareverb(candidate))   return false;
+  if (_hasHaveBareverb(candidate)) return false;
+
+  if (fromLT) {
+    // LT correction is trustworthy only when every structural match had a
+    // suggestion (LT could fix all of them).  If any match has no suggestion,
+    // the correction is incomplete and may leave grammar errors → suppress.
+    const structural   = (ltResult?.matches ?? []).filter(m => m.isStructural);
+    const allSuggestable = structural.length > 0 && structural.every(m => m.suggestions.length > 0);
+    return allSuggestable;
+  }
+
+  // AI correction: require high confidence.
+  // 'medium' or 'low' → AI itself is uncertain → suppress.
+  return aiConfidence === 'high';
 }
 
 // ─── 4-way verdict ────────────────────────────────────────────────────────────

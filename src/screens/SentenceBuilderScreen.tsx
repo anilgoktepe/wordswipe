@@ -121,23 +121,33 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
   })();
 
   // ── Display feedback ──────────────────────────────────────────────────────
-  // Single string shown as the primary heading of the result card.
-  // Must always match `effectiveStatus` — never show "Mükemmel!" on a red card.
+  // Full feedback string — used by the AI panel's issue deduplication logic
+  // (iss.messageTr !== displayFeedback) and as source for AI panel heading.
+  // NOT shown directly in the local result card — see localVerdictText below.
   const displayFeedback: string = (() => {
     if (!result) return '';
     if (effectiveStatus === 'partial') {
-      // 'partial' can only originate from the detailed AI layer.
       return detailedResult?.shortFeedbackTr
         ?? 'Kelimeyi doğru kullandın ama cümlede düzeltilmesi gereken bir nokta var.';
     }
     if (effectiveStatus === 'fail') {
-      // Prefer local's specific grammar-error message when local also failed.
       if (result.status === 'fail') return result.feedbackTr;
-      // Local was OK but detailed downgraded to fail — use detailed's explanation.
       return detailedResult?.shortFeedbackTr ?? result.feedbackTr;
     }
-    // perfect — local success message is always accurate here.
     return result.feedbackTr;
+  })();
+
+  // ── Local verdict text ────────────────────────────────────────────────────
+  // Short, category-level message shown in the local result card.
+  // Intentionally less detailed than displayFeedback so that the AI panel
+  // provides clear additional value (full explanation, score, multi-issue list).
+  const localVerdictText: string = (() => {
+    if (!result) return '';
+    if (effectiveStatus === 'perfect') return result.feedbackTr; // success — full msg ok
+    if (effectiveStatus === 'partial') return 'Kelimeyi kullandın ama düzeltilmesi gereken bir nokta var.';
+    // fail — short category summary, no full rule explanation
+    if (!result.usedTargetWord) return 'Hedef kelimeyi cümlende kullanmadın.';
+    return 'Cümlede dilbilgisi hatası var.';
   })();
 
   // Colour tokens for the three states — used in the result card only.
@@ -326,6 +336,11 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
       }
       if (countAsCompleted) {
         setCompleted(prev => prev + 1);
+        // Advance SRS for the word: updates nextReviewAt, correctCount,
+        // isDifficult auto-clear, and dailyProgress.
+        if (currentWord) {
+          dispatch({ type: 'MARK_WORD_LEARNED', wordId: currentWord.id });
+        }
       }
     }
 
@@ -333,7 +348,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
     setResult(null);
     setDetailedResult(null);
     setCurrentIndex(prev => prev + 1);
-  }, [result, detailedResult, dispatch]);
+  }, [result, detailedResult, currentWord, dispatch]);
 
   const handleSkip = useCallback(() => {
     setSentence('');
@@ -445,8 +460,9 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           </LinearGradient>
 
-          {/* XP running total */}
-          {totalXp > 0 && (
+          {/* XP running total — hidden while a result is on screen to avoid
+              confusion with the current word's inline XP badge */}
+          {totalXp > 0 && !result && (
             <View style={[styles.xpBar, { backgroundColor: theme.primaryLight }]}>
               <Ionicons name="star" size={13} color={theme.primary} />
               <Text style={[styles.xpBarText, { color: theme.primary }]}>+{totalXp} XP</Text>
@@ -555,10 +571,10 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                     style={{ alignSelf: 'center' }}
                   />
 
-                  {/* Feedback — always derived from displayFeedback which is
-                      guaranteed to match effectiveStatus (no green text on red card) */}
+                  {/* Short local verdict — category-level only.
+                      Full explanation is in the AI panel (displayFeedback). */}
                   <Text style={[styles.resultFeedback, { color: statusColor }]}>
-                    {displayFeedback}
+                    {localVerdictText}
                   </Text>
 
                   {/* XP preview — shown once a result is available.
@@ -603,9 +619,12 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                       !!result.correctedSentence &&
                       validateCorrectedSentence(result.correctedSentence);
 
-                    // When local detected a grammar error, its corrected sentence is
-                    // the authoritative fix — always show it regardless of detailed result.
-                    if (result.status === 'fail' && result.correctedSentence) {
+                    // When local detected a grammar error, show the corrected sentence
+                    // if one is available and valid; otherwise fall back to the word's
+                    // example sentence. The outer condition no longer requires a
+                    // correctedSentence — it may have been suppressed (e.g. ambiguous
+                    // be-agreement fix) and the example fallback should still trigger.
+                    if (result.status === 'fail') {
                       if (correctionIsValid) {
                         return (
                           <View style={[styles.correctedBox, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '40' }]}>
@@ -614,15 +633,8 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                           </View>
                         );
                       }
-                      // Correction is still broken — show the word's example instead.
-                      if (currentWord?.example) {
-                        return (
-                          <View style={[styles.correctedBox, { backgroundColor: '#FEF3C720', borderColor: '#F59E0B40' }]}>
-                            <Text style={[styles.boxLabel, { color: '#B45309' }]}>💡 Örnek kullanım:</Text>
-                            <Text style={{ color: theme.text, fontSize: 15, fontStyle: 'italic' }}>{currentWord.example}</Text>
-                          </View>
-                        );
-                      }
+                      // No safe correction available — no fallback example here.
+                      // Example usage belongs to the AI panel (higher-value layer).
                       return null;
                     }
                     // Local was fine (cosmetic only) — only show if detailed hasn't run
@@ -719,48 +731,9 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                         })()}
                       </Text>
 
-                      {/* Grammar issues — deduplicated: skip any issue whose text
-                          is already shown as the primary displayFeedback heading,
-                          and remove duplicate messages within the list itself. */}
-                      {detailedResult.issues.filter((iss, idx, arr) =>
-                        arr.findIndex(o => o.messageTr === iss.messageTr) === idx &&
-                        iss.messageTr !== displayFeedback
-                      ).length > 0 && (
-                        <View style={styles.issueList}>
-                          {detailedResult.issues.filter((iss, idx, arr) =>
-                            arr.findIndex(o => o.messageTr === iss.messageTr) === idx &&
-                            iss.messageTr !== displayFeedback
-                          ).map((issue, i) => (
-                            <View key={i} style={styles.issueRow}>
-                              <Ionicons
-                                name={
-                                  issue.severity === 'error'      ? 'close-circle'     :
-                                  issue.severity === 'warning'    ? 'warning'           :
-                                                                    'bulb-outline'
-                                }
-                                size={14}
-                                color={
-                                  issue.severity === 'error'   ? theme.incorrect :
-                                  issue.severity === 'warning' ? '#B45309'       : theme.primary
-                                }
-                              />
-                              <Text style={[styles.issueText, {
-                                color: issue.severity === 'error'   ? theme.incorrect :
-                                       issue.severity === 'warning' ? '#B45309'       : theme.textSecondary,
-                              }]}>
-                                {issue.messageTr}
-                              </Text>
-                            </View>
-                          ))}
-                        </View>
-                      )}
-
-                      {/* AI / LT corrected sentence — label varies by correctionType.
-                          CORRECTION RELIABILITY GATE: validate before display.
-                          A correction from the AI or LanguageTool that still contains
-                          a detectable grammar error must not be shown — suppress it
-                          and let the fallback (Layer-1 result or example sentence)
-                          handle the display instead. */}
+                      {/* AI / LT corrected sentence — shown BEFORE the issue list
+                          so the user sees "what's correct" before "why it's wrong".
+                          CORRECTION RELIABILITY GATE: validate before display. */}
                       {detailedResult.correctedSentence &&
                        validateCorrectedSentence(detailedResult.correctedSentence) && (
                         <View style={[styles.premiumBox, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '30' }]}>
@@ -772,6 +745,17 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                               : '✏️ Düzeltilmiş hali:'}
                           </Text>
                           <Text style={{ color: theme.text, fontSize: 14 }}>{detailedResult.correctedSentence}</Text>
+                        </View>
+                      )}
+
+                      {/* More natural alternative — shown before issues so the
+                          user sees the better phrasing before the explanation. */}
+                      {detailedResult.naturalAlternative && (
+                        <View style={[styles.premiumBox, { backgroundColor: '#FEF3C720', borderColor: '#F59E0B40' }]}>
+                          <Text style={[styles.boxLabel, { color: '#B45309' }]}>💡 Daha doğal bir ifade:</Text>
+                          <Text style={{ color: theme.text, fontSize: 14, fontStyle: 'italic' }}>
+                            {detailedResult.naturalAlternative}
+                          </Text>
                         </View>
                       )}
 
@@ -789,15 +773,47 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                         </View>
                       )}
 
-                      {/* More natural alternative — populated by real AI backend */}
-                      {detailedResult.naturalAlternative && (
-                        <View style={[styles.premiumBox, { backgroundColor: '#FEF3C720', borderColor: '#F59E0B40' }]}>
-                          <Text style={[styles.boxLabel, { color: '#B45309' }]}>💡 Daha doğal bir ifade:</Text>
-                          <Text style={{ color: theme.text, fontSize: 14, fontStyle: 'italic' }}>
-                            {detailedResult.naturalAlternative}
-                          </Text>
-                        </View>
-                      )}
+                      {/* Grammar issues — sorted by severity (error → warning → suggestion)
+                          so structural errors always appear before punctuation hints.
+                          Deduplicated: skip issues whose text matches displayFeedback
+                          or is an exact duplicate within the list. */}
+                      {(() => {
+                        const SEVERITY_RANK: Record<string, number> = { error: 0, warning: 1, suggestion: 2 };
+                        const visibleIssues = detailedResult.issues
+                          .filter((iss, idx, arr) =>
+                            arr.findIndex(o => o.messageTr === iss.messageTr) === idx &&
+                            iss.messageTr !== displayFeedback
+                          )
+                          .sort((a, b) =>
+                            (SEVERITY_RANK[a.severity] ?? 2) - (SEVERITY_RANK[b.severity] ?? 2)
+                          );
+                        if (visibleIssues.length === 0) return null;
+                        return (
+                          <View style={styles.issueList}>
+                            {visibleIssues.map((issue, i) => (
+                              <View key={i} style={styles.issueRow}>
+                                <Ionicons
+                                  name={
+                                    issue.severity === 'error'   ? 'close-circle' :
+                                    issue.severity === 'warning' ? 'warning'      : 'bulb-outline'
+                                  }
+                                  size={14}
+                                  color={
+                                    issue.severity === 'error'   ? theme.incorrect :
+                                    issue.severity === 'warning' ? '#B45309'       : theme.primary
+                                  }
+                                />
+                                <Text style={[styles.issueText, {
+                                  color: issue.severity === 'error'   ? theme.incorrect :
+                                         issue.severity === 'warning' ? '#B45309'       : theme.textSecondary,
+                                }]}>
+                                  {issue.messageTr}
+                                </Text>
+                              </View>
+                            ))}
+                          </View>
+                        );
+                      })()}
                     </View>
                   )}
 

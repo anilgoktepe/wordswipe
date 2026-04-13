@@ -29,6 +29,9 @@
  *   - Fuzzy target-word detection: if the user wrote a near-misspelling of the
  *     target word, a "Bunu mu demek istedin?" hint is returned instead of a
  *     generic "word not found" message.
+ *      18.  Double comparative / superlative  ("more better", "most best")
+ *      19.  Stative verb + progressive        ("I am knowing", "she is believing")
+ *      20.  Uncountable noun pluralization    ("informations", "advices", "furnitures")
  *
  * Isolation contract:
  *   - ZERO knowledge of AppContext, wordProgress, SRS, XP, or app state.
@@ -417,6 +420,23 @@ function _checkThirdPersonSingular(
 // ─── Rule 4 — be-verb subject agreement ───────────────────────────────────────
 
 /**
+ * Returns true when a candidate corrected sentence ends with "be-verb + bare
+ * base-form verb" — a signal that the agreement fix is structurally incomplete.
+ *
+ * e.g. "I am support"  → true   (should be "I support …" or "I am a support")
+ *      "I am happy"    → false  ("happy" is not a verb base form in the list)
+ *      "he is going"   → false  (gerund — not in THIRD_PERSON_VERBS)
+ *
+ * When true, `_checkBeAgreement` omits `corrected` so the UI falls back to
+ * the word's example sentence instead of showing a still-wrong correction.
+ */
+function _isAmbiguousBeCorrection(sentence: string): boolean {
+  const m = /\b(?:am|is|are|was|were)\s+([a-z]+)[.!?]?\s*$/i.exec(sentence);
+  if (!m) return false;
+  return (THIRD_PERSON_VERBS as readonly string[]).includes(m[1].toLowerCase());
+}
+
+/**
  * Catches mismatches between the subject pronoun and the form of "be".
  *
  *   I is / I are             → I am
@@ -426,17 +446,21 @@ function _checkThirdPersonSingular(
  *
  * "I were" is intentionally not flagged — valid in the English subjunctive
  * ("If I were you…").
+ *
+ * `corrected` is omitted when the fix would leave an ambiguous "be + bare verb"
+ * structure (e.g. "I am support") — see `_isAmbiguousBeCorrection`.
  */
 function _checkBeAgreement(
   sentence: string,
-): { feedback: string; corrected: string } | null {
+): { feedback: string; corrected?: string } | null {
   // I + is/are → am
   if (/\bI\s+(?:is|are)\b/i.test(sentence)) {
     const m = /\bI\s+(is|are)\b/i.exec(sentence)!;
     const fixed = sentence.replace(/\bI\s+(?:is|are)\b/gi, 'I am');
+    const corrected = cosmeticFix(fixed) ?? fixed;
     return {
       feedback:  `"I ${m[1]}" hatalı — "I" öznesinden sonra "am" kullanılır. Doğrusu: "I am".`,
-      corrected: cosmeticFix(fixed) ?? fixed,
+      ...(_isAmbiguousBeCorrection(corrected) ? {} : { corrected }),
     };
   }
   // he/she/it + am/are → is
@@ -444,9 +468,10 @@ function _checkBeAgreement(
     const m = /\b(he|she|it)\s+(am|are)\b/i.exec(sentence);
     if (m) {
       const fixed = sentence.replace(/\b(he|she|it)\s+(?:am|are)\b/gi, (_, s) => `${s} is`);
+      const corrected = cosmeticFix(fixed) ?? fixed;
       return {
         feedback:  `"${m[1]} ${m[2]}" hatalı — "he/she/it" öznesinden sonra "is" kullanılır. Doğrusu: "${m[1]} is".`,
-        corrected: cosmeticFix(fixed) ?? fixed,
+        ...(_isAmbiguousBeCorrection(corrected) ? {} : { corrected }),
       };
     }
   }
@@ -455,9 +480,10 @@ function _checkBeAgreement(
     const m = /\b(we|they|you)\s+(is|am)\b/i.exec(sentence);
     if (m) {
       const fixed = sentence.replace(/\b(we|they|you)\s+(?:is|am)\b/gi, (_, s) => `${s} are`);
+      const corrected = cosmeticFix(fixed) ?? fixed;
       return {
         feedback:  `"${m[1]} ${m[2]}" hatalı — "we/they/you" öznesinden sonra "are" kullanılır. Doğrusu: "${m[1]} are".`,
-        corrected: cosmeticFix(fixed) ?? fixed,
+        ...(_isAmbiguousBeCorrection(corrected) ? {} : { corrected }),
       };
     }
   }
@@ -466,9 +492,10 @@ function _checkBeAgreement(
     const m = /\b(we|they|you)\s+was\b/i.exec(sentence);
     if (m) {
       const fixed = sentence.replace(/\b(we|they|you)\s+was\b/gi, (_, s) => `${s} were`);
+      const corrected = cosmeticFix(fixed) ?? fixed;
       return {
         feedback:  `"${m[1]} was" hatalı — "we/they/you" geçmiş zamanda "were" alır. Doğrusu: "${m[1]} were".`,
-        corrected: cosmeticFix(fixed) ?? fixed,
+        ...(_isAmbiguousBeCorrection(corrected) ? {} : { corrected }),
       };
     }
   }
@@ -730,7 +757,16 @@ function _checkWrongFormAfterAuxiliary(
   sentence: string,
 ): { feedback: string; corrected: string } | null {
   const pastAlt  = Object.keys(IRREGULAR_PAST_TO_BASE).join('|');
-  const triggers = "to|didn't|don't|doesn't|won't|wouldn't|couldn't|shouldn't|can't|mustn't";
+
+  // Negated / contracted auxiliaries (original coverage):
+  //   "didn't went", "doesn't came", "won't ran", etc.
+  // Affirmative do-support (extended coverage):
+  //   "did went", "did came", "did ran", "do went", "does came", etc.
+  //   Note: "did achieved" (regular -ed) is caught by _localHasDoDidPastForm —
+  //   this rule covers irregular pasts only (went, came, ran, saw…).
+  const triggers =
+    "to|didn't|don't|doesn't|won't|wouldn't|couldn't|shouldn't|can't|mustn't" +
+    "|did|do|does";
 
   const re = new RegExp(`\\b(${triggers})\\s+(${pastAlt})\\b`, 'gi');
   re.lastIndex = 0;
@@ -1466,7 +1502,7 @@ const _MODAL_POSITION_TYPOS: readonly _ModalPositionTypo[] = [
   {
     wrong:      'con',
     right:      'can',
-    feedbackTr: '"con" yazım hatası — doğrusu "can" (modal fiil). Doğru örnek: "I can support you."',
+    feedbackTr: '"con" yazım hatası — doğrusu "can" (modal fiil).',
   },
 ];
 
@@ -1516,6 +1552,225 @@ function _checkFunctionWordTypos(
     }
   }
   return _checkModalPositionTypos(sentence);
+}
+
+// ─── Rule 18 — double comparative / superlative ───────────────────────────────
+
+/**
+ * Adjectives that are ALREADY in comparative form.
+ * Prefixing them with "more" creates a double comparative — always wrong.
+ */
+const _ALREADY_COMPARATIVE: readonly string[] = [
+  'better', 'worse', 'bigger', 'smaller', 'faster', 'slower', 'longer', 'shorter',
+  'older', 'younger', 'higher', 'lower', 'easier', 'harder', 'stronger', 'weaker',
+  'richer', 'poorer', 'smarter', 'wiser', 'closer', 'wider', 'deeper', 'cleaner',
+  'cheaper', 'heavier', 'lighter', 'hotter', 'colder', 'louder', 'softer',
+  'thicker', 'thinner', 'nicer', 'simpler', 'braver', 'lazier', 'busier',
+];
+
+/**
+ * Adjectives that are ALREADY in superlative form.
+ * Prefixing them with "most" creates a double superlative — always wrong.
+ */
+const _ALREADY_SUPERLATIVE: readonly string[] = [
+  'best', 'worst', 'biggest', 'smallest', 'fastest', 'slowest', 'longest', 'shortest',
+  'oldest', 'youngest', 'highest', 'lowest', 'easiest', 'hardest', 'strongest',
+  'weakest', 'richest', 'poorest', 'smartest', 'wisest', 'closest', 'widest',
+  'deepest', 'cleanest', 'cheapest',
+];
+
+/**
+ * Detects double comparative ("more better") and double superlative ("most best").
+ * These forms are never correct in English — both "more" and the -er/-est suffix
+ * express the same degree, so only one should appear.
+ *
+ *   "She is more smarter than me"   → "She is smarter than me"
+ *   "This is the most best option"  → "This is the best option"
+ */
+function _checkDoubleComparative(
+  sentence: string,
+): { feedback: string; corrected: string } | null {
+  // "more + already-comparative" (e.g. "more better")
+  {
+    const alt = _ALREADY_COMPARATIVE.join('|');
+    const re  = new RegExp(`\\bmore\\s+(${alt})\\b`, 'gi');
+    re.lastIndex = 0;
+    const m = re.exec(sentence);
+    if (m) {
+      const word  = m[1].toLowerCase();
+      const fixed = sentence.replace(new RegExp(`\\bmore\\s+${word}\\b`, 'gi'), word);
+      return {
+        feedback:  `"more ${word}" hatalı — "${word}" zaten karşılaştırma anlamı taşıyan bir sıfat, önüne "more" eklenmez. Doğrusu: sadece "${word}".`,
+        corrected: cosmeticFix(fixed) ?? fixed,
+      };
+    }
+  }
+  // "most + already-superlative" (e.g. "most best")
+  {
+    const alt = _ALREADY_SUPERLATIVE.join('|');
+    const re  = new RegExp(`\\bmost\\s+(${alt})\\b`, 'gi');
+    re.lastIndex = 0;
+    const m = re.exec(sentence);
+    if (m) {
+      const word  = m[1].toLowerCase();
+      const fixed = sentence.replace(new RegExp(`\\bmost\\s+${word}\\b`, 'gi'), word);
+      return {
+        feedback:  `"most ${word}" hatalı — "${word}" zaten en üst derece anlamı taşıyan bir sıfat, önüne "most" eklenmez. Doğrusu: sadece "${word}".`,
+        corrected: cosmeticFix(fixed) ?? fixed,
+      };
+    }
+  }
+  return null;
+}
+
+// ─── Rule 19 — stative verb + progressive ────────────────────────────────────
+
+/**
+ * Stative verbs that are never correct in the progressive aspect in standard
+ * English.  These express permanent states (knowledge, belonging, composition)
+ * rather than actions — the progressive form is a near-universal EFL error.
+ *
+ * Deliberately conservative: only verbs where the -ing form is essentially
+ * never valid, regardless of context.  Borderline verbs like "want", "need",
+ * "like", "love" are excluded because informal use ("I'm loving it") exists.
+ *
+ * Format: [ base form, gerund ]  — the gerund is computed directly from the
+ * base form rather than hard-coded so the list stays compact.
+ */
+const _STATIVE_VERBS: readonly string[] = [
+  'know',       // "I am knowing"    → never correct
+  'believe',    // "I am believing"  → never correct (in "I think" sense)
+  'understand', // "I am understanding" → never correct
+  'mean',       // "I am meaning"    → never correct
+  'own',        // "I am owning"     → never correct
+  'possess',    // "she is possessing" → never correct
+  'belong',     // "it is belonging" → never correct
+  'consist',    // "it is consisting" → never correct
+  'contain',    // "it is containing" → never correct
+];
+
+/** Converts a verb base form to its -ing gerund form. */
+function _toGerund(verb: string): string {
+  if (verb.endsWith('e') && !verb.endsWith('ee') && !verb.endsWith('oe'))
+    return verb.slice(0, -1) + 'ing';
+  if (verb.length <= 4 && /[^aeiou][aeiou][bcdfghjklmnpqrstvz]$/.test(verb))
+    return verb + verb.slice(-1) + 'ing';
+  return verb + 'ing';
+}
+
+/**
+ * Detects stative verb + progressive pattern.
+ *
+ *   "I am knowing the answer"   → wrong (stative verb, use simple present)
+ *   "She is believing him"       → wrong (use simple present "she believes")
+ *   "It is containing sugar"     → wrong (use "it contains")
+ *
+ * No auto-correction is provided: the correct form depends on whether the
+ * subject is singular or plural, which the rule does not currently infer.
+ */
+function _checkStatativeProgressive(
+  sentence: string,
+): { feedback: string } | null {
+  for (const verb of _STATIVE_VERBS) {
+    const gerund = _toGerund(verb);
+    const re = new RegExp(`\\b(?:am|is|are|was|were)\\s+${gerund}\\b`, 'gi');
+    re.lastIndex = 0;
+    if (re.test(sentence)) {
+      return {
+        feedback: `"${gerund}" şeklinde süregelen zamanda (progressive) kullanım hatalı — "${verb}" fiili bir durumu bildirir (stative verb) ve süregelen zamanda kullanılmaz. Doğrusu: basit zaman ("${verb}…" veya "knows/believes/understands…").`,
+      };
+    }
+  }
+  return null;
+}
+
+// ─── Rule 20 — uncountable noun pluralization ─────────────────────────────────
+
+/**
+ * Uncountable nouns that Turkish EFL learners frequently and incorrectly
+ * pluralize.  Every entry in this list is unambiguous: the plural form is
+ * NEVER valid in standard learner-level English.
+ *
+ * Deliberately excluded to avoid false positives:
+ *   "researches"  — valid 3rd-person verb ("she researches")
+ *   "progresses"  — valid 3rd-person verb ("he progresses")
+ *   "evidences"   — valid 3rd-person verb ("this evidences the claim")
+ *   "experiences" — countable in certain uses ("many experiences")
+ */
+const _UNCOUNTABLE_WRONG_PLURALS: ReadonlyArray<{
+  wrong:      string;
+  correct:    string;
+  feedbackTr: string;
+}> = [
+  {
+    wrong:      'informations',
+    correct:    'information',
+    feedbackTr: '"informations" hatalı — "information" sayılamaz isim olduğu için çoğul kullanılmaz. Doğrusu: "information".',
+  },
+  {
+    wrong:      'advices',
+    correct:    'advice',
+    feedbackTr: '"advices" hatalı — "advice" sayılamaz isim, çoğul almaz. Doğrusu: "advice" veya "pieces of advice".',
+  },
+  {
+    wrong:      'furnitures',
+    correct:    'furniture',
+    feedbackTr: '"furnitures" hatalı — "furniture" sayılamaz isim, çoğul almaz. Doğrusu: "furniture".',
+  },
+  {
+    wrong:      'knowledges',
+    correct:    'knowledge',
+    feedbackTr: '"knowledges" hatalı — "knowledge" sayılamaz isim, çoğul almaz. Doğrusu: "knowledge".',
+  },
+  {
+    wrong:      'homeworks',
+    correct:    'homework',
+    feedbackTr: '"homeworks" hatalı — "homework" sayılamaz isim, çoğul almaz. Doğrusu: "homework" veya "homework assignments".',
+  },
+  {
+    wrong:      'feedbacks',
+    correct:    'feedback',
+    feedbackTr: '"feedbacks" hatalı — "feedback" sayılamaz isim, çoğul almaz. Doğrusu: "feedback".',
+  },
+  {
+    wrong:      'equipments',
+    correct:    'equipment',
+    feedbackTr: '"equipments" hatalı — "equipment" sayılamaz isim, çoğul almaz. Doğrusu: "equipment".',
+  },
+  {
+    wrong:      'traffics',
+    correct:    'traffic',
+    feedbackTr: '"traffics" hatalı — "traffic" sayılamaz isim, çoğul almaz. Doğrusu: "traffic".',
+  },
+  {
+    wrong:      'weathers',
+    correct:    'weather',
+    feedbackTr: '"weathers" hatalı — "weather" sayılamaz isim, çoğul almaz. Doğrusu: "the weather".',
+  },
+  {
+    wrong:      'musics',
+    correct:    'music',
+    feedbackTr: '"musics" hatalı — "music" sayılamaz isim, çoğul almaz. Doğrusu: "music".',
+  },
+];
+
+/**
+ * Scans for uncountable nouns that have been incorrectly pluralized.
+ * Returns the first match found.
+ */
+function _checkUncountablePlural(
+  sentence: string,
+): { feedback: string; corrected: string } | null {
+  for (const { wrong, correct, feedbackTr } of _UNCOUNTABLE_WRONG_PLURALS) {
+    const re = new RegExp(`\\b${wrong}\\b`, 'gi');
+    re.lastIndex = 0;
+    if (re.test(sentence)) {
+      re.lastIndex = 0;
+      const fixed = sentence.replace(re, correct);
+      return { feedback: feedbackTr, corrected: cosmeticFix(fixed) ?? fixed };
+    }
+  }
+  return null;
 }
 
 /**
@@ -1615,6 +1870,18 @@ function _checkGrammar(
   const r17 = _checkFunctionWordTypos(sentence);
   if (r17) return r17;
 
+  // ── Rule 18: double comparative / superlative ─────────────────────────────
+  const r18 = _checkDoubleComparative(sentence);
+  if (r18) return r18;
+
+  // ── Rule 19: stative verb + progressive ──────────────────────────────────
+  const r19 = _checkStatativeProgressive(sentence);
+  if (r19) return r19;
+
+  // ── Rule 20: uncountable noun pluralization ───────────────────────────────
+  const r20 = _checkUncountablePlural(sentence);
+  if (r20) return r20;
+
   return null;
 }
 
@@ -1666,6 +1933,254 @@ function _applyAllCorrections(sentence: string): string | undefined {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
+// ─── Structural pattern guards (used by validateCorrectedSentence) ────────────
+
+/**
+ * Returns true when the sentence contains a `be-verb + bare verb` pattern that
+ * indicates structurally broken grammar.
+ *
+ * Catches cases where local rules did not fire (no be-agreement error) but the
+ * sentence itself is wrong — e.g. "I am increase the price" — so the cosmetic
+ * correction would otherwise pass the 17-rule gate and be shown to the user.
+ *
+ * Safe endings that are NOT bare verbs:
+ *   -ing  → progressive / gerund  (I am increasing ✓)
+ *   -ed   → past participle       (I am required ✓)
+ *   -en   → past participle       (I am given ✓)
+ *
+ * Common adjectives / adverbs / determiners after be-verbs are whitelisted so
+ * "I am happy", "she is ready", "they are not sure" pass correctly.
+ */
+function _localHasBeBareverb(sentence: string): boolean {
+  const SAFE_AFTER_BE = new Set([
+    // determiners / pronouns
+    'a', 'an', 'the', 'my', 'your', 'his', 'her', 'its', 'our', 'their',
+    // negation / adverbs
+    'not', 'also', 'just', 'still', 'very', 'too', 'so', 'yet', 'even', 'now',
+    'here', 'there', 'always', 'never', 'only', 'already', 'almost',
+    // common adjectives safe after be
+    'happy', 'sad', 'glad', 'mad', 'sure', 'fine', 'good', 'bad', 'great',
+    'right', 'wrong', 'clear', 'true', 'false', 'hard', 'easy', 'free',
+    'full', 'new', 'old', 'big', 'small', 'fast', 'slow', 'hot', 'cold',
+    'warm', 'ready', 'safe', 'able', 'aware', 'proud', 'sick', 'well',
+    'born', 'done', 'gone', 'late', 'early', 'real', 'long', 'short',
+    'high', 'low', 'open', 'close', 'last', 'first', 'next',
+    // common linking complements
+    'like', 'about', 'worth', 'similar', 'equal', 'such',
+  ]);
+
+  const re = /\b(?:am|is|are|was|were)\s+([a-z]+)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(sentence)) !== null) {
+    const word = m[1].toLowerCase();
+    if (SAFE_AFTER_BE.has(word)) continue;
+    if (word.endsWith('ing') || word.endsWith('ed') || word.endsWith('en')) continue;
+    // Suffixes that reliably mark adjectives / nouns, not bare verbs
+    if (/(?:ly|ful|less|tion|sion|ness|ment|ity|ive|al|ous|ant|ent|ible|able|ish|ic|ary|ory)$/.test(word)) continue;
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Returns true when the sentence contains a `have/has/had + bare base verb`
+ * pattern — wrong perfect tense form.
+ *
+ * Perfect tense requires a past participle (-ed / -en / irregular).
+ * A bare base form after have/has/had is always wrong:
+ *   "I have increase the price"  → true  (bare verb — wrong)
+ *   "I have increased the price" → false (past participle — correct)
+ *   "he has go there"            → true  (bare verb — wrong)
+ *   "she had already left"       → false (-ed — correct)
+ *
+ * Common past participles that don't end in -ed or -en are whitelisted
+ * (irregular forms: been, gone, done, seen, come, run, won, put, cut, let…).
+ */
+function _localHasHaveBareverb(sentence: string): boolean {
+  // Irregular past participles that look like base forms — must not be flagged.
+  const IRREGULAR_PAST_PARTICIPLES = new Set([
+    'been', 'gone', 'done', 'seen', 'come', 'run', 'won', 'put', 'cut',
+    'let', 'set', 'hit', 'hurt', 'read', 'shut', 'split', 'spread',
+    'burst', 'cast', 'cost', 'bid', 'rid', 'bet', 'led', 'fed', 'bled',
+    'met', 'sat', 'stood', 'left', 'kept', 'slept', 'felt', 'meant',
+    'sent', 'lent', 'spent', 'built', 'burnt', 'learnt', 'dreamt',
+    'made', 'paid', 'said', 'sold', 'told', 'held', 'heard', 'lost',
+    'found', 'bought', 'brought', 'thought', 'caught', 'taught', 'fought',
+    'sought', 'known', 'shown', 'grown', 'blown', 'thrown', 'drawn',
+    'worn', 'torn', 'sworn', 'written', 'ridden', 'risen', 'fallen',
+    'taken', 'given', 'spoken', 'broken', 'chosen', 'frozen', 'stolen',
+    'driven', 'hidden', 'forgiven', 'forgotten',
+    // common adverbs safe after have
+    'not', 'also', 'just', 'already', 'never', 'always', 'still', 'yet',
+    'ever', 'recently', 'finally', 'nearly', 'hardly', 'barely',
+  ]);
+
+  const re = /\b(?:have|has|had)\s+([a-z]+)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(sentence)) !== null) {
+    const word = m[1].toLowerCase();
+    if (IRREGULAR_PAST_PARTICIPLES.has(word)) continue;
+    if (word.endsWith('ed') || word.endsWith('en')) continue;
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Returns true when the sentence contains `do/does/did + regular past (-ed)`
+ * — a common Turkish-learner error where the past marker is doubled:
+ *   "I did achieved"   → wrong  (did + base form required)
+ *   "She does liked"   → wrong
+ *   "He do explained"  → wrong
+ *
+ * The pattern targets words ending in a consonant + "ed" (e.g. "achieved",
+ * "explained", "supported") which are unambiguously regular past tense / past
+ * participle forms.  Words ending in a vowel + "ed" (e.g. "freed", "agreed",
+ * "used") are excluded to avoid false positives on valid forms like "do need".
+ *
+ * Irregular forms ("did went", "did came") are already caught by Rule 10
+ * (_checkWrongFormAfterAuxiliary). This helper fills the gap for regular verbs.
+ */
+function _localHasDoDidPastForm(sentence: string): boolean {
+  // Matches: do/does/did + word ending in consonant+ed
+  // Consonant+ed pattern: the character before 'ed' is NOT a vowel (a/e/i/o/u)
+  const re = /\b(?:do|does|did)\s+([a-z]+[^aeiou\s]ed)\b/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(sentence)) !== null) {
+    const word = m[1].toLowerCase();
+    // Minimum length guard: avoid "I did red" or "she does bed" type noise
+    if (word.length < 4) continue;
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Returns true when the sentence contains two auxiliary verbs in collision —
+ * a pattern that always indicates a structurally broken verb chain.
+ *
+ * Two distinct error families are detected:
+ *
+ *   Family A — "did" followed by a finite auxiliary:
+ *     "did was", "did is", "did are", "did am", "did were"
+ *     "did has", "did had", "did does", "did did"
+ *     "did can", "did will", "did would", "did should", "did could"
+ *     "did might", "did may", "did must", "did shall"
+ *     Excludes "did have", "did do", "did be" — valid in emphatic constructions
+ *     ("She did have it.", "I did do it.").
+ *
+ *   Family B — any auxiliary followed by "did":
+ *     "is did", "are did", "was did", "can did", "should did", etc.
+ *     ("did" in past-tense slot after another finite aux is always wrong)
+ *
+ * Does NOT catch every double-aux pattern — valid combinations such as
+ * "should have", "will be", "has been", "would have" are untouched.
+ */
+function _localHasDoubleAuxiliary(sentence: string): boolean {
+  // Finite auxiliaries that cannot immediately follow "did".
+  // "have", "do", "be" (bare infinitives) are excluded: "did have / did do" are
+  // valid emphatic constructions in English.
+  const AFTER_DID =
+    'is|am|are|was|were|has|had|does|did|can|could|will|would|shall|should|may|might|must';
+
+  // All finite auxiliaries that cannot immediately precede "did".
+  const BEFORE_DID =
+    'am|is|are|was|were|have|has|had|do|does|can|could|will|would|shall|should|may|might|must';
+
+  if (new RegExp(`\\bdid\\s+(?:${AFTER_DID})\\b`, 'i').test(sentence)) return true;
+  if (new RegExp(`\\b(?:${BEFORE_DID})\\s+did\\b`,  'i').test(sentence)) return true;
+  return false;
+}
+
+// ─── Multi-error collector ────────────────────────────────────────────────────
+
+/**
+ * Runs every structural grammar rule against the original sentence and
+ * returns ALL detected issues — unlike `_checkGrammar`, which stops at the
+ * first match and is designed for single-pass correction generation.
+ *
+ * Used only to populate the `issues` array in `LocalAnalysisResult`.
+ * Does NOT generate corrections — `_checkGrammar` / `_applyAllCorrections`
+ * remain the sole sources of `correctedSentence`.
+ *
+ * Includes:
+ *   Rules 1–11 (structural grammar)
+ *   Rules 13–17 (verb-argument, gerund, reflexive, structural verb patterns)
+ *   Structural pattern checks: be + bare verb, have/has/had + bare verb
+ *
+ * Excludes Rule 12 (common misspellings) — spelling is handled by LT / AI.
+ */
+function _collectAllGrammarIssues(sentence: string): LocalAnalysisIssue[] {
+  const issues: LocalAnalysisIssue[] = [];
+  const seen  = new Set<string>();
+
+  function add(messageTr: string): void {
+    if (messageTr && !seen.has(messageTr)) {
+      seen.add(messageTr);
+      issues.push({ messageTr, severity: 'error' });
+    }
+  }
+
+  // ── Rule 1: modal + "to" + infinitive ──────────────────────────────────────
+  MODAL_TO_INFINITIVE.lastIndex = 0;
+  const r1 = MODAL_TO_INFINITIVE.exec(sentence);
+  MODAL_TO_INFINITIVE.lastIndex = 0;
+  if (r1) {
+    add(`"${r1[1]} to ${r1[2]}" hatalı — modal fiillerden (can, will, should…) sonra "to" gelmez. Doğrusu: "${r1[1]} ${r1[2]}".`);
+  }
+
+  // ── Rule 2: transitive verb + wrong preposition ────────────────────────────
+  for (const rule of WRONG_PREP_RULES) {
+    rule.pattern.lastIndex = 0;
+    if (rule.pattern.test(sentence)) add(rule.feedback);
+    rule.pattern.lastIndex = 0;
+  }
+
+  // ── Rules 3–11: individual structural checkers ─────────────────────────────
+  const r3  = _checkThirdPersonSingular(sentence);       if (r3)  add(r3.feedback);
+  const r4  = _checkBeAgreement(sentence);               if (r4)  add(r4.feedback);
+  const r5  = _checkDoDoesAgreement(sentence);           if (r5)  add(r5.feedback);
+  const r6  = _checkModalWithParticipleForm(sentence);   if (r6)  add(r6.feedback);
+  const r7  = _checkDoubleNegation(sentence);            if (r7)  add(r7.feedback);
+  const r8  = _checkPluralSubjectInflectedVerb(sentence);if (r8)  add(r8.feedback);
+  const r9  = _checkArticle(sentence);                   if (r9)  add(r9.feedback);
+  const r10 = _checkWrongFormAfterAuxiliary(sentence);   if (r10) add(r10.feedback);
+  const r11 = _checkDifferentWithPrep(sentence);         if (r11) add(r11.feedback);
+
+  // ── Rules 13–17: verb-complement and structural verb patterns ──────────────
+  const r13 = _checkGroupMembershipPrep(sentence);       if (r13) add(r13.feedback);
+  const r14 = _checkVerbArgumentErrors(sentence);        if (r14) add(r14.feedback);
+  const r15 = _checkTransitiveDirectErrors(sentence);    if (r15) add(r15.feedback);
+  const r16 = _checkGerundOnlyErrors(sentence);          if (r16) add(r16.feedback);
+  const r17 = _checkReflexiveDirectErrors(sentence);     if (r17) add(r17.feedback);
+  const r18 = _checkVerbStructure(sentence);             if (r18) add(r18.feedback);
+  const r19 = _checkPrepGerundErrors(sentence);          if (r19) add(r19.feedback);
+  const r20 = _checkFunctionWordTypos(sentence);         if (r20) add(r20.feedback);
+
+  // ── Rules 18–20: LT-coverage extensions (sync, zero-network) ──────────────
+  const rX18 = _checkDoubleComparative(sentence);        if (rX18) add(rX18.feedback);
+  const rX19 = _checkStatativeProgressive(sentence);     if (rX19) add(rX19.feedback);
+  const rX20 = _checkUncountablePlural(sentence);        if (rX20) add(rX20.feedback);
+
+  // ── Structural pattern checks (not in any rule above) ─────────────────────
+  if (_localHasBeBareverb(sentence)) {
+    add('"be" fiilinden sonra fiil yalın hâlde kullanamzsın. "-ing" (süregelen) ya da sıfat/isim gelmelidir. Yalın fiilin başına "be" koyma.');
+  }
+  if (_localHasHaveBareverb(sentence)) {
+    add('"have/has/had" sonrasında fiil yalın hâlde kullanılamaz. Perfect tense için geçmiş ortaç gerekir (-ed veya düzensiz form: eaten, written, gone…).');
+  }
+  if (_localHasDoDidPastForm(sentence)) {
+    add('"do/does/did" sonrasında fiilin yalın hâli (base form) gelmelidir. Geçmiş zaman eki (-ed) tekrar kullanılamaz.');
+  }
+  if (_localHasDoubleAuxiliary(sentence)) {
+    add('Cümlede iki yardımcı fiil arka arkaya kullanılmış. İngilizce fiil zinciri bu yapıya izin vermez.');
+  }
+
+  return issues;
+}
+
+// ─── Public validation gate ────────────────────────────────────────────────────
+
 /**
  * Validates that a proposed corrected sentence is itself free of detectable
  * grammar errors.
@@ -1675,8 +2190,17 @@ function _applyAllCorrections(sentence: string): string | undefined {
  * verb if the following word is not in the recognised set.  Call this before
  * displaying a corrected sentence so the UI never shows a still-broken result.
  *
+ * Three-tier check:
+ *   1. 17 local grammar rules (_checkGrammar)
+ *   2. be + bare verb pattern (_localHasBeBareverb)
+ *   3. have/has/had + bare verb pattern (_localHasHaveBareverb)
+ *
  *   validateCorrectedSentence("I suggest going there.") → true  (safe to show)
  *   validateCorrectedSentence("I suggest go there.")   → false (still broken)
+ *   validateCorrectedSentence("I am increase it.")     → false (be + bare verb)
+ *   validateCorrectedSentence("I have require it.")    → false (have + bare verb)
+ *   validateCorrectedSentence("I am increasing it.")   → true  (gerund — safe)
+ *   validateCorrectedSentence("I have required it.")   → true  (past part. — safe)
  *
  * Returns true  — no grammar errors detected; safe to display.
  * Returns false — errors remain; suppress the correction and fall back to an
@@ -1684,7 +2208,12 @@ function _applyAllCorrections(sentence: string): string | undefined {
  */
 export function validateCorrectedSentence(corrected: string): boolean {
   if (!corrected || !corrected.trim()) return false;
-  return _checkGrammar(corrected) === null;
+  if (_checkGrammar(corrected) !== null)    return false;
+  if (_localHasBeBareverb(corrected))       return false;
+  if (_localHasHaveBareverb(corrected))     return false;
+  if (_localHasDoDidPastForm(corrected))    return false;
+  if (_localHasDoubleAuxiliary(corrected))  return false;
+  return true;
 }
 
 /**
@@ -1856,8 +2385,16 @@ function _localAnalyze({ targetWord, sentence }: LocalAnalysisInput): LocalAnaly
   if (tokens.some(t => t === targetLower)) {
     usedTargetWord = true;
     targetWordMode = 'exact';
-  } else if (tokens.some(t => t.startsWith(targetLower) && t !== targetLower)) {
-    // word-family match: "increases" satisfies target "increase"
+  } else if (tokens.some(t => {
+    if (!t.startsWith(targetLower) || t === targetLower) return false;
+    const suffix = t.slice(targetLower.length);
+    // Only inflectional suffixes count as family match.
+    // Derivational suffixes (-er, -ion, -tion, -al, -ment, -ness, -ive…)
+    // produce different word classes and must NOT be treated as valid usage
+    // of the target word (e.g. "provider" ≠ "provide", "provision" ≠ "provide").
+    return ['s', 'es', 'd', 'ed', 'ing'].includes(suffix);
+  })) {
+    // Inflectional family match: "increases", "increased", "increasing" ← "increase"
     usedTargetWord = true;
     targetWordMode = 'family';
   } else {
@@ -1886,7 +2423,91 @@ function _localAnalyze({ targetWord, sentence }: LocalAnalysisInput): LocalAnaly
     };
   }
 
-  // ── Step 2: minimum sentence length ──────────────────────────────────────
+  // ── Step 2: grammar error detection ──────────────────────────────────────
+  // Grammar check runs before the length guard so that structurally broken
+  // short sentences (e.g. "I are support") fail with the correct category
+  // (be-agreement error) rather than the less informative "too short" message.
+  //
+  // _checkGrammar   → first error only; used for primary feedback + correction.
+  // _collectAllGrammarIssues → all detectable structural errors; used for the
+  //                            issues list so the user sees every problem, not
+  //                            just the first one the rule engine hit.
+  const grammarError = _checkGrammar(trimmed);
+  if (grammarError) {
+    // Apply ALL detectable corrections in multiple passes so the corrected
+    // sentence reflects every rule that fires — not just the first one.
+    // e.g. "affect on everyone" → (Rule 2) → "affect everyone"
+    //                           → (Rule 3) → "affects everyone"  ← final
+    const fullyCorrected = _applyAllCorrections(trimmed);
+    const allIssues      = _collectAllGrammarIssues(trimmed);
+    return {
+      status:            'fail',
+      usedTargetWord:    true,
+      targetWordMode,
+      score:             35,
+      feedbackTr:        grammarError.feedback,
+      issues:            allIssues.length > 0
+                           ? allIssues
+                           : [{ messageTr: grammarError.feedback, severity: 'error' }],
+      correctedSentence: fullyCorrected ?? grammarError.corrected,
+      confidence:        0.9,
+    };
+  }
+
+  // ── Step 2b: structural patterns not covered by _checkGrammar rules ──────
+  // be + bare verb and have/has/had + bare verb pass all 17 rules but are
+  // structurally wrong — they must fail to prevent XP being awarded without AI.
+  if (_localHasBeBareverb(trimmed)) {
+    const msg = '"be" fiilinden sonra fiil yalın hâlde kullanılamaz. "-ing" (süregelen) ya da sıfat/isim gelmelidir. Yalın fiilin başına "be" koyma.';
+    return {
+      status:         'fail',
+      usedTargetWord: true,
+      targetWordMode,
+      score:          30,
+      feedbackTr:     msg,
+      issues:         [{ messageTr: msg, severity: 'error' }],
+      confidence:     0.9,
+    };
+  }
+  if (_localHasHaveBareverb(trimmed)) {
+    const msg = '"have/has/had" sonrasında fiil yalın hâlde kullanılamaz. Perfect tense için geçmiş ortaç gerekir (-ed veya düzensiz form).';
+    return {
+      status:         'fail',
+      usedTargetWord: true,
+      targetWordMode,
+      score:          30,
+      feedbackTr:     msg,
+      issues:         [{ messageTr: msg, severity: 'error' }],
+      confidence:     0.9,
+    };
+  }
+  if (_localHasDoDidPastForm(trimmed)) {
+    const msg = '"do/does/did" sonrasında fiilin yalın hâli (base form) gelmelidir. Geçmiş zaman eki (-ed) tekrar kullanılamaz.';
+    return {
+      status:         'fail',
+      usedTargetWord: true,
+      targetWordMode,
+      score:          30,
+      feedbackTr:     msg,
+      issues:         [{ messageTr: msg, severity: 'error' }],
+      confidence:     0.9,
+    };
+  }
+  if (_localHasDoubleAuxiliary(trimmed)) {
+    const msg = 'Cümlede iki yardımcı fiil arka arkaya kullanılmış. İngilizce fiil zinciri bu yapıya izin vermez.';
+    return {
+      status:         'fail',
+      usedTargetWord: true,
+      targetWordMode,
+      score:          25,
+      feedbackTr:     msg,
+      issues:         [{ messageTr: msg, severity: 'error' }],
+      confidence:     0.9,
+    };
+  }
+
+  // ── Step 3: minimum sentence length ──────────────────────────────────────
+  // Only reached when no structural grammar errors are present.
   const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
   if (wordCount < 4) {
     const msg = 'Cümle çok kısa. En az 4–5 kelimeden oluşan tam bir cümle yaz.';
@@ -1898,26 +2519,6 @@ function _localAnalyze({ targetWord, sentence }: LocalAnalysisInput): LocalAnaly
       feedbackTr:     msg,
       issues:         [{ messageTr: 'Cümle çok kısa — en az 4 kelime gerekli.', severity: 'error' }],
       confidence:     1,
-    };
-  }
-
-  // ── Step 3: grammar error detection ──────────────────────────────────────
-  const grammarError = _checkGrammar(trimmed);
-  if (grammarError) {
-    // Apply ALL detectable corrections in multiple passes so the corrected
-    // sentence reflects every rule that fires — not just the first one.
-    // e.g. "affect on everyone" → (Rule 2) → "affect everyone"
-    //                           → (Rule 3) → "affects everyone"  ← final
-    const fullyCorrected = _applyAllCorrections(trimmed);
-    return {
-      status:            'fail',
-      usedTargetWord:    true,
-      targetWordMode,
-      score:             35,
-      feedbackTr:        grammarError.feedback,
-      issues:            [{ messageTr: grammarError.feedback, severity: 'error' }],
-      correctedSentence: fullyCorrected ?? grammarError.corrected,
-      confidence:        0.9,
     };
   }
 

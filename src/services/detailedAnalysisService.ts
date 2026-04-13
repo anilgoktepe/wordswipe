@@ -57,9 +57,14 @@ import { validateCorrectedSentence }       from './sentenceAnalysisService';
  * Your secure backend endpoint.
  *
  * Empty string  → mock mode (no network calls, safe for development).
- * Example: 'https://api.yourapp.com/v1/sentence-analysis/detailed'
+ * Dev (iOS Simulator): 'http://localhost:8787/api/sentence-analysis/detailed'
+ * Production: set to your deployed backend URL before releasing.
+ *
+ * When this is non-empty, the backend handles LanguageTool server-side and
+ * folds its findings into the normalized result.  The client-side LT call
+ * (line ~265) is automatically skipped — no double-call.
  */
-const DETAILED_API_URL = '';
+const DETAILED_API_URL = 'http://localhost:8787/api/sentence-analysis/detailed';
 
 /** Network request timeout in milliseconds. */
 const FETCH_TIMEOUT_MS = 10_000;
@@ -256,14 +261,20 @@ export async function analyzeSentenceDetailed(
 
   // ── Step 2: Launch LanguageTool + AI in parallel ──────────────────────────
   //
-  //   When a backend URL is configured, the backend already calls LanguageTool
-  //   server-side and folds its findings into the normalization layer.  Calling
-  //   it again client-side would duplicate the LT request and waste the quota.
+  //   Normal path (backend URL set):
+  //     Client-side LT is skipped — the backend calls LT server-side and folds
+  //     its findings into the normalized result.  No double-call, no quota waste.
   //
-  //   Rule: call client-side LT only when running in mock/local mode (no backend).
+  //   Offline fallback (backend fails):
+  //     When the backend request throws, client-side LT is launched immediately
+  //     so the mock result still benefits from structural grammar floor enforcement.
+  //     Without this, a backend outage would strip all LT coverage.
   //
-  const ltPromise: Promise<LTCallResult | null> = DETAILED_API_URL
-    ? Promise.resolve(null)   // backend handles LT — skip client-side call
+  //   Mock mode (DETAILED_API_URL empty):
+  //     Client-side LT runs from the start, in parallel with the (skipped) backend.
+  //
+  let ltPromise: Promise<LTCallResult | null> = DETAILED_API_URL
+    ? Promise.resolve(null)   // backend handles LT — skip unless backend fails below
     : callLanguageTool(input.sentence).catch(() => null);
 
   let aiResult: DetailedAnalysisResult | null = null;
@@ -272,11 +283,13 @@ export async function analyzeSentenceDetailed(
       const raw = await _fetchDetailed(input);
       aiResult  = normalizeDetailedAnalysisResult(raw);
     } catch {
-      // Network / timeout / parse failure — continue without AI result.
+      // Network / timeout / parse failure — backend is offline.
+      // Launch client-side LT now so the mock fallback has structural floor coverage.
+      ltPromise = callLanguageTool(input.sentence).catch(() => null);
     }
   }
 
-  // Await LT (was running concurrently in mock mode; resolves instantly when backend is active).
+  // Await LT (instant when backend succeeded; real network call when backend failed).
   const ltResult = await ltPromise;
 
   // ── Step 3: Combine floors (Layer 1 pre-validation + LanguageTool) ────────
