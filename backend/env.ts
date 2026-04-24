@@ -73,6 +73,18 @@ export function validateEnv(): AppConfig {
     warnings.push(`OPENAI_API_KEY detected (${masked}).`);
   }
 
+  // ── DEEPL_API_KEY ───────────────────────────────────────────────────────────
+  // Translation is a UX enhancement — missing key degrades to manual-entry
+  // fallback, not a server crash.  Warn in all environments, never hard-fail.
+  const deeplKey = (process.env.DEEPL_API_KEY ?? '').trim();
+  if (!deeplKey) {
+    warnings.push('DEEPL_API_KEY is not set. The /api/translate endpoint will return 503.');
+  } else {
+    const maskedLen = Math.max(0, deeplKey.length - 4);
+    const masked    = '*'.repeat(maskedLen) + deeplKey.slice(maskedLen);
+    warnings.push(`DEEPL_API_KEY detected (${masked}).`);
+  }
+
   // ── PORT ────────────────────────────────────────────────────────────────────
   const rawPort = process.env.PORT ?? '';
   const port    = rawPort ? parseInt(rawPort, 10) : 8787;

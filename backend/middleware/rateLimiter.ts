@@ -81,3 +81,13 @@ function _makeLimiter(opts: Partial<Options>) {
  * 30 requests per IP per 15-minute window.
  */
 export const detailedAnalysisLimiter = _makeLimiter({ max: 30 });
+
+/**
+ * Rate limiter for the translation endpoint.
+ * 60 requests per IP per minute — lenient for single-word lookups,
+ * still blocks automated scraping at scale.
+ */
+export const translateLimiter = _makeLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  max:      60,
+});

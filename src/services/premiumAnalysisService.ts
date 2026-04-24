@@ -41,17 +41,17 @@
  *   No other code changes are needed — the contract is stable.
  */
 
-import { Word } from './vocabularyService';
+import { Word }        from './vocabularyService';
+import { API_BASE_URL } from '../config/apiConfig';
 
 // ─── Configuration ─────────────────────────────────────────────────────────────
 
 /**
- * Your secure backend endpoint that wraps the AI provider.
- *
- * Empty string → mock mode (no network calls, safe for development).
- * Example: 'https://api.yourapp.com/v1/sentence-analysis'
+ * Backend endpoint for legacy sentence analysis (kept for compatibility).
+ * URL is resolved from EXPO_PUBLIC_API_URL env var or platform default.
+ * See src/config/apiConfig.ts for resolution rules and real-device setup.
  */
-const PREMIUM_API_URL = "http://localhost:8787/api/sentence-analysis";
+const PREMIUM_API_URL = `${API_BASE_URL}/api/sentence-analysis`;
 // ─── Public types ──────────────────────────────────────────────────────────────
 
 export interface PremiumAnalysisInput {

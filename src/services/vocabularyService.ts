@@ -433,6 +433,35 @@ export function clearWordsCache(source?: WordSource): void {
   }
 }
 
+// ─── Normalized key ───────────────────────────────────────────────────────────
+
+/**
+ * Canonical word key used for all duplicate checks and merge comparisons.
+ * Single source of truth: trim + lowercase, nothing else.
+ * Do not add stemming or punctuation stripping here — keep it predictable.
+ */
+export function normalizeWordKey(word: string): string {
+  return word.toLowerCase().trim();
+}
+
+// ─── Effective vocabulary pool ────────────────────────────────────────────────
+
+/**
+ * Merges built-in and custom words into a single pool where custom words
+ * take priority. Any built-in word whose normalized key matches a custom word
+ * is excluded — the custom entry wins.
+ *
+ * Use this everywhere built-in and custom words are combined so that the
+ * same word never appears twice in lessons, flashcards, quizzes, or
+ * practice sessions.
+ */
+export function getEffectiveVocab(localWords: Word[], customWords: Word[]): Word[] {
+  if (customWords.length === 0) return localWords;
+  const customKeys = new Set(customWords.map(w => normalizeWordKey(w.word)));
+  const filteredLocal = localWords.filter(w => !customKeys.has(normalizeWordKey(w.word)));
+  return [...filteredLocal, ...customWords];
+}
+
 // ─── Re-exports for convenience ───────────────────────────────────────────────
 //
 // Consumers that import from vocabularyService don't need to also import from

@@ -11,6 +11,8 @@ import { ResultsScreen } from '../screens/ResultsScreen';
 import { DifficultWordsScreen } from '../screens/DifficultWordsScreen';
 import { SentenceBuilderScreen } from '../screens/SentenceBuilderScreen';
 import { PremiumScreen } from '../screens/PremiumScreen';
+import { MyWordsScreen } from '../screens/MyWordsScreen';
+import { AddWordScreen } from '../screens/AddWordScreen';
 import { TabNavigator } from './TabNavigator';
 import {
   pickChallengeWord,
@@ -29,6 +31,8 @@ export type RootStackParamList = {
   Settings: undefined;
   SentenceBuilder: undefined;
   Premium: undefined;
+  MyWords: undefined;
+  AddWord: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -197,6 +201,16 @@ export const AppNavigator: React.FC = () => {
         <Stack.Screen
           name="Premium"
           component={PremiumScreen}
+          options={{ animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="MyWords"
+          component={MyWordsScreen}
+          options={{ animation: 'slide_from_right' }}
+        />
+        <Stack.Screen
+          name="AddWord"
+          component={AddWordScreen}
           options={{ animation: 'slide_from_bottom' }}
         />
       </Stack.Navigator>

@@ -7,7 +7,12 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "dev:api": "tsx server.ts"
+    "dev:api": "tsx server.ts",
+    "test:grammar": "tsx scripts/grammar-stress-test.ts",
+    "validate:vocab": "tsx scripts/validate-vocabulary.ts",
+    "vocab:export": "tsx scripts/export-vocabulary.ts",
+    "vocab:generate": "tsx scripts/generate-vocabulary.ts",
+    "vocab:sync": "npm run vocab:generate -- --write && npm run validate:vocab"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

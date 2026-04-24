@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Word, getLocalWords, getWords, WordSource } from '../services/vocabularyService';
+import { Word, getLocalWords, getWords, WordSource, getEffectiveVocab } from '../services/vocabularyService';
 
 export type Level = 'easy' | 'medium' | 'hard';
 
@@ -98,6 +98,13 @@ export interface AppState {
   /** Date string matching dailyAiAnalysesUsed — resets counter on a new day */
   aiAnalysisDate: string;
 
+  /**
+   * Words manually added by the user via "Kelime Ekle".
+   * Stored here so they are immediately available to getDailyWords and quiz
+   * flows without a separate async load.  Persisted alongside main state.
+   */
+  customWords: Word[];
+
   // ── Word Management practice cycle ─────────────────────────────────────────
   /**
    * IDs of words already practiced in the current Word Management cycle.
@@ -163,7 +170,9 @@ type Action =
   | { type: 'SET_PRACTICE_SEEN_IDS'; ids: number[] }
   | { type: 'CLAIM_LESSON_BONUS' }
   | { type: 'MARK_BONUS_SESSION_STARTED' }
-  | { type: 'MARK_BASE_SESSION_STARTED' };
+  | { type: 'MARK_BASE_SESSION_STARTED' }
+  | { type: 'ADD_CUSTOM_WORD'; word: Word }
+  | { type: 'DELETE_CUSTOM_WORD'; wordId: number };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -192,6 +201,7 @@ const initialState: AppState = {
   dailyBaseSessionStarted: false,
   dailyLessonBonusClaimed: false,
   dailyBonusSessionStarted: false,
+  customWords: [],
 };
 
 /** Build an empty progress entry for a word that has never been seen */
@@ -453,6 +463,8 @@ function reducer(state: AppState, action: Action): AppState {
         dailyBaseSessionStarted:   isNewDay ? false : (loaded.dailyBaseSessionStarted   ?? false),
         dailyLessonBonusClaimed:   isNewDay ? false : (loaded.dailyLessonBonusClaimed   ?? false),
         dailyBonusSessionStarted:  isNewDay ? false : (loaded.dailyBonusSessionStarted  ?? false),
+        // Custom words — always restored as-is
+        customWords: loaded.customWords ?? [],
       };
     }
 
@@ -508,13 +520,24 @@ function reducer(state: AppState, action: Action): AppState {
     case 'MARK_BASE_SESSION_STARTED':
       return { ...state, dailyBaseSessionStarted: true };
 
+    // ── User-added custom words ───────────────────────────────────────────────
+    case 'ADD_CUSTOM_WORD':
+      return { ...state, customWords: [...state.customWords, action.word] };
+
+    case 'DELETE_CUSTOM_WORD':
+      return {
+        ...state,
+        customWords: state.customWords.filter(w => w.id !== action.wordId),
+      };
+
     // ── Full reset (keeps level + dark mode + premium status) ────────────────
     case 'RESET_PROGRESS':
       return {
         ...initialState,
-        level:      state.level,
-        darkMode:   state.darkMode,
-        isPremium:  state.isPremium,   // preserve subscription across resets
+        level:       state.level,
+        darkMode:    state.darkMode,
+        isPremium:   state.isPremium,   // preserve subscription across resets
+        customWords: state.customWords, // preserve user's own word list across resets
         // initialState.todayDate is computed once at module load and can be
         // stale if the app runs past midnight. Always use the real current date
         // so dailyLearnedIds / dailyProgress start clean from the correct day.
@@ -611,6 +634,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const wp        = state.wordProgress;
     const lastLesson = new Set(state.lastLessonWordIds);
 
+    // Merge built-in and user-added words; custom words shadow built-in duplicates.
+    const allVocab = getEffectiveVocab(localVocabulary, state.customWords);
+
     // ── Review cap: at most 20% of the lesson (minimum 1 slot when target ≥ 5)
     const reviewCap = target >= 5 ? Math.round(target * 0.20) : 0;
     const newCap    = target - reviewCap;
@@ -623,7 +649,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .filter(([, p]) => p.correctCount > 0 || p.wrongCount > 0)
         .map(([id]) => Number(id)),
     );
-    const levelWords = localVocabulary.filter(w => w.level === state.level);
+    const levelWords = allVocab.filter(w => w.level === state.level);
     const newWords   = levelWords.filter(w => !interactedIds.has(w.id));
 
     // ── Review candidates: actually seen + qualifies for reinforcement ────────
@@ -644,7 +670,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // Finally most overdue SRS date
         return a.nextReviewAt - b.nextReviewAt;
       })
-      .map(([id]) => localVocabulary.find(w => w.id === Number(id)))
+      .map(([id]) => allVocab.find(w => w.id === Number(id)))
       .filter((w): w is Word => w !== undefined);
 
     // ── Primary pass: new words fill ~80%, review words fill ~20% ────────────
@@ -690,11 +716,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Read from wordProgress (source of truth), not the derived cache arrays.
   // This guarantees freshness even when a screen is re-focused after being
   // frozen by react-freeze while another screen was active.
-  const getDifficultWordObjects = (): Word[] =>
-    localVocabulary.filter(w => state.wordProgress[w.id]?.isDifficult === true);
+  const getDifficultWordObjects = (): Word[] => {
+    const allVocab = getEffectiveVocab(localVocabulary, state.customWords);
+    return allVocab.filter(w => state.wordProgress[w.id]?.isDifficult === true);
+  };
 
-  const getLastLessonWords = (): Word[] =>
-    localVocabulary.filter(w => state.lastLessonWordIds.includes(w.id));
+  const getLastLessonWords = (): Word[] => {
+    const allVocab = getEffectiveVocab(localVocabulary, state.customWords);
+    return allVocab.filter(w => state.lastLessonWordIds.includes(w.id));
+  };
 
   // ─── Supplementary API words ───────────────────────────────────────────────
   // Isolated from the core learning engine. API words returned here:

@@ -21,6 +21,7 @@ import { validateEnv }          from './backend/env';
 import { log }                  from './backend/logger';
 import { requestIdMiddleware }  from './backend/middleware/requestId';
 import { analyzeSentenceRouter } from './backend/analyzeSentence';
+import { translateRouter }       from './backend/translateRoute';
 
 // ─── 1. Load .env ──────────────────────────────────────────────────────────────
 
@@ -92,6 +93,15 @@ app.get('/health', (_req, res) => {
 //   Pipeline: validate → rate-limit → AI model → normalize → respond
 //
 app.use('/api/sentence-analysis/detailed', analyzeSentenceRouter);
+
+// ── Word translation proxy (DeepL backend) ────────────────────────────────────
+//
+//   POST /api/translate
+//
+//   Proxies single-word translation requests to DeepL.
+//   Key stays on the server — never exposed to the client.
+//
+app.use('/api/translate', translateRouter);
 
 // ── Legacy sentence analysis endpoint (preserved for compatibility) ───────────
 //

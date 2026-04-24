@@ -10,7 +10,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp, WordProgress } from '../context/AppContext';
-import { getLocalWords, Word } from '../services/vocabularyService';
+import { getLocalWords, Word, getEffectiveVocab } from '../services/vocabularyService';
 import { Button } from '../components/Button';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import { FREE_SESSION_CAP } from '../utils/monetization';
@@ -21,7 +21,7 @@ interface Props {
   navigation: any;
 }
 
-type FilterTab = 'all' | 'difficult' | 'learned';
+type FilterTab = 'difficult' | 'learned' | 'custom';
 
 // ─── User-facing classification helpers ──────────────────────────────────────
 // These drive the Word Management UI. The internal SRS flags (isDifficult /
@@ -64,14 +64,18 @@ function isDisplayLearned(wp: WordProgress): boolean {
 
 const WordCard: React.FC<{
   word: Word;
-  progress: WordProgress;
+  progress?: WordProgress;
   theme: ReturnType<typeof getTheme>;
 }> = ({ word, progress, theme }) => {
   const [expanded, setExpanded] = useState(false);
-  const difficult = isDisplayDifficult(progress);
-  const learned   = isDisplayLearned(progress);
+  const hasExample = !!word.example;
+  const isCustom   = word.source === 'custom';
+  const difficult  = progress ? isDisplayDifficult(progress) : false;
+  const learned    = progress ? isDisplayLearned(progress)   : false;
 
-  const badge = difficult
+  const badge = isCustom && !progress
+    ? { label: 'Benim',      bg: theme.primaryLight,    text: theme.primary }
+    : difficult
     ? { label: 'Zorlu',      bg: '#FEE2E2', text: '#DC2626' }
     : learned
     ? { label: 'Öğrenildi',  bg: '#D1FAE5', text: '#059669' }
@@ -79,8 +83,8 @@ const WordCard: React.FC<{
 
   return (
     <TouchableOpacity
-      activeOpacity={0.9}
-      onPress={() => setExpanded(v => !v)}
+      activeOpacity={hasExample ? 0.9 : 1}
+      onPress={() => hasExample && setExpanded(v => !v)}
       style={[
         styles.wordCard,
         {
@@ -97,37 +101,41 @@ const WordCard: React.FC<{
           <Text style={[styles.turkish, { color: theme.primary }]}>{word.translation}</Text>
         </View>
 
-        {/* ✓ / ✗ counters */}
-        <View style={styles.statsRow}>
-          <View style={styles.statChip}>
-            <Ionicons name="checkmark" size={12} color="#059669" />
-            <Text style={[styles.statNum, { color: '#059669' }]}>{progress.correctCount}</Text>
+        {/* ✓ / ✗ counters — hidden for words not yet practiced */}
+        {progress ? (
+          <View style={styles.statsRow}>
+            <View style={styles.statChip}>
+              <Ionicons name="checkmark" size={12} color="#059669" />
+              <Text style={[styles.statNum, { color: '#059669' }]}>{progress.correctCount}</Text>
+            </View>
+            <View style={styles.statChip}>
+              <Ionicons name="close" size={12} color="#DC2626" />
+              <Text style={[styles.statNum, { color: '#DC2626' }]}>{progress.wrongCount}</Text>
+            </View>
           </View>
-          <View style={styles.statChip}>
-            <Ionicons name="close" size={12} color="#DC2626" />
-            <Text style={[styles.statNum, { color: '#DC2626' }]}>{progress.wrongCount}</Text>
-          </View>
-        </View>
+        ) : null}
       </View>
 
-      {/* Status badge + expand toggle */}
+      {/* Status badge + expand toggle (only if example exists) */}
       <View style={styles.wordCardFooter}>
         <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
           <Text style={[styles.statusText, { color: badge.text }]}>{badge.label}</Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <Ionicons
-            name={expanded ? 'chevron-up' : 'chevron-down'}
-            size={12}
-            color={theme.textTertiary}
-          />
-          <Text style={[styles.expandHint, { color: theme.textTertiary }]}>
-            {expanded ? 'Gizle' : 'Örnek cümle'}
-          </Text>
-        </View>
+        {hasExample && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Ionicons
+              name={expanded ? 'chevron-up' : 'chevron-down'}
+              size={12}
+              color={theme.textTertiary}
+            />
+            <Text style={[styles.expandHint, { color: theme.textTertiary }]}>
+              {expanded ? 'Gizle' : 'Örnek cümle'}
+            </Text>
+          </View>
+        )}
       </View>
 
-      {expanded && (
+      {expanded && hasExample && (
         <View style={[styles.exampleBox, { backgroundColor: theme.surfaceSecondary }]}>
           <Text style={[styles.exampleText, { color: theme.textSecondary }]}>
             "{word.example}"
@@ -143,19 +151,20 @@ const WordCard: React.FC<{
 export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
   const { state, dispatch } = useApp();
   const theme = getTheme(state.darkMode);
-  const [activeTab, setActiveTab] = useState<FilterTab>('all');
+  const [activeTab, setActiveTab] = useState<FilterTab>('difficult');
 
   // All words that have ever been encountered in a quiz session.
-  // A word enters wordProgress the first time it is answered (correctly or not).
-  // Once a word is in this set it NEVER disappears — this is the permanent record.
-  const seenWords     = vocabulary.filter(w => w.id in state.wordProgress);
+  // Custom words shadow built-in duplicates (same normalized English text).
+  const allVocab      = getEffectiveVocab(vocabulary, state.customWords);
+  const seenWords     = allVocab.filter(w => w.id in state.wordProgress);
   const difficultList = seenWords.filter(w => isHistoricallyDifficult(state.wordProgress[w.id]));
   const learnedList   = seenWords.filter(w => isDisplayLearned(state.wordProgress[w.id]));
+  const customList    = state.customWords;
 
   const displayWords =
-    activeTab === 'all'       ? seenWords
-    : activeTab === 'difficult' ? difficultList
-    :                             learnedList;
+    activeTab === 'difficult' ? difficultList
+    : activeTab === 'learned' ? learnedList
+    :                           customList;
 
   const isPremium = state.isPremium;
 
@@ -203,9 +212,9 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const tabs: { key: FilterTab; label: string; count: number }[] = [
-    { key: 'all',       label: 'Tümü',      count: seenWords.length     },
-    { key: 'difficult', label: 'Zorlu',      count: difficultList.length },
-    { key: 'learned',   label: 'Öğrenildi', count: learnedList.length   },
+    { key: 'difficult', label: 'Zorlu',       count: difficultList.length },
+    { key: 'learned',   label: 'Öğrenildi',   count: learnedList.length   },
+    { key: 'custom',    label: 'Kelimelerim', count: customList.length    },
   ];
 
   return (
@@ -275,35 +284,39 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
           ))}
         </View>
 
-        {/* Empty states */}
-        {seenWords.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>📚</Text>
-            <Text style={[styles.emptyTitle, { color: theme.text }]}>
-              Henüz kelime görmedin
-            </Text>
-            <Text style={[styles.emptySub, { color: theme.textSecondary }]}>
-              Derslerini tamamlayınca kelimeler burada görünecek
-            </Text>
-          </View>
-        ) : displayWords.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>
-              {activeTab === 'difficult' ? '🎉' : '📖'}
-            </Text>
-            <Text style={[styles.emptyTitle, { color: theme.text }]}>
-              {activeTab === 'difficult'
-                ? 'Harika! Zor kelimen yok'
-                : 'Henüz öğrenilmiş kelime yok'}
-            </Text>
-            <Text style={[styles.emptySub, { color: theme.textSecondary }]}>
-              {activeTab === 'difficult'
-                ? 'Yanlış yaptığın kelimeler burada görünecek'
-                : 'Bir kelimeyi doğru yanıtlayınca burada görünecek'}
-            </Text>
-          </View>
-        ) : (
-          <>
+        {/* Content area */}
+        <View style={{ flex: 1 }}>
+          {activeTab !== 'custom' && seenWords.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyEmoji}>📚</Text>
+              <Text style={[styles.emptyTitle, { color: theme.text }]}>
+                Henüz kelime görmedin
+              </Text>
+              <Text style={[styles.emptySub, { color: theme.textSecondary }]}>
+                Derslerini tamamlayınca kelimeler burada görünecek
+              </Text>
+            </View>
+          ) : displayWords.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyEmoji}>
+                {activeTab === 'difficult' ? '🎉' : activeTab === 'custom' ? '✏️' : '📖'}
+              </Text>
+              <Text style={[styles.emptyTitle, { color: theme.text }]}>
+                {activeTab === 'difficult'
+                  ? 'Harika! Zor kelimen yok'
+                  : activeTab === 'custom'
+                  ? 'Henüz kelime eklemedin'
+                  : 'Henüz öğrenilmiş kelime yok'}
+              </Text>
+              <Text style={[styles.emptySub, { color: theme.textSecondary }]}>
+                {activeTab === 'difficult'
+                  ? 'Yanlış yaptığın kelimeler burada görünecek'
+                  : activeTab === 'custom'
+                  ? 'Aşağıdan hızlıca kendi kelimelerini ekleyebilirsin'
+                  : 'Bir kelimeyi doğru yanıtlayınca burada görünecek'}
+              </Text>
+            </View>
+          ) : (
             <FlatList
               data={displayWords}
               keyExtractor={item => item.id.toString()}
@@ -318,18 +331,30 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
                 />
               )}
             />
-            <View style={styles.footer}>
-              <Button
-                title={`Pratik Yap (${isPremium ? displayWords.length : Math.min(displayWords.length, FREE_SESSION_CAP)})`}
-                onPress={handlePractice}
-                theme={theme}
-                size="lg"
-                style={{ width: '100%' }}
-                icon={<MaterialCommunityIcons name="dumbbell" size={20} color="#fff" />}
-              />
-            </View>
-          </>
-        )}
+          )}
+        </View>
+
+        {/* Footer — always visible */}
+        <View style={styles.footer}>
+          {displayWords.length > 0 && (
+            <Button
+              title={`Pratik Yap (${isPremium ? displayWords.length : Math.min(displayWords.length, FREE_SESSION_CAP)})`}
+              onPress={handlePractice}
+              theme={theme}
+              size="lg"
+              style={{ width: '100%' }}
+              icon={<MaterialCommunityIcons name="dumbbell" size={20} color="#fff" />}
+            />
+          )}
+          <Button
+            title="+ Kelime Ekle"
+            variant="secondary"
+            onPress={() => navigation.navigate('AddWord')}
+            theme={theme}
+            size="lg"
+            style={{ width: '100%' }}
+          />
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -486,6 +511,7 @@ const styles = StyleSheet.create({
   footer: {
     padding: spacing.lg,
     paddingBottom: spacing.xl,
+    gap: spacing.sm,
   },
 
   /* Empty states */

@@ -50,21 +50,20 @@
 
 import { callLanguageTool, LTCallResult } from './languageToolService';
 import { validateCorrectedSentence }       from './sentenceAnalysisService';
+import { API_BASE_URL }                    from '../config/apiConfig';
 
 // ─── Configuration ─────────────────────────────────────────────────────────────
 
 /**
- * Your secure backend endpoint.
+ * Backend endpoint for detailed AI sentence analysis.
  *
- * Empty string  → mock mode (no network calls, safe for development).
- * Dev (iOS Simulator): 'http://localhost:8787/api/sentence-analysis/detailed'
- * Production: set to your deployed backend URL before releasing.
+ * URL is resolved from EXPO_PUBLIC_API_URL env var or platform default.
+ * See src/config/apiConfig.ts for resolution rules and real-device setup.
  *
- * When this is non-empty, the backend handles LanguageTool server-side and
- * folds its findings into the normalized result.  The client-side LT call
- * (line ~265) is automatically skipped — no double-call.
+ * When non-empty, the backend handles LanguageTool server-side and folds its
+ * findings into the normalized result — no double-call from the client.
  */
-const DETAILED_API_URL = 'http://localhost:8787/api/sentence-analysis/detailed';
+const DETAILED_API_URL = `${API_BASE_URL}/api/sentence-analysis/detailed`;
 
 /** Network request timeout in milliseconds. */
 const FETCH_TIMEOUT_MS = 10_000;

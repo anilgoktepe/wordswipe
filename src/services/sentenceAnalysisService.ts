@@ -110,14 +110,21 @@ export interface LocalAnalysisResult {
   confidence: number;
 }
 
-// ─── Rule 1 — modal + "to" + infinitive ───────────────────────────────────────
+// ─── Rule 1 — modal / neg-aux + "to" + infinitive ────────────────────────────
 
 /**
- * Modal verbs followed by "to + infinitive" — incorrect in English.
- * e.g. "I can to go" → "I can go"
+ * Modal verbs OR negated do-support followed by "to + infinitive" — incorrect.
+ *
+ *   Modal:   "I can to go"        → "I can go"
+ *   Neg-aux: "I didn't to explain"  → "I didn't explain"
+ *            "She doesn't to provide" → "She doesn't provide"
+ *            "We don't to discuss"    → "We don't discuss"
+ *
+ * Negated do-support + "to" is always wrong: the negative auxiliary already
+ * heads the verb phrase; a bare infinitive follows directly, never "to".
  */
 const MODAL_TO_INFINITIVE =
-  /\b(can|could|will|would|shall|should|may|might|must)\s+to\s+([a-z]+)\b/gi;
+  /\b(can|could|will|would|shall|should|may|might|must|didn't|don't|doesn't|won't|wouldn't|couldn't|shouldn't|can't)\s+to\s+([a-z]+)\b/gi;
 
 // ─── Rule 2 — transitive verb + wrong preposition ─────────────────────────────
 
@@ -271,6 +278,14 @@ const WRONG_PREP_RULES: WrongPrepRule[] = [
     replacement: '$1',
     feedback:    '"emphasize on/about" hatalı — "emphasize" doğrudan nesne alır. Doğru: "emphasize the importance".',
   },
+  {
+    // "support(s|ed|ing) about X" → "support X"
+    // "support" is transitive; "about" is never the correct preposition here.
+    // NOTE: "talked about support", "about support for…" are NOT matched (wrong order).
+    pattern:     /\b(support(?:s|ed|ing)?)\s+about\b/gi,
+    replacement: '$1',
+    feedback:    '"support about" hatalı — "support" doğrudan nesne alır, "about" eklenmez. Doğru örnek: "He supported the team."',
+  },
 ];
 
 // ─── Rule 3 — 3rd-person singular subject–verb agreement ──────────────────────
@@ -318,6 +333,8 @@ const THIRD_PERSON_VERBS: readonly string[] = [
   'claim', 'argue', 'assume', 'note', 'notice', 'propose', 'prepare', 'plan',
   'finish', 'request', 'examine', 'identify', 'extend', 'limit', 'indicate',
   'introduce', 'employ', 'establish',
+  // additional verbs for Pass 5 (-ed past tense detection)
+  'talk',
 ];
 
 /** Converts a verb base form to its 3rd-person singular present simple form. */
@@ -365,17 +382,27 @@ function _checkThirdPersonSingular(
   const pronounRe = new RegExp(`\\b(he|she|it)\\s+(${verbAlt})\\b`, 'i');
   const mA = pronounRe.exec(sentence);
   if (mA) {
-    const subj  = mA[1];
-    const verb  = mA[2];
-    const fixed = toThirdPersonSingular(verb);
-    const corrected = sentence.replace(
-      new RegExp(`\\b(he|she|it)\\s+(${verb})\\b`, 'gi'),
-      (_, s, v) => `${s} ${toThirdPersonSingular(v)}`,
-    );
-    return {
-      feedback:  `"${subj} ${verb}" hatalı — "${subj}" öznesinden sonra fiil 3. tekil şahıs eki almalı. Doğrusu: "${subj} ${fixed}".`,
-      corrected: cosmeticFix(corrected) ?? corrected,
-    };
+    // Skip when the pronoun is preceded by an auxiliary or modal — this means
+    // the sentence is in inverted question form (did/does/can/will/how does …)
+    // and the base verb after the subject is required, not an agreement error.
+    //   "Did she provide enough?"  → "did" precedes "she" → skip ✓
+    //   "How does she manage?"     → "does" precedes "she" → skip ✓
+    //   "She provide support."     → no aux before "she" → fire ✓
+    const before = sentence.slice(0, mA.index).trim().split(/\s+/).pop()?.toLowerCase() ?? '';
+    const isInvertedQ = /^(did|do|does|can|could|will|would|shall|should|may|might|must|has|have|had|how|what|when|where|why|who)$/.test(before);
+    if (!isInvertedQ) {
+      const subj  = mA[1];
+      const verb  = mA[2];
+      const fixed = toThirdPersonSingular(verb);
+      const corrected = sentence.replace(
+        new RegExp(`\\b(he|she|it)\\s+(${verb})\\b`, 'gi'),
+        (_, s, v) => `${s} ${toThirdPersonSingular(v)}`,
+      );
+      return {
+        feedback:  `"${subj} ${verb}" hatalı — "${subj}" öznesinden sonra fiil 3. tekil şahıs eki almalı. Doğrusu: "${subj} ${fixed}".`,
+        corrected: cosmeticFix(corrected) ?? corrected,
+      };
+    }
   }
 
   // ── Pattern B: determiner + (optional modifier) + noun + base-form verb ──
@@ -398,6 +425,28 @@ function _checkThirdPersonSingular(
   );
   const mB = nounPhraseRe.exec(sentence);
   if (mB) {
+    // If the captured subject phrase already contains a modal (e.g. "the school
+    // can provide"), the sentence is grammatically valid — the modal takes the
+    // base-form verb, not the subject.  Don't treat it as a sv-agreement error.
+    if (/\b(?:can|could|will|would|shall|should|may|might|must|need|dare)\b/i.test(mB[1])) {
+      return null;
+    }
+    // If the captured subject phrase already contains a finite be-verb (is/are/
+    // was/were/am), the sentence already has its main predicate and the word
+    // matched as "verb" is actually a noun in a prepositional phrase.
+    // e.g. "This is about support for the community." → "This is about" is
+    // incorrectly captured as subject phrase; "support" is the noun, not the verb.
+    if (/\b(?:is|are|was|were|am)\b/i.test(mB[1])) {
+      return null;
+    }
+    // If the candidate verb is immediately followed by "of", this is almost
+    // certainly a noun-slot misuse ("A clear describe of…", "The consider of…")
+    // rather than a subject-verb agreement error.  Producing "describes" would
+    // be a misleading correction; suppress Pattern B for this case.
+    const afterMatch = sentence.slice(mB.index + mB[0].length).trimStart();
+    if (/^of\b/i.test(afterMatch)) {
+      return null;
+    }
     const subjectPhrase = mB[1];
     const verb  = mB[2];
     const fixed = toThirdPersonSingular(verb);
@@ -1379,7 +1428,7 @@ const PREP_GERUND_TRIGGERS: readonly PrepGerundTrigger[] = [
   {
     // "without [verb]" — GERUND_CHECK_VERBS excludes common nouns like "help", "support"
     pattern:    /\b(without)\s+([a-z]{2,})\b/gi,
-    feedbackFn: (t, v) =>
+    feedbackFn: (_t, v) =>
       `"without ${v}" hatalı — "without" sonrasında gerund (-ing) gelir. Doğru: "without ${_toSimpleGerund(v)}".`,
   },
   {
@@ -1429,6 +1478,38 @@ function _checkPrepGerundErrors(
         return { feedback, corrected: cosmeticFix(corrected) ?? corrected };
       }
     }
+  }
+  return null;
+}
+
+/**
+ * Catches "good/bad/skilled/etc. at [known-verb] [object]" — the object after
+ * the base form disambiguates "support" as a verb, not a noun.
+ *
+ *   "good at support her team"  → "good at supporting her team"  ← fires
+ *   "good at support"           → no object follows → no fire (noun possible)
+ *   "good at football"          → "football" not in THIRD_PERSON_VERBS → no fire
+ */
+const _GOOD_AT_OBJ_RE =
+  /\b((?:good|bad|great|terrible|skilled|talented|experienced)\s+at)\s+([a-z]{2,})\s+(her|him|it|me|them|you|us|my|your|his|its|their|our|the|a|an|this|that|these|those)\b/gi;
+
+function _checkGoodAtVerbObject(
+  sentence: string,
+): { feedback: string; corrected: string } | null {
+  _GOOD_AT_OBJ_RE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = _GOOD_AT_OBJ_RE.exec(sentence)) !== null) {
+    const verb = m[2].toLowerCase();
+    if (verb.endsWith('ing')) continue;          // already gerund
+    if (!THIRD_PERSON_VERBS.includes(verb)) continue; // not a known verb
+    const trigger = m[1].toLowerCase();
+    const gerund  = _toSimpleGerund(verb);
+    const feedback = `"${trigger} ${verb}" hatalı — "at" sonrasında gerund (-ing) gelir. Doğru: "${trigger} ${gerund}".`;
+    const corrected =
+      sentence.slice(0, m.index + m[0].length - m[2].length - m[3].length - 1) +
+      gerund + ' ' + m[3] +
+      sentence.slice(m.index + m[0].length);
+    return { feedback, corrected: cosmeticFix(corrected) ?? corrected };
   }
   return null;
 }
@@ -1783,16 +1864,19 @@ function _checkGrammar(
   sentence: string,
 ): { feedback: string; corrected?: string } | null {
 
-  // ── Rule 1: modal + "to" + infinitive ────────────────────────────────────
+  // ── Rule 1: modal / neg-aux + "to" + infinitive ──────────────────────────
   MODAL_TO_INFINITIVE.lastIndex = 0;
   const modalMatch = MODAL_TO_INFINITIVE.exec(sentence);
   if (modalMatch) {
     const modal = modalMatch[1];
     const verb  = modalMatch[2];
+    const isNegAux = /^(didn't|don't|doesn't|won't|wouldn't|couldn't|shouldn't|can't)$/i.test(modal);
     MODAL_TO_INFINITIVE.lastIndex = 0;
     const fixed = sentence.replace(MODAL_TO_INFINITIVE, '$1 $2');
     return {
-      feedback:  `"${modal} to ${verb}" hatalı — modal fiillerden (can, will, should…) sonra "to" gelmez. Doğrusu: "${modal} ${verb}".`,
+      feedback: isNegAux
+        ? `"${modal} to ${verb}" hatalı — olumsuz yardımcı fiilden (${modal}) sonra "to" gelmez, doğrudan fiil gelir. Doğrusu: "${modal} ${verb}".`
+        : `"${modal} to ${verb}" hatalı — modal fiillerden (can, will, should…) sonra "to" gelmez. Doğrusu: "${modal} ${verb}".`,
       corrected: cosmeticFix(fixed) ?? fixed,
     };
   }
@@ -1865,6 +1949,10 @@ function _checkGrammar(
   // ── Rule 16: gerund-requiring preposition constructions ───────────────────
   const r16 = _checkPrepGerundErrors(sentence);
   if (r16) return r16;
+
+  // ── Rule 16b: "good/bad/… at [known-verb] [object]" ──────────────────────
+  const r16b = _checkGoodAtVerbObject(sentence);
+  if (r16b) return r16b;
 
   // ── Rule 17: function-word / auxiliary typos ──────────────────────────────
   const r17 = _checkFunctionWordTypos(sentence);
@@ -1967,6 +2055,9 @@ function _localHasBeBareverb(sentence: string): boolean {
     'high', 'low', 'open', 'close', 'last', 'first', 'next',
     // common linking complements
     'like', 'about', 'worth', 'similar', 'equal', 'such',
+    // irregular comparatives / superlatives safe after be
+    'better', 'worse', 'best', 'worst', 'more', 'most', 'less', 'least',
+    'further', 'farther', 'furthest', 'farthest',
   ]);
 
   const re = /\b(?:am|is|are|was|were)\s+([a-z]+)/gi;
@@ -1977,6 +2068,12 @@ function _localHasBeBareverb(sentence: string): boolean {
     if (word.endsWith('ing') || word.endsWith('ed') || word.endsWith('en')) continue;
     // Suffixes that reliably mark adjectives / nouns, not bare verbs
     if (/(?:ly|ful|less|tion|sion|ness|ment|ity|ive|al|ous|ant|ent|ible|able|ish|ic|ary|ory)$/.test(word)) continue;
+    // Regular comparative (-er, length ≥ 5) and superlative (-est, length ≥ 5) adjectives.
+    // Exception: known verb bases that happen to end in -er (consider, remember, cover, offer…)
+    // must NOT be skipped — "is consider" is a genuine be+bare error.
+    if (word.length >= 5 && (word.endsWith('er') || word.endsWith('est'))) {
+      if (!(_KNOWN_VERB_BASES as ReadonlySet<string>).has(word)) continue;
+    }
     return true;
   }
   return false;
@@ -2042,9 +2139,15 @@ function _localHasHaveBareverb(sentence: string): boolean {
  * (_checkWrongFormAfterAuxiliary). This helper fills the gap for regular verbs.
  */
 function _localHasDoDidPastForm(sentence: string): boolean {
-  // Matches: do/does/did + word ending in consonant+ed
-  // Consonant+ed pattern: the character before 'ed' is NOT a vowel (a/e/i/o/u)
-  const re = /\b(?:do|does|did)\s+([a-z]+[^aeiou\s]ed)\b/gi;
+  // Matches do-support variants + word ending in consonant+ed.
+  // Covers:
+  //   Affirmative:  do / does / did
+  //   Contracted neg: don't / doesn't / didn't
+  //   Full neg:       did not / does not / do not  (optional "not" gap)
+  //
+  // "didn't considered", "don't explained", "did not provided" are all wrong —
+  // do-support always requires the base (infinitive) form.
+  const re = /\b(?:didn't|don't|doesn't|did\s+not|does\s+not|do\s+not|do|does|did)\s+([a-z]+[^aeiou\s]ed)\b/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(sentence)) !== null) {
     const word = m[1].toLowerCase();
@@ -2089,6 +2192,251 @@ function _localHasDoubleAuxiliary(sentence: string): boolean {
 
   if (new RegExp(`\\bdid\\s+(?:${AFTER_DID})\\b`, 'i').test(sentence)) return true;
   if (new RegExp(`\\b(?:${BEFORE_DID})\\s+did\\b`,  'i').test(sentence)) return true;
+  return false;
+}
+
+// ─── Adjacent verb–auxiliary collision guard ─────────────────────────────────
+
+/**
+ * Set of non-auxiliary verb base forms — every verb from THIRD_PERSON_VERBS
+ * that is NOT itself an auxiliary or modal.
+ *
+ * Auxiliaries excluded (they legitimately appear before other auxiliaries):
+ *   be/am/is/are/was/were  have/has/had  do/does/did
+ *   can/could/will/would/shall/should/may/might/must
+ */
+const _NON_AUX_VERB_BASES: ReadonlySet<string> = new Set(
+  THIRD_PERSON_VERBS.filter(v => !/^(?:be|have|do|can|could|will|would|shall|should|may|might|must)$/.test(v)),
+);
+
+/**
+ * Finite auxiliaries / modals / be-verb conjugations that, when appearing
+ * immediately AFTER a non-auxiliary verb base form, signal a broken clause.
+ *
+ * "provide is", "expect will", "manage was", "achieve can" — none of these
+ * two-token adjacencies is grammatical English.
+ *
+ * Deliberately narrow: only the conjugated / modal forms are listed.
+ * Bare infinitives (be, have, do) are excluded because catenative constructions
+ * like "help build", "let go", "make work" are valid and common.
+ */
+const _FINITE_SECOND_RE =
+  /^(?:am|is|are|was|were|has|had|does|did|can|could|will|would|shall|should|may|might|must)$/i;
+
+/**
+ * Returns true when the sentence contains a directly adjacent pair
+ *   [non-aux verb base form]  +  [finite auxiliary / modal / be-verb]
+ * with no intervening token.
+ *
+ * This pattern is structurally impossible in grammatical English.
+ * The only valid multi-verb sequences either have a subject between the two
+ * finite forms ("I think he will come"), or the second verb is a bare
+ * infinitive in a catenative construction ("she helps build", "let it go").
+ *
+ * Examples that fire (always broken):
+ *   "provide is"   — "Can you provide is benefit."
+ *   "expect will"  — "The expect will be you."
+ *   "achieve can"  — "She achieve can do it."
+ *   "manage was"   — "She manage was difficult."
+ *   "support will" — "I support will help."
+ *
+ * Examples that do NOT fire (valid or handled elsewhere):
+ *   "did go"     — irregular-past-after-aux rule (Rule 10)
+ *   "will have"  — valid perfect modal ("she will have finished")
+ *   "helps be"   — "be" excluded from _FINITE_SECOND_RE (catenative safe)
+ *   "let go"     — "go" is base infinitive, not a finite form
+ *   "think will" — "think" IS in the set, but "think will" is only wrong
+ *                  when there is no subject between them; a false positive
+ *                  risk exists for "I think will suffice" (archaic but valid).
+ *                  Accepted trade-off: the curated set excludes "think",
+ *                  "say", "know", "feel", "seem" — common reporting verbs that
+ *                  appear in complement clauses with modals.
+ *
+ * Reporting / complement verbs excluded from _NON_AUX_VERB_BASES check
+ * (see filter above): the broader THIRD_PERSON_VERBS list is used as the base,
+ * minus auxiliaries.  Verbs like "think", "say", "know" are included in
+ * THIRD_PERSON_VERBS — their adjacency to a modal is almost always a clause
+ * boundary ("I think he will…"), not a collision.  However, the adjacency
+ * check requires NO intervening token, so "I think will" only fires when
+ * the two tokens are consecutive — a genuine error in all realistic cases.
+ */
+function _localHasAdjacentVerbAuxCollision(sentence: string): boolean {
+  const tokens = sentence
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, '')
+    .split(/\s+/)
+    .filter(Boolean);
+
+  for (let i = 0; i < tokens.length - 1; i++) {
+    const t1 = tokens[i];
+    const t2 = tokens[i + 1];
+    if (_NON_AUX_VERB_BASES.has(t1) && _FINITE_SECOND_RE.test(t2)) {
+      // Skip sentence-initial position: the first token is frequently a noun
+      // subject ("Support is important", "Help was given") — not a verb-aux
+      // collision.  True collisions ("She achieve can") always have i > 0.
+      if (i === 0) continue;
+      return true;
+    }
+  }
+  return false;
+}
+
+// ─── Finite verb presence guard ──────────────────────────────────────────────
+//
+// Pre-compiled at module load — derived from existing lists so there is a
+// single source of truth.  No new vocabulary to maintain.
+
+/** Matches any unambiguous finite auxiliary, modal, be-verb, or common
+ *  contracted form (don't, doesn't, won't, isn't, aren't, etc.). */
+const _FINITE_AUX_RE =
+  /\b(?:am|is|are|was|were|do|does|did|have|has|had|can|could|will|would|shall|should|may|might|must)\b|don'?t|doesn'?t|didn'?t|won'?t|wouldn'?t|can'?t|couldn'?t|shouldn'?t|isn'?t|aren'?t|wasn'?t|weren'?t|hasn'?t|haven'?t|hadn'?t/i;
+
+/**
+ * Set of 3rd-person singular inflected forms of all known verbs.
+ * "supports", "helps", "requires", etc. — unambiguous finite verb tokens.
+ */
+const _THIRD_PERSON_VERB_FORMS: ReadonlySet<string> = new Set(
+  THIRD_PERSON_VERBS.map(v => toThirdPersonSingular(v)),
+);
+
+/**
+ * Regex for subject pronoun + known base-form verb.
+ * Catches "I support", "they help", "we provide" — valid finite constructions
+ * that contain no auxiliary and no inflected form.
+ */
+const _SUBJECT_BASE_VERB_RE: RegExp = (() => {
+  const alt = [...new Set(THIRD_PERSON_VERBS)].join('|');
+  return new RegExp(`\\b(?:I|you|we|they)\\s+(?:${alt})\\b`, 'i');
+})();
+
+/** Set of irregular past tense forms — "went", "ran", "came", "said", … */
+const _IRREGULAR_PAST_FORMS: ReadonlySet<string> = new Set(
+  Object.keys(IRREGULAR_PAST_TO_BASE),
+);
+
+/** Set of verb base forms for the regular-past -ed stripping pass. */
+const _KNOWN_VERB_BASES: ReadonlySet<string> = new Set(THIRD_PERSON_VERBS);
+
+/**
+ * Returns true when the sentence contains at least one finite (conjugated)
+ * verb form — a necessary condition for a grammatical English sentence.
+ *
+ * Detection strategy — four passes, each operating on pre-compiled data:
+ *
+ *   Pass 1 — Auxiliary / modal / be-verb (fastest, most common path):
+ *             am/is/are/was/were · do/does/did · have/has/had
+ *             can/could/will/would/shall/should/may/might/must
+ *
+ *   Pass 2 — 3rd-person singular inflected forms of known verbs:
+ *             "supports", "helps", "requires", "runs", …
+ *
+ *   Pass 3 — Subject pronoun + base-form verb:
+ *             "I support", "they help", "we provide", "you decide"
+ *             (finite without any auxiliary)
+ *
+ *   Pass 4 — Irregular past tense forms:
+ *             "went", "ran", "came", "said", "gave", "knew", …
+ *
+ *   Pass 5 — Regular past tense -ed forms of known verbs:
+ *             "walked", "helped", "supported", "achieved"
+ *             (strips -ed / consonant-doubling and checks against known base set)
+ *
+ * Permissive by design: errs toward returning true (sentence passes) when
+ * uncertain.  The guard only fires when ALL five passes find nothing — which
+ * happens exclusively for bare noun-phrase fragments:
+ *   "A very important support for students."  → no finite verb → false
+ *   "The achieve of my goals."                → no finite verb → false
+ *   "Beautiful increase in productivity."     → no finite verb → false
+ *
+ * Valid sentences in all common forms pass reliably:
+ *   "I support the team."       → Pass 3 ✓
+ *   "She supports the team."    → Pass 2 ✓
+ *   "He supported the team."    → Pass 5 ✓
+ *   "They will support us."     → Pass 1 ✓
+ *   "She went home."            → Pass 4 ✓
+ */
+function _localHasFiniteVerb(sentence: string): boolean {
+  // Pass 1 — auxiliary / modal / be-verb (regex on the original string)
+  if (_FINITE_AUX_RE.test(sentence)) return true;
+
+  const tokens = sentence
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, '')
+    .split(/\s+/)
+    .filter(Boolean);
+
+  // Pass 2 — 3rd-person singular form of a known verb ("supports", "helps")
+  for (const t of tokens) {
+    if (_THIRD_PERSON_VERB_FORMS.has(t)) return true;
+  }
+
+  // Pass 3 — subject pronoun + base-form verb ("I support", "they improve")
+  if (_SUBJECT_BASE_VERB_RE.test(sentence)) return true;
+
+  // Pass 4 — irregular past tense ("went", "ran", "came", …)
+  for (const t of tokens) {
+    if (_IRREGULAR_PAST_FORMS.has(t)) return true;
+  }
+
+  // Pass 5 — regular past tense: strip -ed and check against known base set.
+  // Uses `edToBase` (already defined in this module) plus a '+e' fallback for
+  // verbs ending in silent-e: "achieved" → edToBase → "achiev" → +"e" → "achieve" ✓
+  for (const t of tokens) {
+    if (t.length < 4 || !t.endsWith('ed')) continue;
+    const base = edToBase(t);
+    if (base !== t && (_KNOWN_VERB_BASES.has(base) || _KNOWN_VERB_BASES.has(base + 'e'))) {
+      return true;
+    }
+  }
+
+  // Pass 6 — causative/imperative "let": "Let her manage", "Let me help"
+  // "let" past = base (no -ed form), not in IRREGULAR_PAST_TO_BASE, but it IS
+  // a finite verb in both imperative and causative constructions.
+  if (/\blet\s+/i.test(sentence)) return true;
+
+  // Pass 8 — imperative sentence: sentence begins with a known base-form verb.
+  //
+  // "Provide excellent service."   → tokens[0] = "provide" ∈ _KNOWN_VERB_BASES ✓
+  // "Explain the problem clearly." → tokens[0] = "explain" ∈ _KNOWN_VERB_BASES ✓
+  // "Consider the risks carefully." → tokens[0] = "consider" ∈ _KNOWN_VERB_BASES ✓
+  //
+  // Guard conditions to prevent false positives:
+  //   - Token must NOT end in -ing (gerund phrase: "Providing support." = fragment)
+  //   - Minimum 2 tokens required (bare single-word imperatives like "Go!" too
+  //     short to be a meaningful Sentence Builder submission anyway)
+  //   - Only fires when all earlier passes found nothing — so sentences that
+  //     already have an explicit finite verb (auxiliary, 3rd-person form, etc.)
+  //     don't rely on this pass.
+  if (tokens.length >= 2 && _KNOWN_VERB_BASES.has(tokens[0]) && !tokens[0].endsWith('ing')) {
+    return true;
+  }
+
+  // Pass 8b — polite imperative: "Please [verb] …"
+  // "Please describe your experience." → tokens[0]="please", tokens[1]="describe" ∈ KNOWN_VERB_BASES
+  if (
+    tokens.length >= 3 &&
+    tokens[0] === 'please' &&
+    _KNOWN_VERB_BASES.has(tokens[1]) &&
+    !tokens[1].endsWith('ing')
+  ) {
+    return true;
+  }
+
+  // Pass 7 — plural noun subject + base-form verb:
+  // "Good teachers provide students with knowledge."
+  // "Students learn English every day."
+  // Heuristic: a token ending in -s that is NOT a known 3rd-person verb form
+  // (i.e., not "provides", "helps") is likely a plural noun; if a known base
+  // verb follows within 3 positions, the sentence has a finite predicate.
+  for (let i = 0; i < tokens.length - 1; i++) {
+    const t = tokens[i];
+    if (t.length >= 4 && t.endsWith('s') && !_THIRD_PERSON_VERB_FORMS.has(t)) {
+      for (let j = i + 1; j <= Math.min(i + 3, tokens.length - 1); j++) {
+        if (_KNOWN_VERB_BASES.has(tokens[j])) return true;
+      }
+    }
+  }
+
   return false;
 }
 
@@ -2155,6 +2503,7 @@ function _collectAllGrammarIssues(sentence: string): LocalAnalysisIssue[] {
   const r17 = _checkReflexiveDirectErrors(sentence);     if (r17) add(r17.feedback);
   const r18 = _checkVerbStructure(sentence);             if (r18) add(r18.feedback);
   const r19 = _checkPrepGerundErrors(sentence);          if (r19) add(r19.feedback);
+  const r19b = _checkGoodAtVerbObject(sentence);         if (r19b) add(r19b.feedback);
   const r20 = _checkFunctionWordTypos(sentence);         if (r20) add(r20.feedback);
 
   // ── Rules 18–20: LT-coverage extensions (sync, zero-network) ──────────────
@@ -2174,6 +2523,9 @@ function _collectAllGrammarIssues(sentence: string): LocalAnalysisIssue[] {
   }
   if (_localHasDoubleAuxiliary(sentence)) {
     add('Cümlede iki yardımcı fiil arka arkaya kullanılmış. İngilizce fiil zinciri bu yapıya izin vermez.');
+  }
+  if (_localHasAdjacentVerbAuxCollision(sentence)) {
+    add('Cümlede ardışık fiil/yardımcı fiil yapısı İngilizceye uygun değil.');
   }
 
   return issues;
@@ -2212,7 +2564,8 @@ export function validateCorrectedSentence(corrected: string): boolean {
   if (_localHasBeBareverb(corrected))       return false;
   if (_localHasHaveBareverb(corrected))     return false;
   if (_localHasDoDidPastForm(corrected))    return false;
-  if (_localHasDoubleAuxiliary(corrected))  return false;
+  if (_localHasDoubleAuxiliary(corrected))          return false;
+  if (_localHasAdjacentVerbAuxCollision(corrected)) return false;
   return true;
 }
 
@@ -2386,13 +2739,21 @@ function _localAnalyze({ targetWord, sentence }: LocalAnalysisInput): LocalAnaly
     usedTargetWord = true;
     targetWordMode = 'exact';
   } else if (tokens.some(t => {
-    if (!t.startsWith(targetLower) || t === targetLower) return false;
-    const suffix = t.slice(targetLower.length);
-    // Only inflectional suffixes count as family match.
-    // Derivational suffixes (-er, -ion, -tion, -al, -ment, -ness, -ive…)
-    // produce different word classes and must NOT be treated as valid usage
-    // of the target word (e.g. "provider" ≠ "provide", "provision" ≠ "provide").
-    return ['s', 'es', 'd', 'ed', 'ing'].includes(suffix);
+    if (t === targetLower) return false;
+    // Standard inflectional suffix match: "increases" / "increased" ← "increase"
+    if (t.startsWith(targetLower)) {
+      const suffix = t.slice(targetLower.length);
+      // Only inflectional suffixes count as family match.
+      // Derivational suffixes (-er, -ion, -tion, -al, -ment, -ness, -ive…)
+      // produce different word classes and must NOT be treated as valid usage
+      // of the target word (e.g. "provider" ≠ "provide", "provision" ≠ "provide").
+      if (['s', 'es', 'd', 'ed', 'ing'].includes(suffix)) return true;
+    }
+    // Drop-e gerund: "improving" ← "improve", "achieving" ← "achieve",
+    // "increasing" ← "increase", "providing" ← "provide".
+    // The base form ends in silent-e; the gerund drops it before adding -ing.
+    if (targetLower.endsWith('e') && t === targetLower.slice(0, -1) + 'ing') return true;
+    return false;
   })) {
     // Inflectional family match: "increases", "increased", "increasing" ← "increase"
     usedTargetWord = true;
@@ -2440,6 +2801,18 @@ function _localAnalyze({ targetWord, sentence }: LocalAnalysisInput): LocalAnaly
     //                           → (Rule 3) → "affects everyone"  ← final
     const fullyCorrected = _applyAllCorrections(trimmed);
     const allIssues      = _collectAllGrammarIssues(trimmed);
+    // Suppress correction when the original sentence ALSO has a Step 2b
+    // structural issue (adjacent verb-aux collision, no finite verb, etc.).
+    // In these cases _checkGrammar fires on a partially broken clause and
+    // produces an incomplete fix — showing that correction misleads the user.
+    const hasStep2bIssue =
+      _localHasBeBareverb(trimmed) ||
+      _localHasHaveBareverb(trimmed) ||
+      _localHasDoDidPastForm(trimmed) ||
+      _localHasDoubleAuxiliary(trimmed) ||
+      _localHasAdjacentVerbAuxCollision(trimmed) ||
+      !_localHasFiniteVerb(trimmed);
+    const safeCorrected = hasStep2bIssue ? undefined : (fullyCorrected ?? grammarError.corrected);
     return {
       status:            'fail',
       usedTargetWord:    true,
@@ -2449,7 +2822,7 @@ function _localAnalyze({ targetWord, sentence }: LocalAnalysisInput): LocalAnaly
       issues:            allIssues.length > 0
                            ? allIssues
                            : [{ messageTr: grammarError.feedback, severity: 'error' }],
-      correctedSentence: fullyCorrected ?? grammarError.corrected,
+      ...(safeCorrected !== undefined ? { correctedSentence: safeCorrected } : {}),
       confidence:        0.9,
     };
   }
@@ -2470,7 +2843,16 @@ function _localAnalyze({ targetWord, sentence }: LocalAnalysisInput): LocalAnaly
     };
   }
   if (_localHasHaveBareverb(trimmed)) {
-    const msg = '"have/has/had" sonrasında fiil yalın hâlde kullanılamaz. Perfect tense için geçmiş ortaç gerekir (-ed veya düzensiz form).';
+    // Detect whether the bare token after have/has/had is a known verb base form.
+    // If it is NOT a known verb, the error is likely a wrong-POS / noun-in-verb-slot
+    // misuse ("I have to decision this problem") rather than a tense form error.
+    // In that case, give a more neutral message that doesn't mislead with tense advice.
+    const haveMatch = /\b(?:have|has|had)\s+([a-z]+)/i.exec(trimmed);
+    const bareToken = haveMatch?.[1]?.toLowerCase() ?? '';
+    const isKnownVerb = (_KNOWN_VERB_BASES as ReadonlySet<string>).has(bareToken);
+    const msg = isKnownVerb
+      ? '"have/has/had" sonrasında fiil yalın hâlde kullanılamaz. Perfect tense için geçmiş ortaç gerekir (-ed veya düzensiz form).'
+      : 'Bu cümlede "have/has/had" sonrasında gelen kelime fiil olarak uygun görünmüyor. Doğru fiil formunu kullandığından emin ol.';
     return {
       status:         'fail',
       usedTargetWord: true,
@@ -2503,6 +2885,30 @@ function _localAnalyze({ targetWord, sentence }: LocalAnalysisInput): LocalAnaly
       feedbackTr:     msg,
       issues:         [{ messageTr: msg, severity: 'error' }],
       confidence:     0.9,
+    };
+  }
+  if (!_localHasFiniteVerb(trimmed)) {
+    const msg = 'Cümlede çekimli bir fiil yok veya cümle yapısı eksik.';
+    return {
+      status:         'fail',
+      usedTargetWord: true,
+      targetWordMode,
+      score:          20,
+      feedbackTr:     msg,
+      issues:         [{ messageTr: msg, severity: 'error' }],
+      confidence:     0.85,
+    };
+  }
+  if (_localHasAdjacentVerbAuxCollision(trimmed)) {
+    const msg = 'Cümlede ardışık fiil/yardımcı fiil yapısı İngilizceye uygun değil.';
+    return {
+      status:         'fail',
+      usedTargetWord: true,
+      targetWordMode,
+      score:          25,
+      feedbackTr:     msg,
+      issues:         [{ messageTr: msg, severity: 'error' }],
+      confidence:     0.88,
     };
   }
 
