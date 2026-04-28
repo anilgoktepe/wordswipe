@@ -39,30 +39,56 @@ const vocabulary = getLocalWords();
 
 interface Props {
   navigation: any;
+  route?: { params?: { wordIds?: number[] } };
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Builds a shuffled queue of up to `max` learned words for the session. */
-function buildQueue(learnedIds: number[], max: number): Word[] {
+/**
+ * Builds a queue of up to `max` learned words for the session.
+ * When pinned IDs are provided (e.g. from DifficultWordsScreen), uses only those (shuffled).
+ * Otherwise prioritizes review-due words (nextReviewAt <= now) before not-yet-due ones.
+ */
+function buildQueue(
+  learnedIds: number[],
+  max: number,
+  wordProgress: Record<number, { nextReviewAt: number }>,
+  pinnedIds?: number[],
+): Word[] {
+  if (pinnedIds && pinnedIds.length > 0) {
+    const pool = vocabulary.filter(w => pinnedIds.includes(w.id));
+    return [...pool].sort(() => Math.random() - 0.5).slice(0, max);
+  }
+
+  const now  = Date.now();
   const pool = vocabulary.filter(w => learnedIds.includes(w.id));
-  return [...pool].sort(() => Math.random() - 0.5).slice(0, max);
+
+  const due    = pool.filter(w => (wordProgress[w.id]?.nextReviewAt ?? 0) <= now);
+  const notDue = pool.filter(w => (wordProgress[w.id]?.nextReviewAt ?? 0) > now);
+
+  const shuffle = <T,>(arr: T[]): T[] => [...arr].sort(() => Math.random() - 0.5);
+
+  return [...shuffle(due), ...shuffle(notDue)].slice(0, max);
 }
 
 // ─── Screen ────────────────────────────────────────────────────────────────────
 
-export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
+export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) => {
   const { state, dispatch } = useApp();
   const theme = getTheme(state.darkMode);
 
-  const learnedIds = state.learnedWordIds;
-  const isPremium  = state.isPremium;
+  const learnedIds  = state.learnedWordIds;
+  const isPremium   = state.isPremium;
+  const pinnedIds   = route?.params?.wordIds;
 
   // Free users: 5-word queue.  Premium users: full learned-word pool (unlimited).
-  const sessionMax = isPremium ? learnedIds.length : FREE_SENTENCE_SESSION_CAP;
+  // Pinned sessions (from DifficultWords) always use the full pinned set.
+  const sessionMax = pinnedIds && pinnedIds.length > 0
+    ? pinnedIds.length
+    : (isPremium ? learnedIds.length : FREE_SENTENCE_SESSION_CAP);
 
   // One-time queue built at mount — does not rebuild on re-render.
-  const [queue]               = useState<Word[]>(() => buildQueue(learnedIds, sessionMax));
+  const [queue]               = useState<Word[]>(() => buildQueue(learnedIds, sessionMax, state.wordProgress, pinnedIds));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sentence, setSentence]         = useState('');
   const [result, setResult]             = useState<LocalAnalysisResult | null>(null);
@@ -336,11 +362,17 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
       }
       if (countAsCompleted) {
         setCompleted(prev => prev + 1);
+        dispatch({ type: 'UPDATE_STREAK' });
         // Advance SRS for the word: updates nextReviewAt, correctCount,
         // isDifficult auto-clear, and dailyProgress.
         if (currentWord) {
           dispatch({ type: 'MARK_WORD_LEARNED', wordId: currentWord.id });
         }
+      } else if (currentWord) {
+        // FLAWED or REJECTED: pull the next review forward by 1 day so the
+        // word surfaces again soon.  Does NOT touch wrongCount, isDifficult,
+        // isLearned, or consecutiveCorrect — lighter signal than a quiz fail.
+        dispatch({ type: 'SCHEDULE_WORD_REVIEW', wordId: currentWord.id });
       }
     }
 
@@ -406,7 +438,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
           {totalXp > 0 && (
             <View style={[styles.xpSummary, { backgroundColor: theme.primaryLight }]}>
               <Ionicons name="star" size={20} color={theme.primary} />
-              <Text style={[styles.xpSummaryText, { color: theme.primary }]}>+{totalXp} XP kazandın!</Text>
+              <Text style={[styles.xpSummaryText, { color: theme.primary }]}>+{totalXp} puan kazandın!</Text>
             </View>
           )}
 
@@ -465,7 +497,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
           {totalXp > 0 && !result && (
             <View style={[styles.xpBar, { backgroundColor: theme.primaryLight }]}>
               <Ionicons name="star" size={13} color={theme.primary} />
-              <Text style={[styles.xpBarText, { color: theme.primary }]}>+{totalXp} XP</Text>
+              <Text style={[styles.xpBarText, { color: theme.primary }]}>+{totalXp} puan</Text>
             </View>
           )}
 
@@ -588,14 +620,14 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation }) => {
                     detailedResult?.verdict !== 'REJECTED') && (
                     <View style={[styles.xpEarned, { backgroundColor: theme.correct + '20' }]}>
                       <Ionicons name="star" size={14} color={theme.correct} style={{ marginRight: 4 }} />
-                      <Text style={[styles.xpEarnedText, { color: theme.correct }]}>+10 XP kazandın!</Text>
+                      <Text style={[styles.xpEarnedText, { color: theme.correct }]}>+10 puan kazandın!</Text>
                     </View>
                   )}
                   {/* +5 XP only when verdict is explicitly ACCEPTABLE (surface issue, no structural error) */}
                   {detailedResult?.verdict === 'ACCEPTABLE' && (
                     <View style={[styles.xpEarned, { backgroundColor: '#FEF3C7' }]}>
                       <Ionicons name="star-outline" size={14} color="#B45309" style={{ marginRight: 4 }} />
-                      <Text style={[styles.xpEarnedText, { color: '#B45309' }]}>+5 XP (düzelt → +10 XP)</Text>
+                      <Text style={[styles.xpEarnedText, { color: '#B45309' }]}>+5 puan (düzelt → +10 puan)</Text>
                     </View>
                   )}
 

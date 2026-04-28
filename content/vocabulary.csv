@@ -201,104 +201,104 @@ id,word,translation,example,level,cefrLevel,partOfSpeech,topic
 301,adapt,uyum sağlamak,You must adapt to new situations.,medium,B2,verb,daily
 201,inevitable,kaçınılmaz,Change is inevitable in life.,hard,C1,adjective,academic
 202,comprehensive,kapsamlı,We need a comprehensive plan.,hard,C1,adjective,academic
-203,ambiguous,belirsiz / muğlak,The instructions are ambiguous.,hard,C1,adjective,academic
-204,meticulous,titiz / özenli,She is meticulous in her work.,hard,C1,adjective,daily
+203,ambiguous,belirsiz,The instructions are ambiguous.,hard,C1,adjective,academic
+204,meticulous,titiz,She is meticulous in her work.,hard,C1,adjective,daily
 205,deteriorate,kötüleşmek,His health began to deteriorate.,hard,C1,verb,health
-206,eloquent,belagatlı / akıcı konuşan,The president gave an eloquent speech.,hard,C1,adjective,social
-207,ambivalent,kararsız / ikircikli,I feel ambivalent about the decision.,hard,C1,adjective,emotions
-208,pragmatic,pragmatik / pratik düşünen,We need a pragmatic solution.,hard,C1,adjective,academic
-209,cynical,alaycı / kötümser,He has a cynical view of politics.,hard,C1,adjective,emotions
-210,alleviate,hafifletmek / azaltmak,This medicine will alleviate the pain.,hard,C1,verb,health
-211,exacerbate,şiddetlendirmek / kötüleştirmek,Stress can exacerbate health problems.,hard,C1,verb,health
-212,phenomenon,fenomen / olgu,This is a natural phenomenon.,hard,C1,noun,academic
-213,paradox,paradoks / çelişki,It is a strange paradox.,hard,C1,noun,academic
-214,fundamental,temel / köklü,This is a fundamental right.,hard,C1,adjective,academic
-215,contemporary,çağdaş / günümüz,He is a contemporary artist.,hard,C1,adjective,social
-216,elaborate,ayrıntılı / karmaşık,She gave an elaborate explanation.,hard,C1,adjective,academic
-217,scrutinize,ince eleyip sık dokumak / incelemek,We must scrutinize the data carefully.,hard,C1,verb,academic
-218,indigenous,yerli / doğal,The indigenous people have rich traditions.,hard,C1,adjective,social
-219,perpetual,sürekli / kalıcı,They are in perpetual conflict.,hard,C1,adjective,academic
-220,resilient,dayanıklı / esnek,Children are very resilient.,hard,C1,adjective,emotions
-221,profound,derin / köklü,The experience had a profound impact.,hard,C1,adjective,academic
-222,ambition,hırs / heves,Her ambition drives her success.,hard,C1,noun,emotions
-223,coherent,tutarlı / mantıklı,Please give a coherent explanation.,hard,C1,adjective,academic
-224,dilemma,çıkmaz / ikilem,I face a difficult dilemma.,hard,C1,noun,daily
-225,concise,özlü / kısa ve öz,Keep your report concise.,hard,C1,adjective,academic
-226,ambiguity,belirsizlik / muğlaklık,The ambiguity of the law causes problems.,hard,C1,noun,academic
-227,implication,ima / sonuç,What are the implications of this decision?,hard,C1,noun,academic
-228,hypothesis,hipotez / varsayım,The scientist tested the hypothesis.,hard,C1,noun,academic
-229,empirical,ampirik / deneysel,We need empirical evidence.,hard,C1,adjective,academic
+206,eloquent,belagatlı,The president gave an eloquent speech.,hard,C1,adjective,social
+207,ambivalent,kararsız,I feel ambivalent about the decision.,hard,C1,adjective,emotions
+208,pragmatic,pragmatik,We need a pragmatic solution.,hard,C1,adjective,academic
+209,cynical,alaycı,He has a cynical view of politics.,hard,C1,adjective,emotions
+210,alleviate,hafifletmek,This medicine will alleviate the pain.,hard,C1,verb,health
+211,exacerbate,kötüleştirmek,Stress can exacerbate health problems.,hard,C1,verb,health
+212,phenomenon,olgu,This is a natural phenomenon.,hard,C1,noun,academic
+213,paradox,paradoks,It is a strange paradox.,hard,C1,noun,academic
+214,fundamental,temel,This is a fundamental right.,hard,C1,adjective,academic
+215,contemporary,çağdaş,He is a contemporary artist.,hard,C1,adjective,social
+216,elaborate,ayrıntılı,She gave an elaborate explanation.,hard,C1,adjective,academic
+217,scrutinize,incelemek,We must scrutinize the data carefully.,hard,C1,verb,academic
+218,indigenous,yerli,The indigenous people have rich traditions.,hard,C1,adjective,social
+219,perpetual,sürekli,They are in perpetual conflict.,hard,C1,adjective,academic
+220,resilient,dayanıklı,Children are very resilient.,hard,C1,adjective,emotions
+221,profound,derin,The experience had a profound impact.,hard,C1,adjective,academic
+222,ambition,hırs,Her ambition drives her success.,hard,C1,noun,emotions
+223,coherent,tutarlı,Please give a coherent explanation.,hard,C1,adjective,academic
+224,dilemma,ikilem,I face a difficult dilemma.,hard,C1,noun,daily
+225,concise,özlü,Keep your report concise.,hard,C1,adjective,academic
+226,ambiguity,belirsizlik,The ambiguity of the law causes problems.,hard,C1,noun,academic
+227,implication,sonuç,What are the implications of this decision?,hard,C1,noun,academic
+228,hypothesis,hipotez,The scientist tested the hypothesis.,hard,C1,noun,academic
+229,empirical,ampirik,We need empirical evidence.,hard,C1,adjective,academic
 230,abstract,soyut,Mathematics can be very abstract.,hard,C1,adjective,academic
-231,rationale,gerekçe / mantık,What is the rationale behind this decision?,hard,C1,noun,academic
-232,substantial,önemli miktarda / sağlam,There has been a substantial improvement.,hard,C1,adjective,academic
-233,diminish,azalmak / küçülmek,Do not let fear diminish your courage.,hard,C1,verb,emotions
-234,sustain,sürdürmek / desteklemek,We must sustain our efforts.,hard,C1,verb,daily
-235,acknowledge,kabul etmek / teslim etmek,Please acknowledge receipt of this message.,hard,C1,verb,daily
-236,attribute,bağlamak / nitelik,His success is attributed to hard work.,hard,C1,verb,academic
-237,contradict,çelişmek / inkâr etmek,These facts contradict each other.,hard,C1,verb,academic
-238,illustrate,örneklemek / göstermek,Let me illustrate this with an example.,hard,C1,verb,education
-239,implement,uygulamak / hayata geçirmek,We will implement the new policy.,hard,C1,verb,business
+231,rationale,gerekçe,What is the rationale behind this decision?,hard,C1,noun,academic
+232,substantial,önemli miktarda,There has been a substantial improvement.,hard,C1,adjective,academic
+233,diminish,azalmak,Do not let fear diminish your courage.,hard,C1,verb,emotions
+234,sustain,sürdürmek,We must sustain our efforts.,hard,C1,verb,daily
+235,acknowledge,kabul etmek,Please acknowledge receipt of this message.,hard,C1,verb,daily
+236,attribute,atfetmek,His success is attributed to hard work.,hard,C1,verb,academic
+237,contradict,çelişmek,These facts contradict each other.,hard,C1,verb,academic
+238,illustrate,örneklemek,Let me illustrate this with an example.,hard,C1,verb,education
+239,implement,uygulamak,We will implement the new policy.,hard,C1,verb,business
 240,interpret,yorumlamak,How do you interpret this data?,hard,C1,verb,academic
-241,manipulate,manipüle etmek / çevirmek,Do not let others manipulate you.,hard,C1,verb,social
-242,constitute,oluşturmak / teşkil etmek,This constitutes a serious problem.,hard,C1,verb,academic
-243,controversial,tartışmalı / ihtilaflı,The decision was very controversial.,hard,C1,adjective,social
-244,obsolete,modası geçmiş / eskimiş,This technology is now obsolete.,hard,C1,adjective,technology
-245,lucid,anlaşılır / açık,Her explanation was very lucid.,hard,C1,adjective,academic
-246,daunting,yıldırıcı / cesaret kırıcı,The task ahead is daunting.,hard,C1,adjective,emotions
-247,intricate,karmaşık / girift,The design is very intricate.,hard,C2,adjective,daily
-248,eloquence,belagat / güzel söz söyleme sanatı,She spoke with great eloquence.,hard,C1,noun,social
-249,leverage,kaldıraç etkisi / avantaj kullanmak,Use your skills as leverage.,hard,C1,noun,business
-250,mitigate,hafifletmek / azaltmak,We must mitigate the risk.,hard,C1,verb,business
-251,plausible,makul / inandırıcı,That sounds plausible to me.,hard,C1,adjective,academic
-252,prevail,galip gelmek / yaygın olmak,Good always prevails over evil.,hard,C1,verb,daily
+241,manipulate,manipüle etmek,Do not let others manipulate you.,hard,C1,verb,social
+242,constitute,oluşturmak,This constitutes a serious problem.,hard,C1,verb,academic
+243,controversial,tartışmalı,The decision was very controversial.,hard,C1,adjective,social
+244,obsolete,modası geçmiş,This technology is now obsolete.,hard,C1,adjective,technology
+245,lucid,anlaşılır,Her explanation was very lucid.,hard,C1,adjective,academic
+246,daunting,yıldırıcı,The task ahead is daunting.,hard,C1,adjective,emotions
+247,intricate,karmaşık,The design is very intricate.,hard,C2,adjective,daily
+248,eloquence,belagat,She spoke with great eloquence.,hard,C1,noun,social
+249,leverage,kaldıraç etkisi,Use your skills as leverage.,hard,C1,noun,business
+250,mitigate,hafifletmek,We must mitigate the risk.,hard,C1,verb,business
+251,plausible,makul,That sounds plausible to me.,hard,C1,adjective,academic
+252,prevail,galip gelmek,Good always prevails over evil.,hard,C1,verb,daily
 253,proximity,yakınlık,The proximity of the hospital is convenient.,hard,C1,noun,daily
-254,rigorous,titiz / sert,The research was very rigorous.,hard,C1,adjective,academic
-255,spontaneous,kendiliğinden / içten gelen,Her laughter was spontaneous.,hard,C1,adjective,emotions
-256,tenacious,azimli / ısrarcı,A tenacious person never gives up.,hard,C1,adjective,emotions
-257,ubiquitous,her yerde bulunan / yaygın,Smartphones are now ubiquitous.,hard,C1,adjective,technology
-258,verbose,gereksiz ayrıntılı / laf kalabalığı yapan,His writing style is too verbose.,hard,C2,adjective,academic
-259,volatile,değişken / uçucu,The market is very volatile.,hard,C1,adjective,business
-260,zealous,gayretli / şevkli,She is a zealous supporter of the cause.,hard,C2,adjective,emotions
-261,benevolent,hayırsever / iyiliksever,He is a benevolent leader.,hard,C1,adjective,social
-262,candid,açık sözlü / dürüst,Be candid with your feedback.,hard,C1,adjective,social
-263,clemency,merhamet / müsamaha,The judge showed clemency.,hard,C2,noun,social
-264,deference,saygı / itaat,Show deference to your elders.,hard,C2,noun,social
-265,eminent,seçkin / tanınmış,She is an eminent scientist.,hard,C1,adjective,academic
-266,fathom,anlamak / kavramak,I cannot fathom his reasoning.,hard,C1,verb,daily
-267,gregarious,sosyal / topluluğu seven,She is a gregarious person.,hard,C2,adjective,social
-268,hasten,acele etmek / hızlandırmak,We must hasten the process.,hard,C1,verb,daily
-269,impeccable,kusursuz / mükemmel,Her taste in fashion is impeccable.,hard,C1,adjective,daily
-270,judicious,basiretli / sağduyulu,Make judicious use of your resources.,hard,C2,adjective,academic
-271,laudable,övgüye değer / takdire şayan,Your effort is truly laudable.,hard,C2,adjective,emotions
-272,lucrative,kazançlı / kârlı,It is a very lucrative business.,hard,C1,adjective,business
-273,magnanimous,gönülsü geniş / cömert ruhlu,He was magnanimous in victory.,hard,C2,adjective,social
-274,nonchalant,umursamaz / kayıtsız,She seemed nonchalant about the result.,hard,C2,adjective,emotions
-275,ostentatious,gösteriş meraklısı / göz alıcı,His lifestyle is very ostentatious.,hard,C2,adjective,social
-276,pervasive,her yere yayılan / yaygın,Fear was pervasive in the community.,hard,C1,adjective,social
-277,quintessential,en tipik / özünü yansıtan,This is the quintessential example.,hard,C2,adjective,academic
-278,rhetoric,retorik / söylem,His speech was full of rhetoric.,hard,C1,noun,academic
-279,sagacious,bilge / zeki,A sagacious leader makes wise choices.,hard,C2,adjective,academic
-280,taciturn,suskun / az konuşan,He is a very taciturn man.,hard,C2,adjective,social
-281,unequivocal,kesin / açık seçik,Give an unequivocal answer.,hard,C1,adjective,academic
-282,venerate,saygı göstermek / ibadet etmek,They venerate their ancestors.,hard,C2,verb,social
-283,wary,ihtiyatlı / dikkatli,Be wary of strangers.,hard,C1,adjective,daily
+254,rigorous,titiz,The research was very rigorous.,hard,C1,adjective,academic
+255,spontaneous,kendiliğinden,Her laughter was spontaneous.,hard,C1,adjective,emotions
+256,tenacious,azimli,A tenacious person never gives up.,hard,C1,adjective,emotions
+257,ubiquitous,her yerde bulunan,Smartphones are now ubiquitous.,hard,C1,adjective,technology
+258,verbose,gereksiz ayrıntılı,His writing style is too verbose.,hard,C2,adjective,academic
+259,volatile,değişken,The market is very volatile.,hard,C1,adjective,business
+260,zealous,gayretli,She is a zealous supporter of the cause.,hard,C2,adjective,emotions
+261,benevolent,hayırsever,He is a benevolent leader.,hard,C1,adjective,social
+262,candid,açık sözlü,Be candid with your feedback.,hard,C1,adjective,social
+263,clemency,merhamet,The judge showed clemency.,hard,C2,noun,social
+264,deference,saygı,Show deference to your elders.,hard,C2,noun,social
+265,eminent,seçkin,She is an eminent scientist.,hard,C1,adjective,academic
+266,fathom,kavramak,I cannot fathom his reasoning.,hard,C1,verb,daily
+267,gregarious,sosyal,She is a gregarious person.,hard,C2,adjective,social
+268,hasten,acele etmek,We must hasten the process.,hard,C1,verb,daily
+269,impeccable,kusursuz,Her taste in fashion is impeccable.,hard,C1,adjective,daily
+270,judicious,basiretli,Make judicious use of your resources.,hard,C2,adjective,academic
+271,laudable,övgüye değer,Your effort is truly laudable.,hard,C2,adjective,emotions
+272,lucrative,kârlı,It is a very lucrative business.,hard,C1,adjective,business
+273,magnanimous,cömert ruhlu,He was magnanimous in victory.,hard,C2,adjective,social
+274,nonchalant,umursamaz,She seemed nonchalant about the result.,hard,C2,adjective,emotions
+275,ostentatious,gösteriş meraklısı,His lifestyle is very ostentatious.,hard,C2,adjective,social
+276,pervasive,her yere yayılan,Fear was pervasive in the community.,hard,C1,adjective,social
+277,quintessential,en tipik,This is the quintessential example.,hard,C2,adjective,academic
+278,rhetoric,retorik,His speech was full of rhetoric.,hard,C1,noun,academic
+279,sagacious,bilge,A sagacious leader makes wise choices.,hard,C2,adjective,academic
+280,taciturn,suskun,He is a very taciturn man.,hard,C2,adjective,social
+281,unequivocal,kesin,Give an unequivocal answer.,hard,C1,adjective,academic
+282,venerate,saygı göstermek,They venerate their ancestors.,hard,C2,verb,social
+283,wary,ihtiyatlı,Be wary of strangers.,hard,C1,adjective,daily
 284,xenophobia,yabancı düşmanlığı,Xenophobia is a serious social problem.,hard,C1,noun,social
-285,yearning,özlem / arzu,She felt a yearning for home.,hard,C1,noun,emotions
-286,zeal,gayret / şevk,He works with great zeal.,hard,C1,noun,emotions
-287,auspicious,uğurlu / şanslı,This is an auspicious beginning.,hard,C1,adjective,daily
-288,brevity,kısalık / özlülük,Brevity is the soul of wit.,hard,C1,noun,academic
-289,corroborate,doğrulamak / pekiştirmek,Can you corroborate this claim?,hard,C1,verb,academic
-290,decorum,terbiye / uygun davranış,Please maintain decorum in meetings.,hard,C2,noun,social
-291,effervescent,neşeli / canlı,She has an effervescent personality.,hard,C2,adjective,emotions
-292,fortuitous,tesadüfi / şans eseri olan,Their meeting was fortuitous.,hard,C2,adjective,daily
-293,grandiose,görkemli / abartılı,He had grandiose plans.,hard,C2,adjective,emotions
-294,hubris,kibir / aşırı gurur,His hubris led to his downfall.,hard,C2,noun,social
-295,immutable,değişmez / sabit,Some laws of physics are immutable.,hard,C1,adjective,academic
-296,juxtapose,yan yana koymak / karşılaştırmak,The artist juxtaposes light and shadow.,hard,C2,verb,academic
-297,laconic,kısa ve öz / az sözlü,His response was laconic but meaningful.,hard,C2,adjective,academic
-298,mendacious,yalancı / yanıltıcı,Beware of mendacious claims.,hard,C2,adjective,social
-299,nuance,nüans /ince ayrım,There are many nuances in language.,hard,C1,noun,academic
-300,obfuscate,karmaşıklaştırmak / anlaşılmaz kılmak,Do not obfuscate the truth.,hard,C2,verb,academic
+285,yearning,özlem,She felt a yearning for home.,hard,C1,noun,emotions
+286,zeal,gayret,He works with great zeal.,hard,C1,noun,emotions
+287,auspicious,uğurlu,This is an auspicious beginning.,hard,C1,adjective,daily
+288,brevity,kısalık,Brevity is the soul of wit.,hard,C1,noun,academic
+289,corroborate,doğrulamak,Can you corroborate this claim?,hard,C1,verb,academic
+290,decorum,terbiye,Please maintain decorum in meetings.,hard,C2,noun,social
+291,effervescent,neşeli,She has an effervescent personality.,hard,C2,adjective,emotions
+292,fortuitous,tesadüfi,Their meeting was fortuitous.,hard,C2,adjective,daily
+293,grandiose,abartılı,He had grandiose plans.,hard,C2,adjective,emotions
+294,hubris,kibir,His hubris led to his downfall.,hard,C2,noun,social
+295,immutable,değişmez,Some laws of physics are immutable.,hard,C1,adjective,academic
+296,juxtapose,yan yana koymak,The artist juxtaposes light and shadow.,hard,C2,verb,academic
+297,laconic,kısa ve öz,His response was laconic but meaningful.,hard,C2,adjective,academic
+298,mendacious,yalancı,Beware of mendacious claims.,hard,C2,adjective,social
+299,nuance,nüans,There are many nuances in language.,hard,C1,noun,academic
+300,obfuscate,karmaşıklaştırmak,Do not obfuscate the truth.,hard,C2,verb,academic
 302,rain,yağmur,It is raining heavily outside.,easy,A1,noun,nature
 303,snow,kar,The snow is beautiful in winter.,easy,A1,noun,nature
 304,wind,rüzgar,The wind is very strong today.,easy,A1,noun,nature
@@ -334,14 +334,14 @@ id,word,translation,example,level,cefrLevel,partOfSpeech,topic
 334,prototype,prototip,They built a prototype before the final product.,hard,C1,noun,technology
 335,encrypt,şifrelemek,Always encrypt your sensitive personal data.,hard,C1,verb,technology
 336,itinerary,seyahat planı,She prepared a detailed itinerary for the trip.,hard,C1,noun,travel
-337,navigate,yol bulmak / gezinmek,It is difficult to navigate in an unfamiliar city.,hard,C1,verb,travel
-338,embark,yola çıkmak / başlamak,We are about to embark on a new adventure.,hard,C1,verb,travel
+337,navigate,yol bulmak,It is difficult to navigate in an unfamiliar city.,hard,C1,verb,travel
+338,embark,yola çıkmak,We are about to embark on a new adventure.,hard,C1,verb,travel
 339,entrepreneur,girişimci,She is a successful entrepreneur in the tech industry.,hard,C1,noun,business
-340,revenue,gelir / hasılat,The company's annual revenue has doubled.,hard,C1,noun,business
+340,revenue,gelir,The company's annual revenue has doubled.,hard,C1,noun,business
 341,feasible,uygulanabilir,Is this plan feasible within our budget?,hard,C1,adjective,business
 342,benchmark,kıyaslama noktası,Set a benchmark to measure your progress.,hard,C1,noun,business
 343,collaborate,iş birliği yapmak,We collaborated on the research project.,hard,C1,verb,business
-344,discrepancy,tutarsızlık / uyuşmazlık,There is a discrepancy in the financial data.,hard,C1,noun,academic
+344,discrepancy,uyuşmazlık,There is a discrepancy in the financial data.,hard,C1,noun,academic
 345,validate,doğrulamak,We need to validate these findings before publishing.,hard,C1,verb,academic
 346,perception,algı,Public perception of the issue has changed significantly.,hard,C1,noun,academic
 347,destination,varış noktası,Our final destination is Paris.,medium,B1,noun,travel
@@ -389,3 +389,113 @@ id,word,translation,example,level,cefrLevel,partOfSpeech,topic
 389,immune,bağışık,The body's immune system fights off infection.,hard,C1,adjective,health
 390,melancholy,melankoli,There was a deep sense of melancholy in his voice.,hard,C1,noun,emotions
 391,composure,soğukkanlılık,She maintained her composure under pressure.,hard,C1,noun,emotions
+392,visa,vize,She applied for a tourist visa to visit France.,medium,B1,noun,travel
+393,border,sınır,We crossed the border early in the morning.,medium,B1,noun,travel
+394,currency,para birimi,What currency do they use in Japan?,medium,B1,noun,travel
+395,souvenir,hâtıra eşyası,She bought a small souvenir at the market.,medium,B1,noun,travel
+396,delay,gecikme,The flight delay caused us to miss our connection.,medium,B1,noun,travel
+397,transit,aktarma,We had a three-hour transit in Dubai.,medium,B1,noun,travel
+398,landmark,simge yapı,The Eiffel Tower is a famous landmark in Paris.,medium,B2,noun,travel
+399,excursion,gezi,We went on a day excursion to the nearby islands.,medium,B2,noun,travel
+400,fare,bilet ücreti,The train fare is cheaper if you book in advance.,medium,B1,noun,travel
+401,explore,keşfe çıkmak,We decided to explore the old city on foot.,medium,B1,verb,travel
+402,ferry,feribot,We took the ferry across the bay.,medium,B1,noun,travel
+403,embassy,büyükelçilik,She registered her trip at the embassy.,medium,B2,noun,travel
+404,pollution,kirlilik,Air pollution is a major problem in big cities.,medium,B1,noun,nature
+405,species,tür,Many species of birds migrate in the autumn.,medium,B2,noun,nature
+406,conservation,koruma,Wildlife conservation is essential for future generations.,medium,B2,noun,nature
+407,flood,sel,The flood damaged many homes near the river.,medium,B1,noun,nature
+408,shore,kıyı,We walked along the shore as the sun set.,medium,B1,noun,nature
+409,renewable,yenilenebilir,Solar energy is a renewable source of power.,medium,B2,adjective,nature
+410,meadow,çayır,The children played in the green meadow.,medium,B1,noun,nature
+411,canyon,kanyon,The canyon was carved by a river over thousands of years.,medium,B1,noun,nature
+412,software,yazılım,The company developed new software for data analysis.,medium,B1,noun,technology
+413,update,güncelleme,Please install the latest update before using the app.,medium,B1,noun,technology
+414,platform,platform,This platform connects buyers and sellers online.,medium,B1,noun,technology
+415,virtual,sanal,The students attended a virtual classroom session.,medium,B1,adjective,technology
+416,database,veritabanı,The hospital keeps all patient records in a secure database.,medium,B2,noun,technology
+417,wireless,kablosuz,The printer connects via a wireless signal.,medium,B1,adjective,technology
+418,interface,arayüz,The user interface is clean and easy to navigate.,medium,B2,noun,technology
+419,automated,otomatik,Many tasks in the factory are now automated.,medium,B2,adjective,technology
+420,backup,yedekleme,Always keep a backup of your important files.,medium,B1,noun,technology
+421,server,sunucu,The server stores all the data for the website.,medium,B1,noun,technology
+422,brush,fırçalamak,She brushes her teeth every morning.,easy,A1,verb,daily
+423,climb,tırmanmak,The children love to climb trees in the park.,easy,A2,verb,nature
+424,choose,seçmek,You can choose any book from the shelf.,easy,A2,verb,daily
+425,carry,taşımak,Can you carry this bag for me?,easy,A1,verb,daily
+426,wake,uyanmak,I wake up early every day.,easy,A1,verb,daily
+427,smile,gülümsemek,She smiled when she saw her friend.,easy,A1,verb,social
+428,rest,dinlenmek,You should rest after a long day at work.,easy,A1,verb,health
+429,wash,yıkamak,Please wash your hands before eating.,easy,A1,verb,daily
+430,visit,ziyaret etmek,We plan to visit my grandmother this weekend.,easy,A2,verb,social
+431,spend,harcamak,She spends a lot of time reading.,easy,A2,verb,daily
+432,share,paylaşmak,They shared the pizza with their classmates.,easy,A2,verb,social
+433,celebrate,kutlamak,We celebrate my birthday every year.,easy,A2,verb,social
+434,nutrition,beslenme,Good nutrition is important for a healthy lifestyle.,medium,B1,noun,health
+435,therapy,terapi,She attends weekly therapy sessions for anxiety.,medium,B2,noun,health
+436,prevention,önleme,Prevention is better than cure.,medium,B1,noun,health
+437,vaccine,aşı,The doctor recommended a vaccine before the trip.,medium,B1,noun,health
+438,fatigue,yorgunluk,Chronic fatigue can affect your daily performance.,medium,B2,noun,health
+439,allergy,alerji,She has a severe allergy to peanuts.,medium,B1,noun,health
+440,treatment,tedavi,The doctor suggested a new treatment for the condition.,medium,B1,noun,health
+441,infection,enfeksiyon,The cut became infected and needed treatment.,medium,B1,noun,health
+442,hygiene,hijyen,Good hygiene helps prevent the spread of illness.,medium,B2,noun,health
+443,diagnose,teşhis koymak,The doctor was able to diagnose the illness quickly.,medium,B2,verb,health
+444,prescribe,reçete yazmak,The doctor prescribed medication for the infection.,medium,B2,verb,health
+445,rehabilitate,rehabilite etmek,The patient worked hard to rehabilitate after surgery.,medium,B2,verb,health
+446,dosage,dozaj,Follow the correct dosage instructions on the label.,medium,B2,noun,health
+447,consult,danışmak,You should consult a doctor before taking this medication.,medium,B1,verb,health
+448,pedagogy,pedagoji,She studied pedagogy to understand how children learn.,hard,C1,noun,education
+449,curriculum,müfredat,The school revised its curriculum to include digital skills.,hard,C1,noun,education
+450,dissertation,tez,He spent two years writing his doctoral dissertation.,hard,C1,noun,education
+451,cognition,biliş,Language acquisition is closely linked to cognition.,hard,C1,noun,education
+452,scholarship,burs,She received a scholarship to study abroad.,hard,B2,noun,education
+453,tenure,kadro,The professor was granted tenure after years of research.,hard,C1,noun,education
+454,arrange,düzenlemek,She arranged all the documents on the desk.,medium,B1,verb,daily
+455,handle,üstesinden gelmek,He handled the situation calmly and professionally.,medium,B1,verb,daily
+456,adjust,ayarlamak,You can adjust the settings in the menu.,medium,B1,verb,daily
+457,accomplish,başarmak,She accomplished all her goals by the end of the year.,medium,B2,verb,daily
+458,routine,rutin,Exercise is part of his daily routine.,medium,B1,noun,daily
+459,priority,öncelik,Health should be your top priority.,medium,B2,noun,daily
+461,procrastinate,ertelemek,He tends to procrastinate when the task feels overwhelming.,hard,C1,verb,daily
+462,delegate,yetki vermek,A good manager knows how to delegate tasks effectively.,hard,C1,verb,daily
+463,contemplate,düşünmek,"She sat quietly, contemplating her next move.",hard,C1,verb,daily
+464,persevere,azimle devam etmek,"Despite the difficulties, he persevered and succeeded.",hard,C1,verb,daily
+465,meander,dolanmak,The river meanders slowly through the valley.,hard,C1,verb,nature
+466,quarantine,karantina,Travellers were placed in quarantine upon arrival.,hard,C1,noun,travel
+467,deportation,sınır dışı etme,He faced deportation after overstaying his visa.,hard,C1,noun,travel
+468,consulate,konsolosluk,She went to the consulate to get her visa renewed.,hard,C1,noun,travel
+469,repatriate,yurduna döndürmek,The government agreed to repatriate the stranded citizens.,hard,C1,verb,travel
+470,rendezvous,buluşma noktası,They agreed on a rendezvous point near the main square.,hard,C1,noun,travel
+471,traverse,geçmek,The hikers traversed the mountain range in three days.,hard,C1,verb,travel
+472,disembark,karaya çıkmak,Passengers were asked to disembark in an orderly manner.,hard,C1,verb,travel
+473,smuggle,kaçakçılık yapmak,Customs officers found items smuggled in the luggage.,hard,C1,verb,travel
+474,detour,alternatif güzergah,We took a detour to avoid the traffic on the main road.,hard,C1,noun,travel
+475,trek,uzun yürüyüş,They went on a week-long trek through the jungle.,hard,C1,noun,travel
+476,frustrate,hayal kırıklığına uğratmak,It frustrated her when nobody listened to her ideas.,medium,B2,verb,emotions
+477,reassure,güvence vermek,He reassured his friend that everything would be fine.,medium,B2,verb,emotions
+478,admire,hayran olmak,She admired his patience and dedication to the work.,medium,B1,verb,emotions
+479,regret,pişmanlık duymak,He regretted not calling his friend sooner.,medium,B1,verb,emotions
+480,envy,kıskanmak,She envied her colleague's ability to stay calm under pressure.,medium,B2,verb,emotions
+481,sympathize,sempati duymak,I sympathize with what you are going through.,medium,B2,verb,emotions
+482,overwhelm,bunaltmak,The amount of work overwhelmed her completely.,medium,B2,verb,emotions
+483,ashamed,utanmış,He felt ashamed after raising his voice at his colleague.,medium,B2,adjective,emotions
+484,optimistic,iyimser,"Despite the setbacks, she remained optimistic about the future.",medium,B2,adjective,emotions
+485,nostalgic,nostaljik,The old photograph made her feel deeply nostalgic.,medium,B2,adjective,emotions
+486,stream,akış,You can stream the film directly from the app.,medium,B1,verb,technology
+487,debug,hata ayıklamak,The developer spent hours trying to debug the code.,medium,B2,verb,technology
+488,deploy,dağıtmak,The team deployed the new version of the software overnight.,medium,B2,verb,technology
+489,migrate,taşımak,We decided to migrate all data to the new server.,medium,B2,verb,technology
+490,latency,gecikme süresi,High latency causes noticeable lag in online games.,hard,C1,noun,technology
+491,scalability,ölçeklenebilirlik,Scalability is a key factor when designing large systems.,hard,C1,noun,technology
+492,infrastructure,altyapı,The country invested heavily in digital infrastructure.,hard,C1,noun,technology
+493,cybersecurity,siber güvenlik,Companies must invest in cybersecurity to protect user data.,hard,C1,noun,technology
+494,authentication,kimlik doğrulama,Two-factor authentication adds an extra layer of security.,hard,C1,noun,technology
+495,glacier,buzul,The glacier has retreated significantly over the past century.,hard,C1,noun,nature
+496,biodiversity,biyoçeşitlilik,The rainforest supports extraordinary biodiversity.,hard,C1,noun,nature
+497,deforestation,ormansızlaşma,Deforestation threatens the habitat of many species.,hard,C1,noun,nature
+498,monsoon,muson,The monsoon season brings heavy rain to the region each year.,hard,C1,noun,nature
+499,sediment,tortu,The river deposits sediment as it slows near the delta.,hard,C1,noun,nature
+500,semester,dönem,She completed four courses in her first semester.,medium,B1,noun,education
+501,syllabus,ders izlencesi,The professor handed out the syllabus on the first day.,medium,B2,noun,education
+502,plagiarism,intihal,Submitting someone else's work as your own is plagiarism.,medium,B2,noun,education

@@ -230,7 +230,7 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
             <View style={[styles.statCard, { backgroundColor: theme.primaryLight, ...shadows.sm }]}>
               <Ionicons name="star" size={24} color={theme.primary} />
               <Text style={[styles.statValue, { color: theme.primary }]}>{state.xp}</Text>
-              <Text style={[styles.statLabel, { color: theme.primary }]}>XP</Text>
+              <Text style={[styles.statLabel, { color: theme.primary }]}>Puan</Text>
             </View>
           </Animated.View>
 

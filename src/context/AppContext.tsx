@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppState as RNAppState } from 'react-native';
 import { Word, getLocalWords, getWords, WordSource, getEffectiveVocab } from '../services/vocabularyService';
 
 export type Level = 'easy' | 'medium' | 'hard';
@@ -172,7 +173,9 @@ type Action =
   | { type: 'MARK_BONUS_SESSION_STARTED' }
   | { type: 'MARK_BASE_SESSION_STARTED' }
   | { type: 'ADD_CUSTOM_WORD'; word: Word }
-  | { type: 'DELETE_CUSTOM_WORD'; wordId: number };
+  | { type: 'CHECK_NEW_DAY' }
+  | { type: 'DELETE_CUSTOM_WORD'; wordId: number }
+  | { type: 'SCHEDULE_WORD_REVIEW'; wordId: number };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -435,12 +438,19 @@ function reducer(state: AppState, action: Action): AppState {
       const savedAdsDate = loaded.adsDate ?? '';
       const isNewAdsDay  = savedAdsDate !== today;
 
+      // ── Streak validation on load ────────────────────────────────────────────
+      // If the user hasn't studied yesterday or today, the streak is broken.
+      const yesterday = new Date(Date.now() - 86_400_000).toDateString();
+      const savedLastStudy = loaded.lastStudyDate ?? null;
+      const streakAlive = savedLastStudy === today || savedLastStudy === yesterday;
+      const validatedStreak = streakAlive ? (loaded.streak ?? 0) : 0;
+
       return {
         ...state,
         level:             loaded.level             ?? state.level,
         xp:                loaded.xp                ?? state.xp,
-        streak:            loaded.streak            ?? state.streak,
-        lastStudyDate:     loaded.lastStudyDate     ?? state.lastStudyDate,
+        streak:            validatedStreak,
+        lastStudyDate:     savedLastStudy,
         darkMode:          loaded.darkMode          ?? state.darkMode,
         lastLessonWordIds: loaded.lastLessonWordIds ?? state.lastLessonWordIds,
         lessonSize:        loaded.lessonSize        ?? state.lessonSize,
@@ -520,15 +530,54 @@ function reducer(state: AppState, action: Action): AppState {
     case 'MARK_BASE_SESSION_STARTED':
       return { ...state, dailyBaseSessionStarted: true };
 
+    case 'CHECK_NEW_DAY': {
+      const today = new Date().toDateString();
+      if (state.todayDate === today) return state;
+      // It's a new calendar day — reset all daily counters
+      return {
+        ...state,
+        todayDate:                 today,
+        dailyProgress:             0,
+        dailyLearnedIds:           [],
+        dailyBaseSessionStarted:   false,
+        dailyLessonBonusClaimed:   false,
+        dailyBonusSessionStarted:  false,
+        dailyAdsShown:             0,
+        adsDate:                   today,
+        dailyAiAnalysesUsed:       0,
+        aiAnalysisDate:            today,
+      };
+    }
+
     // ── User-added custom words ───────────────────────────────────────────────
     case 'ADD_CUSTOM_WORD':
       return { ...state, customWords: [...state.customWords, action.word] };
 
-    case 'DELETE_CUSTOM_WORD':
+    case 'DELETE_CUSTOM_WORD': {
+      const { [action.wordId]: _removed, ...remainingProgress } = state.wordProgress;
+      const wordProgress = remainingProgress as Record<number, WordProgress>;
       return {
         ...state,
         customWords: state.customWords.filter(w => w.id !== action.wordId),
+        wordProgress,
+        ...deriveFromProgress(wordProgress),
       };
+    }
+
+    // ── Sentence Builder review signal ───────────────────────────────────────
+    // Dispatched when a Sentence Builder attempt produces FLAWED or REJECTED.
+    // Lighter than ADD_DIFFICULT_WORD: does NOT touch wrongCount, isDifficult,
+    // isLearned, or consecutiveCorrect.  Only pulls the next review forward by
+    // 1 day so the word surfaces again soon without being demoted in the pool.
+    case 'SCHEDULE_WORD_REVIEW': {
+      const existing = state.wordProgress[action.wordId] ?? emptyProgress();
+      const updated: WordProgress = {
+        ...existing,
+        nextReviewAt: Date.now() + INTERVAL_WRONG,
+      };
+      const wordProgress = { ...state.wordProgress, [action.wordId]: updated };
+      return { ...state, wordProgress, ...deriveFromProgress(wordProgress) };
+    }
 
     // ── Full reset (keeps level + dark mode + premium status) ────────────────
     case 'RESET_PROGRESS':
@@ -596,6 +645,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       setIsLoaded(true);
     });
+  }, []);
+
+  // Reset daily counters when the app comes back to foreground on a new day.
+  // LOAD_STATE only fires on cold start; this catches background→foreground transitions.
+  useEffect(() => {
+    const sub = RNAppState.addEventListener('change', nextState => {
+      if (nextState === 'active') {
+        dispatch({ type: 'CHECK_NEW_DAY' });
+      }
+    });
+    return () => sub.remove();
   }, []);
 
   // Persist on every change (skip until first load to avoid clobbering saved data).
@@ -671,7 +731,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return a.nextReviewAt - b.nextReviewAt;
       })
       .map(([id]) => allVocab.find(w => w.id === Number(id)))
-      .filter((w): w is Word => w !== undefined);
+      .filter((w): w is Word => w !== undefined && w.level === state.level);
 
     // ── Primary pass: new words fill ~80%, review words fill ~20% ────────────
     const added  = new Set<number>();

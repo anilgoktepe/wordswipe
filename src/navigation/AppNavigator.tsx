@@ -18,6 +18,11 @@ import {
   pickChallengeWord,
   scheduleDailyChallengeNotification,
 } from '../services/curiosityNotification';
+import {
+  scheduleStreakReminder,
+  scheduleAddWordReminder,
+  scheduleSentenceBuilderReminder,
+} from '../services/streakNotification';
 
 const vocabulary = getLocalWords();
 
@@ -29,7 +34,7 @@ export type RootStackParamList = {
   Results: undefined;
   DifficultWords: undefined;
   Settings: undefined;
-  SentenceBuilder: undefined;
+  SentenceBuilder: { wordIds?: number[] } | undefined;
   Premium: undefined;
   MyWords: undefined;
   AddWord: undefined;
@@ -90,11 +95,22 @@ export const AppNavigator: React.FC = () => {
   // Safe to run on every app open: scheduleDailyChallengeNotification cancels
   // and replaces the previous notification using a stable identifier.
   useEffect(() => {
-    if (!isLoaded || !state.level || Platform.OS === 'web') return;
-    const word = pickChallengeWord(state);
-    if (word) {
-      scheduleDailyChallengeNotification(word);
+    if (!isLoaded || Platform.OS === 'web') return;
+
+    // Daily challenge notification (9 AM)
+    if (state.level) {
+      const word = pickChallengeWord(state);
+      if (word) scheduleDailyChallengeNotification(word);
     }
+
+    // Streak reminder — 20:00 (cancels if user already studied today)
+    scheduleStreakReminder(state);
+
+    // Add word reminder — 14:00
+    scheduleAddWordReminder();
+
+    // Sentence builder reminder — 11:00 (only if enough learned words)
+    scheduleSentenceBuilderReminder(state);
   }, [isLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
   // Intentionally only re-run when isLoaded flips true (once per session).
 

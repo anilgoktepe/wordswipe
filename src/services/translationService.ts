@@ -17,6 +17,8 @@
 
 import { API_BASE_URL } from '../config/apiConfig';
 
+let _activeController: AbortController | null = null;
+
 export async function translateWord(
   text: string,
   from: 'en' | 'tr',
@@ -25,20 +27,27 @@ export async function translateWord(
   const trimmed = text.trim();
   if (!trimmed || trimmed.length < 2) return null;
 
+  _activeController?.abort();
+  const controller = new AbortController();
+  _activeController = controller;
+  const { signal } = controller;
+
   try {
-    const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
 
     const res = await fetch(`${API_BASE_URL}/api/translate`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ text: trimmed, from, to }),
-      signal:  controller.signal,
+      signal,
     });
 
     clearTimeout(timeout);
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      if (__DEV__) console.warn(`[translate] ${res.status} from ${API_BASE_URL}/api/translate`);
+      return null;
+    }
 
     const data = await res.json() as { translation?: string };
     const translation = data.translation?.trim();
@@ -47,7 +56,9 @@ export async function translateWord(
     if (translation.toLowerCase() === trimmed.toLowerCase()) return null;
 
     return translation;
-  } catch {
+  } catch (err) {
+    if ((err as { name?: string })?.name === 'AbortError') return null;
+    if (__DEV__) console.warn('[translate] fetch failed:', err);
     return null;
   }
 }

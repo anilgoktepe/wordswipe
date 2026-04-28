@@ -2046,6 +2046,9 @@ function _localHasBeBareverb(sentence: string): boolean {
     // negation / adverbs
     'not', 'also', 'just', 'still', 'very', 'too', 'so', 'yet', 'even', 'now',
     'here', 'there', 'always', 'never', 'only', 'already', 'almost',
+    // degree modifiers that precede adjectives after be ("a little tired", "quite happy")
+    'little', 'bit', 'quite', 'rather', 'pretty', 'fairly', 'somewhat',
+    'extremely', 'incredibly', 'deeply', 'truly', 'really', 'slightly',
     // common adjectives safe after be
     'happy', 'sad', 'glad', 'mad', 'sure', 'fine', 'good', 'bad', 'great',
     'right', 'wrong', 'clear', 'true', 'false', 'hard', 'easy', 'free',
@@ -2058,23 +2061,40 @@ function _localHasBeBareverb(sentence: string): boolean {
     // irregular comparatives / superlatives safe after be
     'better', 'worse', 'best', 'worst', 'more', 'most', 'less', 'least',
     'further', 'farther', 'furthest', 'farthest',
+    // common adjectives without standard suffix patterns (not caught by -ful/-ous/-ive etc.)
+    'upset', 'fit', 'thin', 'flat', 'raw', 'calm', 'keen', 'pure', 'lean',
+    'bright', 'sharp', 'tough', 'rough', 'harsh', 'plain', 'wild', 'firm',
+    'alive', 'awake', 'alone', 'afraid', 'asleep', 'ashamed', 'alike', 'apart',
+    'aloof', 'intact', 'exact', 'faint', 'fond', 'brave', 'fair', 'pale',
+    'dull', 'loud', 'weak', 'vast', 'slim', 'tense', 'keen', 'calm',
+    // irregular past-participle adjectives that don't end in -ed/-en/-ing visually
+    'hurt', 'lost', 'stuck', 'set', 'cut', 'hit', 'shut', 'split', 'spread',
   ]);
 
-  const re = /\b(?:am|is|are|was|were)\s+([a-z]+)/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(sentence)) !== null) {
-    const word = m[1].toLowerCase();
-    if (SAFE_AFTER_BE.has(word)) continue;
-    if (word.endsWith('ing') || word.endsWith('ed') || word.endsWith('en')) continue;
-    // Suffixes that reliably mark adjectives / nouns, not bare verbs
-    if (/(?:ly|ful|less|tion|sion|ness|ment|ity|ive|al|ous|ant|ent|ible|able|ish|ic|ary|ory)$/.test(word)) continue;
-    // Regular comparative (-er, length ≥ 5) and superlative (-est, length ≥ 5) adjectives.
-    // Exception: known verb bases that happen to end in -er (consider, remember, cover, offer…)
-    // must NOT be skipped — "is consider" is a genuine be+bare error.
-    if (word.length >= 5 && (word.endsWith('er') || word.endsWith('est'))) {
-      if (!(_KNOWN_VERB_BASES as ReadonlySet<string>).has(word)) continue;
+  // Split sentence into tokens and walk through looking for be-verb + bare-verb chains.
+  // Using token-based scan instead of a simple regex so modifiers (articles, degree
+  // adverbs) between the be-verb and the bare verb are correctly skipped.
+  const tokens = sentence.toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean);
+  const BE_VERBS = new Set(['am', 'is', 'are', 'was', 'were']);
+
+  for (let i = 0; i < tokens.length; i++) {
+    if (!BE_VERBS.has(tokens[i])) continue;
+
+    // Scan forward past safe words to find the eventual complement word.
+    // -ly words are adverb modifiers (completely, deeply) → continue scanning.
+    // Other adjective suffixes (-ful, -ous, -ive, etc.) are end of complement → break.
+    for (let j = i + 1; j < tokens.length && j <= i + 6; j++) {
+      const word = tokens[j];
+      if (SAFE_AFTER_BE.has(word)) continue;                   // safe modifier — keep scanning
+      if (word.endsWith('ly')) continue;                        // adverb modifier — keep scanning
+      if (word.endsWith('ing') || word.endsWith('ed') || word.endsWith('en')) break;
+      if (/(?:ful|less|tion|sion|ness|ment|ity|ive|al|ous|ant|ent|ible|able|ish|ic|ary|ory)$/.test(word)) break;
+      if (word.length >= 5 && (word.endsWith('er') || word.endsWith('est'))) {
+        if (!(_KNOWN_VERB_BASES as ReadonlySet<string>).has(word)) break;
+      }
+      // Reached a word that looks like a bare verb — flag it
+      return true;
     }
-    return true;
   }
   return false;
 }

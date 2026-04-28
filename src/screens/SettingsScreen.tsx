@@ -185,7 +185,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const handleReset = () => {
     Alert.alert(
       'İlerlemeyi Sıfırla',
-      'Tüm ilerlemeniz, XP puanınız ve serileriniz silinecek. Emin misiniz?',
+      'Tüm ilerlemeniz, puanınız ve serileriniz silinecek. Emin misiniz?',
       [
         { text: 'İptal', style: 'cancel' },
         {
@@ -230,7 +230,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                 Kelime Öğrencisi
               </Text>
               <Text style={[styles.profileSub, { color: theme.textSecondary }]}>
-                {state.xp} XP · {state.streak} gün serisi · {Object.values(state.wordProgress).filter(p => p.correctCount >= 2).length} kelime
+                {state.xp} puan · {state.streak} gün serisi · {Object.values(state.wordProgress).filter(p => p.correctCount >= 2).length} kelime
               </Text>
             </View>
           </View>

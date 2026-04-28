@@ -36,6 +36,7 @@ import { translateLimiter }          from './middleware/rateLimiter';
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const DEEPL_URL      = 'https://api-free.deepl.com/v2/translate';
+const MYMEMORY_URL   = 'https://api.mymemory.translated.net/get';
 const CACHE_TTL_MS   = 24 * 60 * 60 * 1000; // 24 hours
 const MAX_TEXT_LEN   = 100;                  // single words/short phrases only
 
@@ -65,6 +66,102 @@ function _cacheSet(key: string, translation: string): void {
 // ─── DeepL language code map ──────────────────────────────────────────────────
 
 const LANG_MAP: Record<string, string> = { en: 'EN', tr: 'TR' };
+
+// ─── Provider helpers ─────────────────────────────────────────────────────────
+
+async function _translateWithDeepL(
+  text: string,
+  from: string,
+  to: string,
+  apiKey: string,
+): Promise<string | null> {
+  const controller = new AbortController();
+  const timeout    = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const res = await fetch(DEEPL_URL, {
+      method:  'POST',
+      headers: {
+        'Authorization': `DeepL-Auth-Key ${apiKey}`,
+        'Content-Type':  'application/json',
+      },
+      body:   JSON.stringify({
+        text:        [text],
+        source_lang: LANG_MAP[from],
+        target_lang: LANG_MAP[to],
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const data = await res.json() as { translations?: { text: string }[] };
+    return data.translations?.[0]?.text?.trim() ?? null;
+  } catch {
+    clearTimeout(timeout);
+    return null;
+  }
+}
+
+// MyMemory hata mesajlarını string olarak döndürür — bunları reddet
+const MYMEMORY_ERROR_PHRASES = [
+  'PLEASE SELECT',
+  'MYMEMORY WARNING',
+  'QUERY LENGTH',
+  'IS AN INVALID',
+  'INVALID LANGUAGE',
+];
+
+// EN hedefi: sadece Latin + yaygın noktalama izinli
+const EN_SCRIPT_RE  = /^[a-zA-ZÀ-ÿ\s\-'",.()\d!?]+$/;
+// TR hedefi: Kiril, Arap, CJK, Devanagari vb. yasak
+const BAD_SCRIPT_RE = /[\u0400-\u04FF\u0600-\u06FF\u0900-\u097F\u3000-\u9FFF\uAC00-\uD7AF]/;
+
+function _validateMyMemoryResult(translated: string, to: string): boolean {
+  const upper = translated.toUpperCase();
+  if (MYMEMORY_ERROR_PHRASES.some(p => upper.includes(p))) return false;
+  if (to === 'en' && !EN_SCRIPT_RE.test(translated))  return false;
+  if (BAD_SCRIPT_RE.test(translated))                 return false;
+  return true;
+}
+
+async function _translateWithMyMemory(
+  text: string,
+  from: string,
+  to: string,
+): Promise<string | null> {
+  const controller = new AbortController();
+  const timeout    = setTimeout(() => controller.abort(), 5000);
+
+  const langPair = `${LANG_MAP[from]}|${LANG_MAP[to]}`;
+  const url      = `${MYMEMORY_URL}?q=${encodeURIComponent(text)}&langpair=${langPair}`;
+
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const data = await res.json() as {
+      responseData?:  { translatedText?: string; match?: number };
+      responseStatus?: number;
+    };
+
+    // responseStatus 206 = rate-limited / over quota
+    if (data.responseStatus !== undefined && data.responseStatus !== 200) return null;
+
+    const translated = data.responseData?.translatedText?.trim();
+    if (!translated) return null;
+
+    // match=0 means MyMemory found nothing; negative means error
+    const matchScore = data.responseData?.match ?? 1;
+    if (matchScore <= 0) return null;
+
+    if (!_validateMyMemoryResult(translated, to)) return null;
+
+    return translated;
+  } catch {
+    clearTimeout(timeout);
+    return null;
+  }
+}
 
 // ─── Router ───────────────────────────────────────────────────────────────────
 
@@ -101,63 +198,22 @@ translateRouter.post('/', translateLimiter, async (req: Request, res: Response) 
     return;
   }
 
-  // ── Check key ───────────────────────────────────────────────────────────────
+  // ── Try DeepL first, fall back to MyMemory ──────────────────────────────────
 
-  const apiKey = (process.env.DEEPL_API_KEY ?? '').trim();
-  if (!apiKey) {
-    log.warn('translate_no_key', reqId, {});
-    res.status(503).json({ error: 'Translation service is not configured.' });
-    return;
-  }
-
-  // ── Call DeepL ──────────────────────────────────────────────────────────────
+  const deeplKey = (process.env.DEEPL_API_KEY ?? '').trim();
 
   try {
-    const controller = new AbortController();
-    const timeout    = setTimeout(() => controller.abort(), 5000);
+    const translation = deeplKey
+      ? await _translateWithDeepL(text.trim(), from, to, deeplKey)
+      : await _translateWithMyMemory(text.trim(), from, to);
 
-    const upstream = await fetch(DEEPL_URL, {
-      method:  'POST',
-      headers: {
-        'Authorization': `DeepL-Auth-Key ${apiKey}`,
-        'Content-Type':  'application/json',
-      },
-      body:   JSON.stringify({
-        text:        [text.trim()],
-        source_lang: LANG_MAP[from],
-        target_lang: LANG_MAP[to],
-      }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeout);
-
-    if (!upstream.ok) {
-      log.warn('translate_upstream_error', reqId, { status: upstream.status });
-      res.status(502).json({ error: 'Translation provider returned an error.' });
-      return;
-    }
-
-    const data = await upstream.json() as {
-      translations?: { text: string }[];
-    };
-
-    const translation = data.translations?.[0]?.text?.trim();
-    if (!translation) {
-      log.warn('translate_empty_response', reqId, {});
-      res.status(502).json({ error: 'Translation provider returned an empty result.' });
-      return;
-    }
-
-    // Discard if identical to input (no actual translation)
-    if (translation.toLowerCase() === normalizedText) {
+    if (!translation || translation.toLowerCase() === normalizedText) {
       res.status(502).json({ error: 'No translation found.' });
       return;
     }
 
     _cacheSet(cacheKey, translation);
-
-    log.info('translate_ok', reqId, { from, to, charCount: text.length });
+    log.info('translate_ok', reqId, { from, to, provider: deeplKey ? 'deepl' : 'mymemory' });
     res.json({ translation });
 
   } catch (err) {

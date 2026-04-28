@@ -73,7 +73,7 @@ const BENEFITS = [
     color: '#10B981',
     bg: '#D1FAE5',
     title: 'İlerlemeni takip et',
-    desc: 'Seri, XP ve istatistiklerle motive kal',
+    desc: 'Seri, puan ve istatistiklerle motive kal',
   },
 ];
 

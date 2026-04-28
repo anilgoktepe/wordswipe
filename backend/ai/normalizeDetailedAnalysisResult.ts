@@ -203,6 +203,42 @@ export function normalizeDetailedAnalysisResult(
     })
     .filter((i): i is DetailedIssue => i !== null);
 
+  // ── AI issue trust gate ──────────────────────────────────────────────────────
+  //
+  //   When BOTH local pre-validation AND LanguageTool found no structural errors,
+  //   the sentence is almost certainly correct. AI structural issues in this context
+  //   are likely hallucinations (wrong collocation knowledge, over-strict rules).
+  //
+  //   Guard: downgrade AI error-severity structural issues → 'suggestion' so they
+  //   appear as style notes rather than hard grammar errors. This prevents FLAWED
+  //   on sentences that two independent validators already deemed structurally clean.
+  //
+  //   Condition requires LT to have actually run (ltResult !== null) so we don't
+  //   silently suppress AI findings when LT was unavailable.
+  //
+  // Only downgrade AI structural issues when ALL three signals agree it's clean:
+  //   1. Local pre-validation found no structural error
+  //   2. LanguageTool found no structural error (and actually ran)
+  //   3. AI's own raw grammarScore > 65 — meaning the AI thinks grammar is mostly fine
+  //      but is nitpicking (likely a wrong collocation belief, e.g. "ambitious about").
+  //      When AI grammarScore ≤ 65 the AI itself considers the sentence significantly
+  //      wrong — that's a real error, not a hallucination, so we trust it.
+  const rawGrammarScore = clamp(r.grammarScore);
+  const localAndLtClean =
+    localAnalysis.status !== 'fail' &&
+    !_hasStructuralIssue(localAnalysis.issues) &&
+    ltResult !== null &&
+    !ltResult.hasStructuralError &&
+    rawGrammarScore > 40;
+
+  const guardedAiIssues: DetailedIssue[] = localAndLtClean
+    ? aiIssues.map(i =>
+        i.severity === 'error' && !SURFACE_ONLY_ISSUE_TYPES.has(i.type)
+          ? { ...i, severity: 'suggestion' as IssueSeverity }
+          : i,
+      )
+    : aiIssues;
+
   // Filter tags to strings only.
   let tags = (r.tags as unknown[]).filter((t): t is string => typeof t === 'string');
 
@@ -232,7 +268,7 @@ export function normalizeDetailedAnalysisResult(
   ));
 
   // ── Step 6: merge all issue sources, deduplicated ─────────────────────────
-  const issues = _mergeAndDedup(aiIssues, localAnalysis, ltResult);
+  const issues = _mergeAndDedup(guardedAiIssues, localAnalysis, ltResult);
 
   // ── Step 7: correction candidate ─────────────────────────────────────────
   //
@@ -294,9 +330,13 @@ export function normalizeDetailedAnalysisResult(
   //   Rule: display correctedSentence only when _isCorrectionTrusted() passes.
   //   Otherwise null → UI falls back to exampleSentences (if present).
   //
+  const structuralErrorCount = issues.filter(
+    i => i.severity === 'error' && !SURFACE_ONLY_ISSUE_TYPES.has(i.type),
+  ).length;
+
   const finalCorrected: string | null =
     correctionCandidate !== null &&
-    _isCorrectionTrusted(correctionCandidate, verdict, r.confidence, ltResult, correctionFromLT)
+    _isCorrectionTrusted(correctionCandidate, verdict, r.confidence, ltResult, correctionFromLT, structuralErrorCount)
       ? correctionCandidate
       : null;
 
@@ -363,7 +403,13 @@ function _applyStatusFloor(
     floor = 'perfect'; // no deterministic error detected — trust the model
   }
 
-  return rank(modelStatus) < rank(floor) ? modelStatus : floor;
+  // ceiling: model can't claim a status better than floor allows
+  const afterCeiling = rank(modelStatus) < rank(floor) ? modelStatus : floor;
+
+  // minimum: when the target word is present, the status can never be 'fail'
+  // (REJECTED means word missing — contradicts usedTargetWord === true)
+  if (local.usedTargetWord && afterCeiling === 'fail') return 'partial';
+  return afterCeiling;
 }
 
 // ─── Score caps per status ────────────────────────────────────────────────────
@@ -542,11 +588,12 @@ function _hasHaveBareverb(sentence: string): boolean {
  *   may leave grammar errors → suppress.
  */
 function _isCorrectionTrusted(
-  candidate:    string,
-  verdict:      EvaluationVerdict,
-  aiConfidence: string,
-  ltResult:     LTResult | null | undefined,
-  fromLT:       boolean,
+  candidate:           string,
+  verdict:             EvaluationVerdict,
+  aiConfidence:        string,
+  ltResult:            LTResult | null | undefined,
+  fromLT:              boolean,
+  structuralErrorCount: number = 0,
 ): boolean {
   if (verdict === 'REJECTED' || verdict === 'PERFECT') return false;
 
@@ -556,11 +603,16 @@ function _isCorrectionTrusted(
   if (_hasBeBareverb(candidate))   return false;
   if (_hasHaveBareverb(candidate)) return false;
 
+  // Suppress when 2+ structural errors are present — applies to BOTH sources.
+  // Neither LT nor AI reliably fixes all errors simultaneously.
+  // A partial correction is worse than no correction (CLAUDE.md product rule).
+  if (structuralErrorCount >= 2) return false;
+
   if (fromLT) {
     // LT correction is trustworthy only when every structural match had a
     // suggestion (LT could fix all of them).  If any match has no suggestion,
     // the correction is incomplete and may leave grammar errors → suppress.
-    const structural   = (ltResult?.matches ?? []).filter(m => m.isStructural);
+    const structural     = (ltResult?.matches ?? []).filter(m => m.isStructural);
     const allSuggestable = structural.length > 0 && structural.every(m => m.suggestions.length > 0);
     return allSuggestable;
   }
@@ -615,10 +667,10 @@ function _computeVerdict(
   const hasStructuralError =
     // (a) LT GRAMMAR category match
     ltHasStructural ||
-    // (b) AI grammarScore below confidence threshold
-    grammarScore < 65 ||
-    // (c) Merged issue list contains any non-surface error-severity issue.
+    // (b) Merged issue list contains any non-surface error-severity issue.
     //     Whitelist approach: catches every type string the AI might use.
+    //     grammarScore < 65 removed — score is mechanically capped for 'partial'
+    //     status which causes false FLAWED on typo-only sentences.
     _hasStructuralIssue(issues);
 
   if (hasStructuralError) return 'FLAWED';

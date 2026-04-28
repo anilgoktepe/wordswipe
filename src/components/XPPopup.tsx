@@ -77,7 +77,7 @@ export const XPPopup = forwardRef<XPPopupHandle>((_, ref) => {
       ]}
     >
       <View style={styles.pill}>
-        <Text style={styles.text}>+{amount} XP</Text>
+        <Text style={styles.text}>+{amount} puan</Text>
         <Text style={styles.star}>⭐</Text>
       </View>
     </Animated.View>

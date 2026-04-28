@@ -346,6 +346,17 @@ export const DifficultWordsScreen: React.FC<Props> = ({ navigation }) => {
               icon={<MaterialCommunityIcons name="dumbbell" size={20} color="#fff" />}
             />
           )}
+          {activeTab === 'difficult' && difficultList.length > 0 && (
+            <Button
+              title="Cümle Kur"
+              variant="secondary"
+              onPress={() => navigation.navigate('SentenceBuilder', { wordIds: difficultList.map(w => w.id) })}
+              theme={theme}
+              size="lg"
+              style={{ width: '100%' }}
+              icon={<MaterialCommunityIcons name="pencil-outline" size={20} color={theme.primary} />}
+            />
+          )}
           <Button
             title="+ Kelime Ekle"
             variant="secondary"

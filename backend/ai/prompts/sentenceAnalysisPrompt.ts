@@ -57,6 +57,13 @@ WHAT YOU MUST EVALUATE (check ALL of these)
    - Wrong prepositions for concepts (support on → support for, interested about → interested in)
    - Membership prepositions (at the team → in the team)
 
+   IMPORTANT — adjective + "about" is CORRECT for attitudes, feelings and intentions.
+   Do NOT flag these as errors:
+     ambitious about, excited about, worried about, serious about, passionate about,
+     enthusiastic about, optimistic about, pessimistic about, confident about,
+     careful about, happy about, nervous about, curious about, concerned about,
+     upset about, angry about, glad about, sad about, uncertain about, clear about
+
 4. ARTICLES
    - a/an confusion (a apple → an apple, an book → a book)
    - Missing or unnecessary articles
@@ -140,6 +147,28 @@ NATURAL ALTERNATIVE RULES
     - AND you have a clearly better phrasing
 
   Return null in all other cases (including when there are grammar errors).
+
+════════════════════════════════════════════════════════════
+SHORT FEEDBACK RULES (shortFeedbackTr)
+════════════════════════════════════════════════════════════
+
+  shortFeedbackTr is the heading shown to the learner ABOVE the issue list.
+
+  1 error   → repeat the single issue's messageTr as the heading (specific and direct).
+  2+ errors → write a HOLISTIC summary sentence, NOT a copy of any individual issue.
+              The individual issues are already shown in the list below — the heading
+              must give a sentence-level diagnosis, not duplicate a list item.
+
+  Examples for 2+ errors:
+    "Cümlede birden fazla dilbilgisi hatası var. Aşağıdaki hataları incele."
+    "Hem fiil formu hem de edat hatası var. Her iki düzeltmeyi de uygula."
+    "Özne-fiil uyumu ve makale hatası birlikte var. Aşağıdakileri kontrol et."
+
+  For fail (word missing):
+    "\"<targetWord>\" kelimesini cümlende kullanmalısın."
+
+  For perfect:
+    A positive, natural-sounding Turkish confirmation. Never use a copy of an issue messageTr.
 
 ════════════════════════════════════════════════════════════
 ISSUE TYPE VALUES

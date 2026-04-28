@@ -298,7 +298,29 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     });
   };
 
-  const progressPct = totalToday > 0 ? (todayProgress / totalToday) * 100 : 0;
+  const progressPct  = totalToday > 0 ? (todayProgress / totalToday) * 100 : 0;
+  const goalComplete = progressPct >= 100;
+
+  // Learned word count for Cümle Kur badge
+  const learnedCount = vocabulary.filter(w => {
+    const wp = state.wordProgress[w.id];
+    return wp ? wp.correctCount >= 2 : false;
+  }).length;
+
+  // Goal-complete bar animation: fades between purple → green
+  const goalAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(goalAnim, {
+      toValue: goalComplete ? 1 : 0,
+      duration: 600,
+      useNativeDriver: false,
+    }).start();
+  }, [goalComplete]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const barColor = goalAnim.interpolate({
+    inputRange:  [0, 1],
+    outputRange: ['#ffffff', '#ffffff'],
+  });
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -326,31 +348,47 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   <Text style={styles.levelBadgeText}>{levelLabels[state.level]}</Text>
                 ) : null}
               </View>
-              <View style={styles.logoBadge}>
+              <View style={styles.logoWrapper}>
+                <View style={styles.logoWhiteBg} />
                 <Image
-                  source={require('../../assets/header-logo.png')}
+                  source={require('../../assets/icon_original_backup.png')}
                   style={styles.logoImage}
+                  resizeMode="contain"
                 />
               </View>
             </View>
 
             {/* Stats Row */}
             <View style={styles.statsRow}>
+              {/* Streak — öne çıkarılmış, milestone'a göre renk */}
               <View style={styles.statCard}>
                 <Animated.View style={{ transform: [{ scale: streakPulse }] }}>
-                  <MaterialCommunityIcons name="fire" size={24} color="rgba(255,255,255,0.95)" />
+                  <MaterialCommunityIcons
+                    name="fire"
+                    size={state.streak >= 7 ? 30 : 24}
+                    color={state.streak >= 7 ? '#FF6B35' : 'rgba(255,255,255,0.95)'}
+                  />
                 </Animated.View>
                 <Text style={[
                   styles.statValue,
-                  state.streak >= 10 && { color: '#FFD700' },
-                ]}>{state.streak}</Text>
-                <Text style={styles.statLabel}>Seri</Text>
+                  state.streak >= 14 && { color: '#FF6B35', fontSize: 28 },
+                  state.streak >= 7  && state.streak < 14 && { color: '#FFD700', fontSize: 26 },
+                  state.streak >= 3  && state.streak < 7  && { color: '#FDE68A' },
+                ]}>
+                  {state.streak}
+                </Text>
+                <Text style={[
+                  styles.statLabel,
+                  state.streak >= 3 && { color: 'rgba(255,255,255,0.9)', fontWeight: '700' },
+                ]}>
+                  {state.streak >= 14 ? '🔥 Seri' : state.streak >= 7 ? '⚡ Seri' : 'Seri'}
+                </Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statCard}>
                 <MaterialCommunityIcons name="star" size={24} color="rgba(255,255,255,0.95)" />
                 <Text style={styles.statValue}>{state.xp}</Text>
-                <Text style={styles.statLabel}>XP</Text>
+                <Text style={styles.statLabel}>Puan</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statCard}>
@@ -363,11 +401,23 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             {/* Progress Bar */}
             <View style={styles.progressContainer}>
               <View style={styles.progressHeader}>
-                <Text style={styles.progressLabel}>Günlük hedef</Text>
-                <Text style={styles.progressValue}>{todayProgress}/{totalToday}</Text>
+                {goalComplete ? (
+                  <View style={styles.goalCompleteRow}>
+                    <MaterialCommunityIcons name="check-circle" size={16} color="#ffffff" />
+                    <Text style={[styles.progressLabel, { color: '#ffffff' }]}>Günlük hedef tamamlandı!</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.progressLabel}>Günlük hedef</Text>
+                )}
+                <Text style={[styles.progressValue, goalComplete && { color: '#ffffff' }]}>
+                  {todayProgress}/{totalToday}
+                </Text>
               </View>
               <View style={styles.progressBarBg}>
-                <View style={[styles.progressBarFill, { width: `${progressPct}%` }]} />
+                <Animated.View style={[
+                  styles.progressBarFill,
+                  { width: `${progressPct}%`, backgroundColor: barColor },
+                ]} />
               </View>
             </View>
           </LinearGradient>
@@ -382,23 +432,15 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={[styles.wordCountText, { color: theme.primary }]}>{cappedDailyWords.length} kelime</Text>
               </View>
             </View>
-            <Text style={[styles.ctaSubtitle, { color: theme.textSecondary }]}>
-              Yeni kelimeleri öğrenmek için swipe yap veya butona bas
-            </Text>
-
-            {/* Lesson size picker — 15 / 20 are premium-gated for free users */}
+            {/* Lesson size picker */}
             <View style={styles.sizePicker}>
-              <View style={styles.sizeLabelRow}>
-                <Text style={[styles.sizeLabel, { color: theme.textSecondary }]}>Ders büyüklüğü:</Text>
-                {!isPremium && (
-                  <View style={styles.freeCapBadge}>
-                    <Text style={[styles.freeCapText, { color: theme.textTertiary }]}>Ücretsiz: maks {FREE_SESSION_CAP}</Text>
-                  </View>
-                )}
-              </View>
+              <Text style={[styles.sizeLabel, { color: theme.textSecondary, marginBottom: spacing.xs }]}>
+                Ders büyüklüğü:
+              </Text>
+
               <View style={styles.sizeOptions}>
                 {ALL_LESSON_SIZES.map(size => {
-                  const isLocked  = !isPremium && size > FREE_SESSION_CAP;
+                  const isLocked   = !isPremium && size > FREE_SESSION_CAP;
                   const isSelected = lessonSize === size && !isLocked;
                   return (
                     <TouchableOpacity
@@ -406,8 +448,8 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       onPress={() => {
                         if (isLocked) {
                           showPremiumModal(
-                            `${size} Kelimelik Ders`,
-                            `8, 10, 15 ve 20 kelimelik dersler Premium üyeler için açık. Premium'a geçerek daha uzun oturumlarla daha hızlı ilerle.`,
+                            'Daha Uzun Dersler',
+                            '8, 10, 15 ve 20 kelimelik dersler Premium üyeler için açık. Daha uzun oturumlarla çok daha hızlı ilerle.',
                           );
                           return;
                         }
@@ -416,30 +458,31 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       style={[
                         styles.sizeOption,
                         {
-                          backgroundColor: isSelected
-                            ? theme.primary
-                            : isLocked
-                              ? theme.surfaceSecondary
-                              : theme.surfaceSecondary,
-                          borderColor: isSelected
-                            ? theme.primary
-                            : isLocked ? theme.border : theme.border,
-                          opacity: isLocked ? 0.65 : 1,
+                          backgroundColor: isSelected ? theme.primary : theme.surfaceSecondary,
+                          borderColor:     isSelected ? theme.primary : theme.border,
+                          opacity:         isLocked ? 0.45 : 1,
                         },
                       ]}
                     >
-                      <Text style={[styles.sizeOptionText, {
-                        color: isSelected ? '#fff' : theme.textSecondary,
-                      }]}>
+                      <Text style={[styles.sizeOptionText, { color: isSelected ? '#fff' : theme.textSecondary }]}>
                         {size}
                       </Text>
-                      {isLocked && (
-                        <Ionicons name="lock-closed" size={9} color={theme.textTertiary} style={{ marginTop: 1 }} />
-                      )}
                     </TouchableOpacity>
                   );
                 })}
               </View>
+              {!isPremium && (
+                <TouchableOpacity
+                  onPress={() => showPremiumModal(
+                    'Daha Uzun Dersler',
+                    '8, 10, 15 ve 20 kelimelik dersler Premium üyeler için açık. Daha uzun oturumlarla çok daha hızlı ilerle.',
+                  )}
+                  style={styles.premiumSizeLink}
+                >
+                  <Ionicons name="lock-closed" size={11} color="#7C3AED" />
+                  <Text style={styles.premiumSizeLinkText}>8, 10, 15 ve 20 — Premium ile aç</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             <Button
@@ -538,9 +581,18 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <MaterialCommunityIcons name="pencil" size={24} color="#7C3AED" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.actionTitle, { color: theme.text }]}>Cümle Kur</Text>
+              <View style={styles.actionTitleRow}>
+                <Text style={[styles.actionTitle, { color: theme.text }]}>Cümle Kur</Text>
+                {learnedCount > 0 && (
+                  <View style={styles.learnedBadge}>
+                    <Text style={styles.learnedBadgeText}>{learnedCount} kelime hazır</Text>
+                  </View>
+                )}
+              </View>
               <Text style={[styles.actionSub, { color: theme.textSecondary }]}>
-                Öğrendiğin kelimelerle cümle oluştur
+                {learnedCount > 0
+                  ? 'AI ile cümle kur, puan kazan ve İngilizceni geliştir'
+                  : 'Önce birkaç kelime öğren, sonra cümle kur'}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.textTertiary} />
@@ -607,7 +659,7 @@ const styles = StyleSheet.create({
     borderRadius: 110,
     backgroundColor: 'rgba(255,255,255,0.07)',
     top: -60,
-    right: -60,
+    left: -60,
   },
   decorCircle2: {
     position: 'absolute',
@@ -637,15 +689,30 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'Inter_600SemiBold',
   },
-  logoBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    overflow: 'hidden',
+  logoWrapper: {
+    width: width * 0.14,
+    height: width * 0.14,
+  },
+  logoWhiteBg: {
+    position: 'absolute',
+    top: (width * 0.14 - width * 0.099) / 2,
+    left: (width * 0.14 - width * 0.099) / 2,
+    width: width * 0.099,
+    height: width * 0.095,
+    borderRadius: width * 0.025,
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
   },
   logoImage: {
-    width: 44,
-    height: 44,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: width * 0.14,
+    height: width * 0.14,
   },
 
   /* Stats row */
@@ -872,6 +939,47 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginTop: 2,
     fontFamily: 'Inter_400Regular',
+  },
+
+  /* Goal complete row */
+  goalCompleteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+
+  premiumSizeLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  premiumSizeLinkText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#7C3AED',
+    fontFamily: 'Inter_600SemiBold',
+  },
+
+  /* Sentence builder card badge */
+  actionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    flexWrap: 'wrap',
+  },
+  learnedBadge: {
+    backgroundColor: '#EDE9FE',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+  },
+  learnedBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#7C3AED',
+    fontFamily: 'Inter_700Bold',
   },
 
   /* Action cards */

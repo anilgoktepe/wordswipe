@@ -618,18 +618,23 @@ export function mockDetailedAnalysis(
 
   // ── Short feedback ────────────────────────────────────────────────────────
   //   Rules:
-  //   • REJECTED  → point out missing word
-  //   • FLAWED    → use first error message (structural); never praise
+  //   • REJECTED   → point out missing word
+  //   • FLAWED (1 error)  → use that single error message as the heading
+  //   • FLAWED (2+ errors) → holistic summary so the heading is not a copy of
+  //                           the first list item (backlog: bütüncül üst seviye teşhis)
   //   • ACCEPTABLE → gentle note about surface fix
-  //   • PERFECT   → positive confirmation
+  //   • PERFECT    → positive confirmation
   let shortFeedbackTr: string;
   if (verdict === 'REJECTED') {
     shortFeedbackTr = `"${targetWord}" kelimesini cümlende kullanmalısın.`;
   } else if (verdict === 'FLAWED') {
-    const firstError = dedupIssues.find(i => i.severity === 'error');
-    shortFeedbackTr = firstError
-      ? firstError.messageTr
-      : 'Cümlende yapısal bir dilbilgisi hatası var. Aşağıdaki düzeltmeyi incele.';
+    const errorIssues = dedupIssues.filter(i => i.severity === 'error');
+    if (errorIssues.length >= 2) {
+      shortFeedbackTr = 'Cümlede birden fazla dilbilgisi hatası var. Aşağıdaki hataları incele.';
+    } else {
+      shortFeedbackTr = errorIssues[0]?.messageTr
+        ?? 'Cümlende yapısal bir dilbilgisi hatası var. Aşağıdaki düzeltmeyi incele.';
+    }
   } else if (verdict === 'ACCEPTABLE') {
     shortFeedbackTr = 'Cümle doğru kurulmuş! Sadece küçük yazım/noktalama düzeltmesi gerekiyor.';
   } else {
