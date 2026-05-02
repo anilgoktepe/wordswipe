@@ -348,12 +348,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   <Text style={styles.levelBadgeText}>{levelLabels[state.level]}</Text>
                 ) : null}
               </View>
-              <View style={styles.logoWrapper}>
-                <View style={styles.logoWhiteBg} />
+              <View style={styles.logoBadge}>
                 <Image
-                  source={require('../../assets/icon_original_backup.png')}
+                  source={require('../../assets/header-logo.png')}
                   style={styles.logoImage}
-                  resizeMode="contain"
                 />
               </View>
             </View>
@@ -689,30 +687,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'Inter_600SemiBold',
   },
-  logoWrapper: {
-    width: width * 0.14,
-    height: width * 0.14,
-  },
-  logoWhiteBg: {
-    position: 'absolute',
-    top: (width * 0.14 - width * 0.099) / 2,
-    left: (width * 0.14 - width * 0.099) / 2,
-    width: width * 0.099,
-    height: width * 0.095,
-    borderRadius: width * 0.025,
-    backgroundColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
+  logoBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    overflow: 'hidden',
   },
   logoImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: width * 0.14,
-    height: width * 0.14,
+    width: 44,
+    height: 44,
   },
 
   /* Stats row */

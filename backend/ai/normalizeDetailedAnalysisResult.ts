@@ -124,6 +124,82 @@ function _hasStructuralIssue(
   );
 }
 
+// ─── Collocation normalization ────────────────────────────────────────────────
+//
+// The AI non-deterministically uses type:"grammar" instead of type:"vocabulary"
+// for collocation issues, and sometimes uses severity:"suggestion" for errors
+// that the prompt explicitly marks as unambiguous learner mistakes.
+//
+// This normalizer stabilises those two fields so the trust gate exception
+// (vocabulary excluded from downgrade) fires reliably for listed errors.
+//
+// Patterns are matched against span + messageTr (the AI always quotes the wrong
+// form in at least one of these fields).  Only the patterns explicitly listed in
+// the Sprint 3 prompt collocation section are ever upgraded — unlisted or
+// ambiguous collocations keep whatever severity the AI assigned.
+
+const _LISTED_COLLOCATION_ERRORS: RegExp[] = [
+  /\bmade?\s+(?:\w+\s+)*homework\b/i,  // make/made ... homework
+  /\bdid?\s+a\s+mistake\b/i,           // do/did a mistake
+  /\bdid?\s+progress\b/i,              // do/did progress
+  /\bmade?\s+research\b/i,             // make/made research
+  /\bpowerful\s+coffee\b/i,            // powerful coffee
+  /\btook?\s+a\s+mistake\b/i,          // take/took a mistake
+  /\bmade?\s+an?\s+exam\b/i,           // make/made a(n) exam
+];
+
+/**
+ * Fixes two non-deterministic AI behaviours for collocation issues:
+ *   1. Sets type to "vocabulary" when AI returned "grammar" or another type.
+ *      This ensures the trust gate exclusion for "vocabulary" fires correctly.
+ *   2. Upgrades severity to "error" when span or messageTr matches one of the
+ *      explicitly listed wrong-collocation patterns.  Unlisted collocations keep
+ *      whatever severity the AI chose.
+ */
+function _normalizeCollocations(issues: DetailedIssue[]): DetailedIssue[] {
+  return issues.map(issue => {
+    if (issue.subtype !== 'collocation') return issue;
+
+    let out: DetailedIssue = issue.type !== 'vocabulary'
+      ? { ...issue, type: 'vocabulary' }
+      : issue;
+
+    if (out.severity !== 'error') {
+      const haystack = `${out.span ?? ''} ${out.messageTr}`;
+      if (_LISTED_COLLOCATION_ERRORS.some(re => re.test(haystack))) {
+        out = { ...out, severity: 'error' as IssueSeverity };
+      }
+    }
+
+    return out;
+  });
+}
+
+// ─── Trust-gate message softener ─────────────────────────────────────────────
+//
+// When the trust gate downgrades an issue from error → suggestion, the messageTr
+// may still use harsh wording ("hatalı — doğrusu") that contradicts a PERFECT
+// verdict.  This helper rewrites the common formula into suggestion-style wording.
+//
+// Conservative by design:
+//   • Only rewrites when messageTr contains BOTH "hatalı" AND "doğrusu".
+//   • Extracts span and alternative via named patterns — leaves unchanged if
+//     either extraction fails (no partial rewrite).
+//   • Never called outside of the trust gate downgrade path.
+
+function _softenDowngradedMessage(messageTr: string): string {
+  if (!messageTr.includes('hatalı') || !messageTr.includes('doğrusu')) {
+    return messageTr;
+  }
+  // Formula: "SPAN" hatalı — doğrusu "ALT" olmalı.
+  // Both SPAN and ALT must be present as quoted strings.
+  const spanMatch = messageTr.match(/^"([^"]+)"\s+hatalı/);
+  const altMatch  = messageTr.match(/doğrusu\s+"([^"]+)"/);
+  if (!spanMatch || !altMatch) return messageTr;
+
+  return `"${spanMatch[1]}" yerine "${altMatch[1]}" daha doğal olabilir.`;
+}
+
 // ─── Score helpers ─────────────────────────────────────────────────────────────
 
 function clamp(v: number, min = 0, max = 100): number {
@@ -203,6 +279,10 @@ export function normalizeDetailedAnalysisResult(
     })
     .filter((i): i is DetailedIssue => i !== null);
 
+  // Normalise collocation issues before the trust gate runs, so type and severity
+  // are stable regardless of which wording the AI chose for a given run.
+  const normalizedAiIssues = _normalizeCollocations(aiIssues);
+
   // ── AI issue trust gate ──────────────────────────────────────────────────────
   //
   //   When BOTH local pre-validation AND LanguageTool found no structural errors,
@@ -216,28 +296,60 @@ export function normalizeDetailedAnalysisResult(
   //   Condition requires LT to have actually run (ltResult !== null) so we don't
   //   silently suppress AI findings when LT was unavailable.
   //
-  // Only downgrade AI structural issues when ALL three signals agree it's clean:
-  //   1. Local pre-validation found no structural error
-  //   2. LanguageTool found no structural error (and actually ran)
-  //   3. AI's own raw grammarScore > 65 — meaning the AI thinks grammar is mostly fine
-  //      but is nitpicking (likely a wrong collocation belief, e.g. "ambitious about").
-  //      When AI grammarScore ≤ 65 the AI itself considers the sentence significantly
-  //      wrong — that's a real error, not a hallucination, so we trust it.
-  const rawGrammarScore = clamp(r.grammarScore);
+  // Only downgrade AI structural issues when BOTH independent validators agree clean:
+  //   1. Local pre-validation: status must be 'perfect' (no rules fired at all)
+  //   2. LanguageTool: actually ran AND found no structural error
+  //
+  //   When these two agree the sentence is clean, AI structural errors are almost
+  //   certainly hallucinations (wrong collocation knowledge, over-strict rules).
+  //   The grammarScore threshold is intentionally removed: AI can be confidently
+  //   wrong (low grammarScore) on a correct sentence — e.g. "We don't compare it".
+  //   If local+LT both pass, we trust that consensus over the AI's score.
+  //
+  //   If ANY local rule fires (status 'partial' or 'fail') or LT flags a structural
+  //   error, the trust gate stays off and AI issues are respected as-is.
+  //
+  //   EXCEPTION — trust gate excluded types:
+  //   'vocabulary' (collocations: make/do, strong/powerful) is excluded from the
+  //   downgrade because LanguageTool has zero coverage of English collocations.
+  //   "LT found nothing" is not evidence of correctness for collocations — LT
+  //   simply lacks those rules.  The AI's explicit prompt guidance (named error
+  //   list + 'error' severity requirement) provides the safety layer instead.
+  //
+  //   Prepositions are intentionally NOT excluded: many preposition choices are
+  //   context-dependent or borderline (e.g. "tired from" vs "tired of"), and LT
+  //   does cover the most common preposition errors.  Keeping preposition inside
+  //   the trust gate prevents false FLAWED verdicts on ambiguous but valid usage.
+  const TRUST_GATE_EXCLUDED_TYPES    = new Set<string>(['vocabulary']);
+  // Subtypes that are also excluded from downgrade regardless of their type.
+  // 'wrong-pos': adjective-used-as-adverb and similar POS mismatches — LT and the
+  // local engine cannot detect these, so "both validators found nothing" is not
+  // evidence of correctness.  Same rationale as 'vocabulary' / collocations.
+  const TRUST_GATE_EXCLUDED_SUBTYPES = new Set<string>(['wrong-pos', 'dependent-preposition']);
+
   const localAndLtClean =
-    localAnalysis.status !== 'fail' &&
+    localAnalysis.status === 'perfect' &&
     !_hasStructuralIssue(localAnalysis.issues) &&
     ltResult !== null &&
-    !ltResult.hasStructuralError &&
-    rawGrammarScore > 40;
+    !ltResult.hasStructuralError;
 
   const guardedAiIssues: DetailedIssue[] = localAndLtClean
-    ? aiIssues.map(i =>
-        i.severity === 'error' && !SURFACE_ONLY_ISSUE_TYPES.has(i.type)
-          ? { ...i, severity: 'suggestion' as IssueSeverity }
-          : i,
-      )
-    : aiIssues;
+    ? normalizedAiIssues.map(i => {
+        if (
+          i.severity === 'error' &&
+          !SURFACE_ONLY_ISSUE_TYPES.has(i.type) &&
+          !TRUST_GATE_EXCLUDED_TYPES.has(i.type) &&
+          !(i.subtype && TRUST_GATE_EXCLUDED_SUBTYPES.has(i.subtype))
+        ) {
+          return {
+            ...i,
+            severity:  'suggestion' as IssueSeverity,
+            messageTr: _softenDowngradedMessage(i.messageTr),
+          };
+        }
+        return i;
+      })
+    : normalizedAiIssues;
 
   // Filter tags to strings only.
   let tags = (r.tags as unknown[]).filter((t): t is string => typeof t === 'string');
@@ -314,12 +426,49 @@ export function normalizeDetailedAnalysisResult(
   //   LT has a structural match with a known Turkish message.  REJECTED keeps
   //   its own feedback (target word missing — LT is not relevant there).
   //
-  let finalFeedbackTr = shortFeedbackTr;
+  // ── Step 8c-pre: correct AI usedTargetWord misreport ─────────────────────
+  //
+  //   AI occasionally returns usedTargetWord:false when the word IS present but
+  //   used wrongly (e.g. "protect to you" → AI thinks word is absent).
+  //   Local token-based detection is authoritative for presence; if local found
+  //   the word, override the AI's false-negative and fix the shortFeedbackTr so
+  //   the learner is not told to add a word that's already there.
+  //
+  const aiSaysWordMissing = !r.usedTargetWord && localAnalysis.usedTargetWord;
+
+  // Final usedTargetWord / targetWordMode respect local when it found the word.
+  const finalUsedTargetWord = localAnalysis.usedTargetWord ? true : r.usedTargetWord;
+  const finalTargetWordMode = (localAnalysis.usedTargetWord && r.targetWordMode === 'missing')
+    ? (localAnalysis.targetWordMode ?? 'exact')
+    : r.targetWordMode;
+
+  let finalFeedbackTr = aiSaysWordMissing
+    ? 'Cümlede dilbilgisi hatası var. Aşağıdaki geri bildirimi incele.'
+    : shortFeedbackTr;
+
   if (verdict === 'FLAWED' && ltResult?.hasStructuralError) {
     const ltStructural = ltResult.matches.find(m => m.isStructural && m.feedbackTr.trim().length > 0);
     if (ltStructural) {
       finalFeedbackTr = ltStructural.feedbackTr.trim();
     }
+  }
+
+  // ── Step 8c-post: PERFECT + suggestion-only override ─────────────────────
+  //
+  //   When the trust gate downgrades all AI issues to 'suggestion', the verdict
+  //   is PERFECT but shortFeedbackTr may still say "dilbilgisi hatası var" (the
+  //   AI wrote it expecting an error verdict).  Replace with soft wording that
+  //   matches the PERFECT verdict.
+  //
+  //   Condition: verdict is PERFECT AND at least one issue exists AND every
+  //   issue is suggestion-severity.  FLAWED / ACCEPTABLE cases are not touched.
+  //
+  if (
+    verdict === 'PERFECT' &&
+    issues.length > 0 &&
+    issues.every(i => i.severity === 'suggestion')
+  ) {
+    finalFeedbackTr = 'Cümlen doğru; daha doğal bir kullanım önerisi var.';
   }
 
   // ── Step 8d: correction trust gate ────────────────────────────────────────
@@ -346,8 +495,8 @@ export function normalizeDetailedAnalysisResult(
   // ── Step 10: assemble final result ────────────────────────────────────────
   return {
     status:            safeStatus,
-    usedTargetWord:    r.usedTargetWord,
-    targetWordMode:    r.targetWordMode,
+    usedTargetWord:    finalUsedTargetWord,
+    targetWordMode:    finalTargetWordMode,
     score,
     grammarScore,
     clarityScore,

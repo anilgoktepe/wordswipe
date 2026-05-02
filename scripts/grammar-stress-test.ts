@@ -1314,6 +1314,164 @@ const TEST_CASES: TestCase[] = [
     expectedStatus: 'fail', shouldAwardXp: false,
     note: '"supported about" — "support" is transitive; "about" is wrong preposition. WRONG_PREP_RULES fires. Correction "He has supported the issue." is safe (have+past-participle, not bare verb).',
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CATEGORY: sv-agreement-noun  (Sprint 9 — Tier 1: vocab singular noun + "are")
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  {
+    id: 177, category: 'sv-agreement-noun',
+    targetWord: 'society', sentence: 'Society are changing very fast.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"society are" — "society" is a vocabulary singular noun; "are" must be "is". Tier-1 SVA rule fires.',
+  },
+  {
+    id: 178, category: 'sv-agreement-noun',
+    targetWord: 'technology', sentence: 'Technology are improving our lives every day.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"technology are" — another vocabulary singular noun with "are". Confirms generalisation beyond just "society".',
+  },
+  {
+    id: 179, category: 'sv-agreement-noun',
+    targetWord: 'education', sentence: 'Education are the key to a better future.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"education are" — third vocabulary singular noun; rule must fire across all vocab nouns, not one-word patch.',
+  },
+  {
+    id: 180, category: 'sv-agreement-noun',
+    targetWord: 'society', sentence: 'Society is an important part of our lives.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "society is" — correct subject-verb agreement. SVA rule must NOT fire.',
+  },
+  {
+    id: 181, category: 'sv-agreement-noun',
+    targetWord: 'society', sentence: 'Both technology and society are evolving rapidly.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "society are" preceded by "and" → "and" guard fires, skips candidate. Compound subject with "are" is correct.',
+  },
+  {
+    id: 182, category: 'sv-agreement-noun',
+    targetWord: 'society', sentence: 'People are very important in society.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "people are" — "people" is in exception set; "society" is used without "are". No SVA error.',
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CATEGORY: sv-agreement-article  (Sprint 9 — Tier 2: a/an + noun + "are")
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  {
+    id: 183, category: 'sv-agreement-article',
+    targetWord: 'solution', sentence: 'A solution are needed here.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"A solution are" — article "a" demands singular verb. Tier-2 SVA rule fires.',
+  },
+  {
+    id: 184, category: 'sv-agreement-article',
+    targetWord: 'experience', sentence: 'An experience are valuable in any job.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"An experience are" — article "an" demands singular verb. Tier-2 SVA rule fires.',
+  },
+  {
+    id: 185, category: 'sv-agreement-article',
+    targetWord: 'solution', sentence: 'A solution is possible.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "A solution is" — correct singular agreement. Tier-2 rule must NOT fire.',
+  },
+  {
+    id: 186, category: 'sv-agreement-article',
+    targetWord: 'opportunity', sentence: 'An opportunity is available for everyone.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "An opportunity is" — correct singular agreement. Tier-2 rule must NOT fire.',
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CATEGORY: dependent-preposition  (Sprint 8 — noun + wrong preposition)
+  // Local limit: only caught by AI layer; local engine returns PERFECT.
+  // Trust gate exclusion (TRUST_GATE_EXCLUDED_SUBTYPES) ensures AI error survives.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  {
+    id: 187, category: 'dependent-preposition',
+    targetWord: 'importance', sentence: 'The importance for learning cannot be ignored.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"importance for" — correct collocation is "importance OF". Local engine cannot detect noun+preposition collocations; only AI catches this. Known local-rule limit.',
+    knownLimit: true,
+  },
+  {
+    id: 188, category: 'dependent-preposition',
+    targetWord: 'importance', sentence: 'The importance of learning cannot be ignored.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "importance of" — correct dependent preposition. No rule should fire.',
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CATEGORY: derivational-sibling  (Sprint 8 — LCP guard in typo detection)
+  // "important" is a derivational sibling of "importance", not a typo.
+  // LCP guard: pfx >= targetLen - 2 → skip near-miss. Sentence still fails
+  // (target word absent), but NOT via a false "typo" message.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  {
+    id: 189, category: 'derivational-sibling',
+    targetWord: 'importance', sentence: 'I know the important of education.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"important" ≠ "importance" — derivational sibling, not a typo. LCP guard prevents false "typo of importance" feedback. Sentence still fails: target word absent/wrong form.',
+  },
+  {
+    id: 190, category: 'derivational-sibling',
+    targetWord: 'important', sentence: 'It is important to learn new vocabulary every day.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "important" used correctly as target. Sibling "importance" is not present; no false near-miss should fire.',
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CATEGORY: wrong-pos-adjective-adverb  (adjective used where adverb expected)
+  // Local limit: local engine cannot distinguish adjective vs adverb position.
+  // AI layer is required to catch this pattern.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  {
+    id: 191, category: 'wrong-pos-adjective-adverb',
+    targetWord: 'meticulous', sentence: 'She does her work meticulous.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"meticulous" (adjective) used as adverb after verb phrase — should be "meticulously". Local engine cannot detect adjective-as-adverb position; known local-rule limit.',
+    knownLimit: true,
+  },
+  {
+    id: 192, category: 'wrong-pos-adjective-adverb',
+    targetWord: 'meticulous', sentence: 'She is meticulous in her work.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "meticulous" as predicate adjective after "is" — correct usage. No rule should fire.',
+  },
+  {
+    id: 193, category: 'wrong-pos-adjective-adverb',
+    targetWord: 'efficient', sentence: 'She works efficient at the office.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"efficient" (adjective) used as adverb modifying "works" — should be "efficiently". Local engine cannot detect this; known local-rule limit.',
+    knownLimit: true,
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CATEGORY: spelling-severity  (Sprint 10 target — spelling → min 'error' severity)
+  // Local limit: local engine has no spelling checker; these sentences pass locally.
+  // Full pipeline: AI detects spelling, normalizer must enforce severity='error'
+  //   → verdict ACCEPTABLE (not PERFECT). Sprint 10 fix: enforce in normalizer.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  {
+    id: 194, category: 'spelling-severity',
+    targetWord: 'technology', sentence: 'Modern technology improved our dailys lived.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"dailys lived" — nonsense word form; only AI catches spelling/morphology errors. Local engine returns PERFECT (local limit). Full pipeline should return ACCEPTABLE at best via Sprint 10 severity enforcement.',
+    knownLimit: true,
+  },
+  {
+    id: 195, category: 'spelling-severity',
+    targetWord: 'technology', sentence: 'Modern technology has improved our lives greatly.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "technology" used correctly with no errors. Baseline control for the spelling-severity category.',
+  },
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

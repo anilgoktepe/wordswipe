@@ -29,6 +29,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { spacing, radius } from '../utils/theme';
+import { REWARDED_AD_AI_BONUS } from '../utils/monetization';
 
 // ─── Shared token type (subset of the full theme, avoids circular imports) ────
 export interface ModalTheme {
@@ -207,7 +208,7 @@ export const AiAnalysisGateModal: React.FC<AiAnalysisGateModalProps> = ({
           <>
             <Text style={[styles.cardDesc, { color: theme.textSecondary }]}>
               Cümlenin dilbilgisini, netliğini ve doğallığını öğren — AI sana özelleştirilmiş öneriler sunar.{'\n\n'}
-              Bugün <Text style={{ fontWeight: '700', color: '#7C3AED' }}>{analysesRemaining}</Text> ücretsiz analizin kaldı. Her reklam 1 analiz açar.
+              Bugün <Text style={{ fontWeight: '700', color: '#7C3AED' }}>{analysesRemaining}</Text> ücretsiz analizin kaldı. Her reklam {REWARDED_AD_AI_BONUS} analiz açar.
             </Text>
 
             {/* Watch Ad option */}
@@ -218,7 +219,7 @@ export const AiAnalysisGateModal: React.FC<AiAnalysisGateModalProps> = ({
             >
               <Ionicons name="play-circle" size={18} color="#7C3AED" style={{ marginRight: 6 }} />
               <Text style={[styles.watchAdBtnText, { color: '#7C3AED' }]}>
-                Reklam izle ve 1 analiz aç
+                Reklam izle ve {REWARDED_AD_AI_BONUS} analiz aç
               </Text>
             </TouchableOpacity>
 

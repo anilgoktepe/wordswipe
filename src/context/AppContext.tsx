@@ -98,6 +98,8 @@ export interface AppState {
   dailyAiAnalysesUsed: number;
   /** Date string matching dailyAiAnalysesUsed — resets counter on a new day */
   aiAnalysisDate: string;
+  /** Extra AI analysis slots granted by a rewarded ad today (resets daily) */
+  extraAiAnalyses: number;
 
   /**
    * Words manually added by the user via "Kelime Ekle".
@@ -167,6 +169,7 @@ type Action =
   | { type: 'RESET_PROGRESS' }
   | { type: 'RECORD_AD_SHOWN' }
   | { type: 'RECORD_AI_ANALYSIS_USED' }
+  | { type: 'GRANT_AI_ANALYSIS_BONUS'; amount: number }
   | { type: 'SET_PREMIUM'; isPremium: boolean }
   | { type: 'SET_PRACTICE_SEEN_IDS'; ids: number[] }
   | { type: 'CLAIM_LESSON_BONUS' }
@@ -200,6 +203,7 @@ const initialState: AppState = {
   adsDate: new Date().toDateString(),
   dailyAiAnalysesUsed: 0,
   aiAnalysisDate: new Date().toDateString(),
+  extraAiAnalyses: 0,
   practiceSeenIds: [],
   dailyBaseSessionStarted: false,
   dailyLessonBonusClaimed: false,
@@ -467,6 +471,7 @@ function reducer(state: AppState, action: Action): AppState {
         // AI analysis gate — reset on a new day
         dailyAiAnalysesUsed:   isNewAdsDay ? 0 : (loaded.dailyAiAnalysesUsed ?? 0),
         aiAnalysisDate:        today,
+        extraAiAnalyses:       isNewAdsDay ? 0 : (loaded.extraAiAnalyses      ?? 0),
         // Practice cycle — persisted across restarts; never day-reset
         practiceSeenIds:       loaded.practiceSeenIds ?? [],
         // Lesson bonus + session-started flags all reset every calendar day
@@ -493,6 +498,15 @@ function reducer(state: AppState, action: Action): AppState {
       const today = new Date().toDateString();
       const base = state.aiAnalysisDate === today ? state.dailyAiAnalysesUsed : 0;
       return { ...state, dailyAiAnalysesUsed: base + 1, aiAnalysisDate: today };
+    }
+
+    // ── Rewarded ad AI bonus grant ────────────────────────────────────────────
+    // Adds extra analysis slots so the free gate stays open for `amount` more
+    // uses after a rewarded ad.  Accumulates within the same calendar day.
+    case 'GRANT_AI_ANALYSIS_BONUS': {
+      const today = new Date().toDateString();
+      const base = state.aiAnalysisDate === today ? state.extraAiAnalyses : 0;
+      return { ...state, extraAiAnalyses: base + action.amount, aiAnalysisDate: today };
     }
 
     // ── Subscription entitlement ─────────────────────────────────────────────
@@ -546,6 +560,7 @@ function reducer(state: AppState, action: Action): AppState {
         adsDate:                   today,
         dailyAiAnalysesUsed:       0,
         aiAnalysisDate:            today,
+        extraAiAnalyses:           0,
       };
     }
 

@@ -203,9 +203,9 @@ translateRouter.post('/', translateLimiter, async (req: Request, res: Response) 
   const deeplKey = (process.env.DEEPL_API_KEY ?? '').trim();
 
   try {
-    const translation = deeplKey
-      ? await _translateWithDeepL(text.trim(), from, to, deeplKey)
-      : await _translateWithMyMemory(text.trim(), from, to);
+    const deeplResult   = deeplKey ? await _translateWithDeepL(text.trim(), from, to, deeplKey) : null;
+    const translation   = deeplResult ?? await _translateWithMyMemory(text.trim(), from, to);
+    const provider      = deeplResult ? 'deepl' : 'mymemory';
 
     if (!translation || translation.toLowerCase() === normalizedText) {
       res.status(502).json({ error: 'No translation found.' });
@@ -213,7 +213,7 @@ translateRouter.post('/', translateLimiter, async (req: Request, res: Response) 
     }
 
     _cacheSet(cacheKey, translation);
-    log.info('translate_ok', reqId, { from, to, provider: deeplKey ? 'deepl' : 'mymemory' });
+    log.info('translate_ok', reqId, { from, to, provider });
     res.json({ translation });
 
   } catch (err) {

@@ -28,6 +28,7 @@ import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import {
   FREE_SENTENCE_SESSION_CAP,
   FREE_DAILY_AI_ANALYSES,
+  REWARDED_AD_AI_BONUS,
   showRewardedAd,
   isRewardedAdReady,
 } from '../utils/monetization';
@@ -71,6 +72,15 @@ function buildQueue(
   return [...shuffle(due), ...shuffle(notDue)].slice(0, max);
 }
 
+// ─── Auto-AI trigger decision ──────────────────────────────────────────────────
+
+function shouldAutoAnalyze(result: LocalAnalysisResult, sentence: string): boolean {
+  if (!result.usedTargetWord) return false;
+  if (sentence.trim().split(/\s+/).filter(Boolean).length < 4) return false;
+  if (result.status !== 'fail') return true;
+  return !!result.correctedSentence; // correctable error → AI adds value
+}
+
 // ─── Screen ────────────────────────────────────────────────────────────────────
 
 export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -100,6 +110,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
   // Layer 1 (local) always runs first. Premium is opt-in, user-triggered.
   const [detailedResult, setDetailedResult]       = useState<DetailedAnalysisResult | null>(null);
   const [isDetailedAnalyzing, setIsDetailedAnalyzing] = useState(false);
+  const [aiError, setAiError]                     = useState(false);
 
   // ── AI analysis gate (free users) ────────────────────────────────────────────
   // Free users see a modal with two paths: watch a rewarded ad (1/day) or
@@ -107,10 +118,9 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
   const [aiGateVisible,  setAiGateVisible]  = useState(false);
   const [isWatchingAd,   setIsWatchingAd]   = useState(false);
   // Has the daily free rewarded analysis already been used?
-  const aiLimitReached =
-    !isPremium &&
-    state.dailyAiAnalysesUsed >= FREE_DAILY_AI_ANALYSES;
-  const analysesRemaining = Math.max(0, FREE_DAILY_AI_ANALYSES - state.dailyAiAnalysesUsed);
+  const effectiveAiLimit  = FREE_DAILY_AI_ANALYSES + (state.extraAiAnalyses ?? 0);
+  const aiLimitReached    = !isPremium && state.dailyAiAnalysesUsed >= effectiveAiLimit;
+  const analysesRemaining = Math.max(0, effectiveAiLimit - state.dailyAiAnalysesUsed);
 
   const currentWord = queue[currentIndex] ?? null;
   const isFinished  = currentIndex >= queue.length;
@@ -172,21 +182,41 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
     if (effectiveStatus === 'perfect') return result.feedbackTr; // success — full msg ok
     if (effectiveStatus === 'partial') return 'Kelimeyi kullandın ama düzeltilmesi gereken bir nokta var.';
     // fail — short category summary, no full rule explanation
-    if (!result.usedTargetWord) return 'Hedef kelimeyi cümlende kullanmadın.';
+    if (!result.usedTargetWord) {
+      // typo_suspected: local engine already built a useful "did you mean X?" message
+      if (result.targetWordMode === 'typo_suspected') return result.feedbackTr;
+      return 'Hedef kelimeyi cümlende kullanmadın.';
+    }
     return 'Cümlede dilbilgisi hatası var.';
   })();
 
-  // Colour tokens for the three states — used in the result card only.
-  const statusColor = effectiveStatus === 'perfect' ? theme.correct
+  // Colour tokens for the result card.
+  // When a detailed verdict is available, it is used as the primary signal
+  // (FLAWED → red even if local status was partial/amber).
+  // Falls back to effectiveStatus while AI is still loading or didn't run.
+  const _verdict = detailedResult?.verdict ?? null;
+  const statusColor = _verdict === 'PERFECT'    ? theme.correct
+                    : _verdict === 'ACCEPTABLE' ? '#B45309'
+                    : _verdict !== null         ? theme.incorrect      // FLAWED or REJECTED
+                    : effectiveStatus === 'perfect' ? theme.correct
                     : effectiveStatus === 'partial'  ? '#B45309'
                     :                                  theme.incorrect;
-  const statusBg    = effectiveStatus === 'perfect' ? theme.correctLight
+  const statusBg    = _verdict === 'PERFECT'    ? theme.correctLight
+                    : _verdict === 'ACCEPTABLE' ? '#FEF3C7'
+                    : _verdict !== null         ? theme.incorrectLight
+                    : effectiveStatus === 'perfect' ? theme.correctLight
                     : effectiveStatus === 'partial'  ? '#FEF3C7'
                     :                                  theme.incorrectLight;
-  const statusBorder = effectiveStatus === 'perfect' ? theme.correct
+  const statusBorder = _verdict === 'PERFECT'    ? theme.correct
+                     : _verdict === 'ACCEPTABLE' ? '#F59E0B'
+                     : _verdict !== null         ? theme.incorrect
+                     : effectiveStatus === 'perfect' ? theme.correct
                      : effectiveStatus === 'partial'  ? '#F59E0B'
                      :                                  theme.incorrect;
-  const statusIcon   = effectiveStatus === 'perfect' ? 'checkmark-circle'
+  const statusIcon   = _verdict === 'PERFECT'    ? 'checkmark-circle'
+                     : _verdict === 'ACCEPTABLE' ? 'warning'
+                     : _verdict !== null         ? 'close-circle'
+                     : effectiveStatus === 'perfect' ? 'checkmark-circle'
                      : effectiveStatus === 'partial'  ? 'warning'
                      :                                  'close-circle';
 
@@ -212,50 +242,65 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
 
   // ── Actions ─────────────────────────────────────────────────────────────────
 
+  // Core AI runner — called by both auto-trigger (handleSubmit) and manual tap.
+  const _runDetailedAnalysis = useCallback(async (localResult: LocalAnalysisResult) => {
+    if (isDetailedAnalyzing || !currentWord) return;
+    setAiError(false);
+    setIsDetailedAnalyzing(true);
+
+    const toConfidenceLevel = (c: number): ConfidenceLevel =>
+      c >= 0.7 ? 'high' : c >= 0.4 ? 'medium' : 'low';
+
+    const localAnalysis: LocalAnalysisSummary = {
+      status:         localResult.status,
+      usedTargetWord: localResult.usedTargetWord,
+      targetWordMode: localResult.targetWordMode,
+      score:          localResult.score,
+      confidence:     toConfidenceLevel(localResult.confidence),
+      issues: localResult.issues.map(i => ({
+        type:      'grammar',
+        severity:  i.severity === 'error' ? ('error' as const) : ('suggestion' as const),
+        messageTr: i.messageTr,
+      })),
+    };
+
+    try {
+      const analysis = await analyzeSentenceDetailed({
+        targetWord: currentWord.word,
+        sentence,
+        userLevel:  currentWord.level,
+        localAnalysis,
+      });
+      setDetailedResult(analysis);
+    } catch {
+      setAiError(true);
+    } finally {
+      setIsDetailedAnalyzing(false);
+    }
+  }, [currentWord, sentence, isDetailedAnalyzing]);
+
   const handleSubmit = useCallback(() => {
     if (!sentence.trim() || isAnalyzing || !currentWord) return;
 
     setIsAnalyzing(true);
+    setAiError(false);
     const analysis = analyzeSentenceLocal({ targetWord: currentWord.word, sentence });
     setResult(analysis);
     // XP is NOT awarded here. It is deferred to handleNext so that the detailed
     // analysis (if the user triggers it) can influence the final grade first.
     setIsAnalyzing(false);
-  }, [sentence, currentWord, isAnalyzing]);
+
+    const canAutoAnalyze = isPremium || !aiLimitReached;
+    if (shouldAutoAnalyze(analysis, sentence) && canAutoAnalyze) {
+      if (!isPremium) dispatch({ type: 'RECORD_AI_ANALYSIS_USED' });
+      _runDetailedAnalysis(analysis);
+    }
+  }, [sentence, currentWord, isAnalyzing, isPremium, aiLimitReached, dispatch, _runDetailedAnalysis]);
 
   const handleDetailedAnalysis = useCallback(async () => {
-    if (!currentWord || isDetailedAnalyzing || !result) return;
-    setIsDetailedAnalyzing(true);
-
-    // Convert the numeric confidence from Layer 1 (0–1) to the enum the
-    // request contract requires.
-    const toConfidenceLevel = (c: number): ConfidenceLevel =>
-      c >= 0.7 ? 'high' : c >= 0.4 ? 'medium' : 'low';
-
-    // Build the Layer-1 summary forwarded to the backend so it does not have
-    // to re-run basic grammar checks.
-    const localAnalysis: LocalAnalysisSummary = {
-      status:         result.status,
-      usedTargetWord: result.usedTargetWord,
-      targetWordMode: result.targetWordMode,
-      score:          result.score,
-      confidence:     toConfidenceLevel(result.confidence),
-      issues: result.issues.map(i => ({
-        type:     'grammar',
-        severity: i.severity === 'error' ? ('error' as const) : ('suggestion' as const),
-        messageTr: i.messageTr,
-      })),
-    };
-
-    const analysis = await analyzeSentenceDetailed({
-      targetWord:    currentWord.word,
-      sentence,
-      userLevel:     currentWord.level,
-      localAnalysis,
-    });
-    setDetailedResult(analysis);
-    setIsDetailedAnalyzing(false);
-  }, [currentWord, sentence, result, isDetailedAnalyzing]);
+    if (!result || isDetailedAnalyzing) return;
+    _runDetailedAnalysis(result);
+  }, [result, isDetailedAnalyzing, _runDetailedAnalysis]);
 
   // ── "Detaylı AI Analizi Al" tap handler ──────────────────────────────────
   // Premium: run analysis directly.
@@ -288,6 +333,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
       setIsWatchingAd(false);
       if (rewarded) {
         dispatch({ type: 'RECORD_AD_SHOWN' });
+        dispatch({ type: 'GRANT_AI_ANALYSIS_BONUS', amount: REWARDED_AD_AI_BONUS });
         dispatch({ type: 'RECORD_AI_ANALYSIS_USED' });
         setAiGateVisible(false);
         // Slight delay so the modal closes before analysis spinner appears
@@ -379,6 +425,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
     setSentence('');
     setResult(null);
     setDetailedResult(null);
+    setAiError(false);
     setCurrentIndex(prev => prev + 1);
   }, [result, detailedResult, currentWord, dispatch]);
 
@@ -386,6 +433,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
     setSentence('');
     setResult(null);
     setDetailedResult(null);
+    setAiError(false);
     setCurrentIndex(prev => prev + 1);
   }, []);
 
@@ -393,6 +441,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
     setSentence('');
     setResult(null);
     setDetailedResult(null);
+    setAiError(false);
     setAiGateVisible(false);
   }, []);
 
@@ -630,6 +679,20 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
                       <Text style={[styles.xpEarnedText, { color: '#B45309' }]}>+5 puan (düzelt → +10 puan)</Text>
                     </View>
                   )}
+                  {/* Explicit 0-puan badge for FLAWED and REJECTED so the user
+                      never has to infer "no badge = no points". */}
+                  {detailedResult?.verdict === 'FLAWED' && (
+                    <View style={[styles.xpEarned, { backgroundColor: theme.incorrect + '20' }]}>
+                      <Ionicons name="close-circle-outline" size={14} color={theme.incorrect} style={{ marginRight: 4 }} />
+                      <Text style={[styles.xpEarnedText, { color: theme.incorrect }]}>0 puan — yapısal hata düzeltilmeli</Text>
+                    </View>
+                  )}
+                  {detailedResult?.verdict === 'REJECTED' && (
+                    <View style={[styles.xpEarned, { backgroundColor: theme.incorrect + '20' }]}>
+                      <Ionicons name="close-circle-outline" size={14} color={theme.incorrect} style={{ marginRight: 4 }} />
+                      <Text style={[styles.xpEarnedText, { color: theme.incorrect }]}>0 puan — hedef kelime kullanılmadı</Text>
+                    </View>
+                  )}
 
                   {/* User's sentence */}
                   <View style={[styles.sentenceDisplay, { backgroundColor: theme.surface + 'CC' }]}>
@@ -682,6 +745,26 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
                     return null;
                   })()}
 
+                  {/* ── AI hata / timeout mesajı ── */}
+                  {!detailedResult && !isDetailedAnalyzing && aiError && (
+                    <View style={styles.aiInfoRow}>
+                      <Ionicons name="warning-outline" size={14} color="#B45309" />
+                      <Text style={[styles.aiInfoText, { color: '#B45309' }]}>
+                        Detaylı analiz alınamadı. Temel sonuca göre devam edebilirsin.
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* ── Günlük AI quota dolu mesajı ── */}
+                  {!detailedResult && !isDetailedAnalyzing && !aiError && aiLimitReached && result && shouldAutoAnalyze(result, sentence) && (
+                    <View style={styles.aiInfoRow}>
+                      <Ionicons name="information-circle-outline" size={14} color={theme.textSecondary} />
+                      <Text style={[styles.aiInfoText, { color: theme.textSecondary }]}>
+                        Bugünkü detaylı analiz hakkın doldu. Temel sonuca göre devam edebilirsin.
+                      </Text>
+                    </View>
+                  )}
+
                   {/* ── Premium AI analysis panel ── */}
                   {!detailedResult && !isDetailedAnalyzing && (
                     <TouchableOpacity
@@ -695,7 +778,10 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
                       ]}
                     >
                       <Ionicons
-                        name={aiLimitReached ? 'lock-closed-outline' : 'sparkles'}
+                        name={
+                          aiLimitReached ? 'lock-closed-outline' :
+                          aiError        ? 'refresh'             : 'sparkles'
+                        }
                         size={15}
                         color={aiLimitReached ? '#9CA3AF' : '#7C3AED'}
                       />
@@ -705,6 +791,8 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
                       ]}>
                         {aiLimitReached
                           ? 'AI Analizi — Günlük limit doldu'
+                          : aiError
+                          ? 'AI Analizini Tekrar Dene'
                           : 'Detaylı AI Analizi Al'}
                       </Text>
                     </TouchableOpacity>
@@ -714,7 +802,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
                     <View style={styles.premiumLoading}>
                       <ActivityIndicator size="small" color="#7C3AED" />
                       <Text style={{ color: '#7C3AED', fontSize: 13, fontWeight: '600', marginLeft: 8 }}>
-                        Analiz ediliyor…
+                        AI Analizi yükleniyor…
                       </Text>
                     </View>
                   )}
@@ -792,7 +880,10 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
                       )}
 
                       {/* Example sentences — shown when verdict is REJECTED and
-                          no corrected sentence is available (real AI backend only) */}
+                          no corrected sentence is available.
+                          Prefer AI-generated exampleSentences; fall back to
+                          currentWord.example when the AI list is empty (e.g.
+                          mock/fallback path). */}
                       {detailedResult.verdict === 'REJECTED' &&
                        !detailedResult.correctedSentence &&
                        detailedResult.exampleSentences &&
@@ -802,6 +893,15 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
                           {detailedResult.exampleSentences.map((ex, i) => (
                             <Text key={i} style={{ color: theme.text, fontSize: 14, fontStyle: 'italic' }}>• {ex}</Text>
                           ))}
+                        </View>
+                      )}
+                      {detailedResult.verdict === 'REJECTED' &&
+                       !detailedResult.correctedSentence &&
+                       (!detailedResult.exampleSentences || detailedResult.exampleSentences.length === 0) &&
+                       !!currentWord?.example && (
+                        <View style={[styles.premiumBox, { backgroundColor: '#FEF3C720', borderColor: '#F59E0B40' }]}>
+                          <Text style={[styles.boxLabel, { color: '#B45309' }]}>💡 Bu kelime nasıl kullanılır:</Text>
+                          <Text style={{ color: theme.text, fontSize: 14, fontStyle: 'italic' }}>• {currentWord.example}</Text>
                         </View>
                       )}
 
@@ -854,12 +954,24 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
                     {effectiveStatus !== 'perfect' && (
                       <TouchableOpacity
                         onPress={handleRetry}
-                        style={[styles.retryBtn, { borderColor: theme.border, backgroundColor: theme.surface }]}
+                        disabled={isDetailedAnalyzing}
+                        style={[
+                          styles.retryBtn,
+                          {
+                            borderColor: theme.border,
+                            backgroundColor: theme.surface,
+                            opacity: isDetailedAnalyzing ? 0.4 : 1,
+                          },
+                        ]}
                       >
                         <Text style={{ color: theme.text, fontWeight: '700', fontSize: 14 }}>Tekrar Dene</Text>
                       </TouchableOpacity>
                     )}
-                    <TouchableOpacity onPress={handleNext} style={[styles.nextBtn, { overflow: 'hidden' }]}>
+                    <TouchableOpacity
+                      onPress={handleNext}
+                      disabled={isDetailedAnalyzing}
+                      style={[styles.nextBtn, { overflow: 'hidden', opacity: isDetailedAnalyzing ? 0.5 : 1 }]}
+                    >
                       <LinearGradient
                         colors={['#6C63FF', '#9B5CF6']}
                         start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
@@ -1036,6 +1148,13 @@ const styles = StyleSheet.create({
 
   actionBtn: { paddingHorizontal: spacing.xl, paddingVertical: spacing.md, borderRadius: radius.full },
   actionBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+
+  // ── AI info rows (quota / error) ──
+  aiInfoRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 6,
+    paddingVertical: spacing.xs,
+  },
+  aiInfoText: { fontSize: 12, flex: 1, lineHeight: 17 },
 
   // ── Premium AI panel ──
   premiumBtn: {

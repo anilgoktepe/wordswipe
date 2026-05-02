@@ -43,7 +43,7 @@
  *   The AnalysisInput / AnalysisResult contract and all call-sites stay unchanged.
  */
 
-import { Word } from './vocabularyService';
+import { Word, getLocalWords } from './vocabularyService';
 
 // ─── Public types ──────────────────────────────────────────────────────────────
 
@@ -193,6 +193,11 @@ const WRONG_PREP_RULES: WrongPrepRule[] = [
     feedback:    '"enter to" hatalı. "Enter" doğrudan nesne alır. Doğru örnek: "She entered the room."',
   },
   {
+    pattern:     /\b(discover(?:s|ed|ing)?)\s+to\b/gi,
+    replacement: '$1',
+    feedback:    '"discover" fiilinden sonra "to" kullanılmamalı — "discover" doğrudan nesne alır. Doğru örnek: "I discovered new places."',
+  },
+  {
     pattern:     /\b(explain(?:s|ed|ing)?)\s+about\b/gi,
     replacement: '$1',
     feedback:    '"explain about" hatalı. "Explain" doğrudan nesne alır. Doğru örnek: "He explained the rule."',
@@ -287,6 +292,32 @@ const WRONG_PREP_RULES: WrongPrepRule[] = [
     feedback:    '"support about" hatalı — "support" doğrudan nesne alır, "about" eklenmez. Doğru örnek: "He supported the team."',
   },
 ];
+
+// ─── Rule 4 support — singular noun be-agreement sets ────────────────────────
+//
+// Collective nouns, semantic plurals, and irregular plurals that are correct
+// with "are" in some contexts and must never be flagged.
+const _SING_NOUN_EXCEPTIONS = new Set([
+  'people', 'children', 'men', 'women', 'cattle', 'police', 'fish',
+  'team', 'family', 'staff', 'government', 'committee', 'board',
+  'jury', 'crew', 'public', 'majority', 'minority', 'media', 'data',
+]);
+
+// All app-vocabulary nouns that are unambiguously singular.
+// Built once at module load (~252 entries); zero runtime cost per grammar call.
+const VOCAB_SINGULAR_NOUNS: Set<string> = new Set(
+  getLocalWords()
+    .filter(w => w.partOfSpeech === 'noun' && !_SING_NOUN_EXCEPTIONS.has(w.word.toLowerCase()))
+    .map(w => w.word.toLowerCase()),
+);
+
+// Words that can follow "a / an" and still correctly take "are".
+// e.g. "a few are here", "a couple are coming".
+const _ARTICLE_ARE_SKIP = new Set([
+  'few', 'lot', 'couple', 'number', 'variety', 'range', 'series',
+  'kind', 'sort', 'pair', 'bit', 'group', 'set', 'team', 'majority',
+  'minority', 'handful', 'bunch',
+]);
 
 // ─── Rule 3 — 3rd-person singular subject–verb agreement ──────────────────────
 
@@ -548,6 +579,52 @@ function _checkBeAgreement(
       };
     }
   }
+
+  // ── Tier 1: vocabulary singular noun + "are" ──────────────────────────────
+  // Scan all occurrences of "word are" and return the first one that is a
+  // known unambiguous singular vocabulary noun (not collective / irregular plural).
+  {
+    const re = /\b(\w+)\s+are\b/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(sentence)) !== null) {
+      const candidate = m[1].toLowerCase();
+      if (!VOCAB_SINGULAR_NOUNS.has(candidate)) continue;
+      // Compound-subject guard: "society and culture are" → skip this match.
+      const before = sentence.slice(0, m.index).trimEnd();
+      if (/\band\s*$/i.test(before)) continue;
+      const fixed = sentence.replace(
+        new RegExp(`\\b${m[1]}\\s+are\\b`, 'gi'),
+        `${m[1]} is`,
+      );
+      return {
+        feedback:  `"${m[1]} are" hatalı — "${m[1]}" tekil isim, "are" yerine "is" kullanılmalı. Doğrusu: "${m[1]} is".`,
+        corrected: cosmeticFix(fixed) ?? fixed,
+      };
+    }
+  }
+
+  // ── Tier 2: a/an + (singular noun) + "are" ───────────────────────────────
+  // "a/an" always precedes singular nouns in standard English, so this
+  // construction is wrong regardless of whether the noun is in the vocabulary.
+  // Guard: skip quantifiers that legitimately introduce plural meaning ("a few are").
+  {
+    const re = /\b(a|an)\s+(\w+)\s+are\b/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(sentence)) !== null) {
+      const noun = m[2].toLowerCase();
+      if (_ARTICLE_ARE_SKIP.has(noun)) continue;
+      const art  = m[1];
+      const fixed = sentence.replace(
+        new RegExp(`\\b${art}\\s+${m[2]}\\s+are\\b`, 'gi'),
+        `${art} ${m[2]} is`,
+      );
+      return {
+        feedback:  `"${art} ${m[2]} are" hatalı — "${art}" belirleyicisi tekil isimlerle kullanılır, "is" olmalı. Doğrusu: "${art} ${m[2]} is".`,
+        corrected: cosmeticFix(fixed) ?? fixed,
+      };
+    }
+  }
+
   return null;
 }
 
@@ -2069,6 +2146,16 @@ function _localHasBeBareverb(sentence: string): boolean {
     'dull', 'loud', 'weak', 'vast', 'slim', 'tense', 'keen', 'calm',
     // irregular past-participle adjectives that don't end in -ed/-en/-ing visually
     'hurt', 'lost', 'stuck', 'set', 'cut', 'hit', 'shut', 'split', 'spread',
+    // common predicate nouns that are valid after be-verb
+    'way',
+  ]);
+
+  // Words that signal the end of a be-verb complement — stop scanning, not an error.
+  // "to" = infinitive marker: "It is hard TO provide" — the complement is "hard".
+  // Conjunctions: "since", "when", etc. introduce a new clause after the complement.
+  const CLAUSE_BOUNDARY = new Set([
+    'to',
+    'since', 'when', 'if', 'because', 'that', 'which', 'who', 'where', 'as',
   ]);
 
   // Split sentence into tokens and walk through looking for be-verb + bare-verb chains.
@@ -2083,10 +2170,12 @@ function _localHasBeBareverb(sentence: string): boolean {
     // Scan forward past safe words to find the eventual complement word.
     // -ly words are adverb modifiers (completely, deeply) → continue scanning.
     // Other adjective suffixes (-ful, -ous, -ive, etc.) are end of complement → break.
+    // CLAUSE_BOUNDARY words ("to", "since", "when", ...) end the complement → break clean.
     for (let j = i + 1; j < tokens.length && j <= i + 6; j++) {
       const word = tokens[j];
       if (SAFE_AFTER_BE.has(word)) continue;                   // safe modifier — keep scanning
       if (word.endsWith('ly')) continue;                        // adverb modifier — keep scanning
+      if (CLAUSE_BOUNDARY.has(word)) break;                    // complement ended; not an error
       if (word.endsWith('ing') || word.endsWith('ed') || word.endsWith('en')) break;
       if (/(?:ful|less|tion|sion|ness|ment|ity|ive|al|ous|ant|ent|ible|able|ish|ic|ary|ory)$/.test(word)) break;
       if (word.length >= 5 && (word.endsWith('er') || word.endsWith('est'))) {
@@ -2783,7 +2872,15 @@ function _localAnalyze({ targetWord, sentence }: LocalAnalysisInput): LocalAnaly
     const threshold = targetLower.length >= 8 ? 3 : targetLower.length >= 4 ? 2 : 1;
     const hasClose  = tokens.some(t => {
       const d = levenshtein(targetLower, t);
-      return d > 0 && d <= threshold;
+      if (d === 0 || d > threshold) return false;
+      // Derivational sibling guard: if the token shares nearly the entire stem
+      // (LCP ≥ target.length - 2) it is a related word form, not a typo.
+      // e.g. "important" vs "importance" → lcp=8, target.len-2=7 → skip.
+      // e.g. "meticuluos" vs "meticulous" → lcp=7, target.len-2=8 → allow.
+      let pfx = 0;
+      while (pfx < targetLower.length && pfx < t.length && targetLower[pfx] === t[pfx]) pfx++;
+      if (pfx >= targetLower.length - 2) return false;
+      return true;
     });
     if (hasClose) targetWordMode = 'typo_suspected';
     // else stays 'missing'

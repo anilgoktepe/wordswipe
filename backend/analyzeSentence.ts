@@ -205,7 +205,33 @@ analyzeSentenceRouter.post('/', async (req: Request, res: Response) => {
     return;
   }
 
-  // ── 4. Log outcome ──────────────────────────────────────────────────────────
+  // ── 4. Correction integrity gate ────────────────────────────────────────────
+  //
+  //   The normalizer's _isCorrectionTrusted() checks confidence, error count, and
+  //   structural patterns but never runs LT on the corrected text itself.
+  //   This gate validates the corrected sentence with LT before sending it to the
+  //   client. If LT finds a structural error — or is unavailable — the correction
+  //   is suppressed. naturalAlternative is not validated (it is a suggestion, not
+  //   a direct fix, and may intentionally use different vocabulary).
+  //
+  if (result.correctedSentence !== null) {
+    let correctionPassed = false;
+    try {
+      const correctionLt = await callLanguageTool(result.correctedSentence, reqId);
+      correctionPassed = correctionLt !== null && !correctionLt.hasStructuralError;
+    } catch {
+      // callLanguageTool never rejects, but safe default is no correction.
+      correctionPassed = false;
+    }
+    if (!correctionPassed) {
+      log.info('correction_integrity_failed', reqId, {
+        correctedLen: result.correctedSentence.length,
+      });
+      result = { ...result, correctedSentence: null };
+    }
+  }
+
+  // ── 5. Log outcome ──────────────────────────────────────────────────────────
   log.info('analysis_complete', reqId, {
     status:          result.status,
     verdict:         result.verdict,
@@ -220,6 +246,6 @@ analyzeSentenceRouter.post('/', async (req: Request, res: Response) => {
     durationMs:      Date.now() - startedAt,
   });
 
-  // ── 5. Return ────────────────────────────────────────────────────────────────
+  // ── 6. Return ────────────────────────────────────────────────────────────────
   res.json(result);
 });
