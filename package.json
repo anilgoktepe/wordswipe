@@ -7,6 +7,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
+    "start:api": "tsx server.ts",
     "dev:api": "tsx server.ts",
     "test:srs": "tsx scripts/srs-test.ts",
     "test:grammar": "tsx scripts/grammar-stress-test.ts",
@@ -50,6 +51,7 @@
     "react-native-screens": "~4.23.0",
     "react-native-web": "^0.21.2",
     "react-native-worklets": "0.7.2",
+    "tsx": "^4.21.0",
     "zod": "^4.3.6"
   },
   "private": true,
@@ -59,7 +61,6 @@
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@types/react-native": "^0.72.8",
-    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }
