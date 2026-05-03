@@ -350,6 +350,9 @@ const FlashCard: React.FC<{
           <Text style={styles.meaningText}>{word.translation}</Text>
           <View style={styles.sentenceBg}>
             <Text style={styles.sentenceText}>"{word.example}"</Text>
+            {word.exampleTr ? (
+              <Text style={styles.exampleTrText}>"{word.exampleTr}"</Text>
+            ) : null}
           </View>
         </Animated.View>
       </TouchableOpacity>
@@ -366,6 +369,10 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
 
   const words = state.sessionWords.length > 0 ? state.sessionWords : getDailyWords();
 
+  // Tracks the self-rating the user gave each word during the flashcard phase.
+  // Passed to QuizScreen so the SRS policy can account for (un)confidence.
+  const selfRatingsRef = useRef<Record<number, 'know' | 'dont_know'>>({});
+
   useEffect(() => {
     if (words.length > 0) {
       prefetchEnrichments(words.map(w => w.word));
@@ -377,7 +384,7 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
     dispatch({ type: 'SET_LAST_LESSON_WORDS', wordIds: seenWords.map(w => w.id) });
     dispatch({ type: 'ADD_XP', amount: 20 });
     dispatch({ type: 'UPDATE_STREAK' });
-    navigation.navigate('Quiz');
+    navigation.navigate('Quiz', { selfRatings: selfRatingsRef.current });
   }, [words, dispatch, navigation]);
 
   const handleNext = useCallback(() => {
@@ -393,6 +400,16 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
     await showInterstitial();
     finishLesson(currentIndex);
   }, [currentIndex, finishLesson, showInterstitial]);
+
+  const handleSwipeRight = useCallback(() => {
+    selfRatingsRef.current[words[currentIndex].id] = 'know';
+    handleNext();
+  }, [currentIndex, words, handleNext]);
+
+  const handleSwipeLeft = useCallback(() => {
+    selfRatingsRef.current[words[currentIndex].id] = 'dont_know';
+    handleNext();
+  }, [currentIndex, words, handleNext]);
 
   const handleKnow = () => {
     if (swipeCommand) return;
@@ -457,7 +474,11 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
                   { transform: [{ scale: 1 - offset * 0.04 }, { translateY: offset * 12 }], zIndex: -offset },
                 ]}
               >
-                <View style={[styles.card, { backgroundColor: theme.card }, shadows.sm]} />
+                <View style={[styles.card, { backgroundColor: theme.card }, shadows.sm]}>
+                  <Text style={[styles.wordText, { color: theme.text, marginBottom: 0 }]} numberOfLines={1}>
+                    {words[idx].word}
+                  </Text>
+                </View>
               </View>
             );
           })}
@@ -468,8 +489,8 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
               word={words[currentIndex]}
               theme={theme}
               isTop={true}
-              onSwipeLeft={handleNext}
-              onSwipeRight={handleNext}
+              onSwipeLeft={handleSwipeLeft}
+              onSwipeRight={handleSwipeRight}
               swipeCommand={swipeCommand}
               onSwipeCommandDone={handleSwipeCommandDone}
             />
@@ -611,6 +632,15 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_400Regular',
     textAlign: 'center',
     lineHeight: 22,
+  },
+  exampleTrText: {
+    color: 'rgba(255,255,255,0.65)',
+    fontSize: 13,
+    fontStyle: 'italic',
+    fontFamily: 'Inter_400Regular',
+    textAlign: 'center',
+    lineHeight: 19,
+    marginTop: spacing.xs,
   },
   speakHitArea: {
     alignItems: 'center',

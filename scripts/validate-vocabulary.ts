@@ -50,8 +50,11 @@ const slashTranslation: { id: number; word: string; translation: string }[]  = [
 const posCounts:   Record<string, number> = {};
 const topicCounts: Record<string, number> = {};
 
+let withExTr  = 0;
 let withPOS   = 0;
 let withTopic = 0;
+
+const shortExampleTr: { id: number; word: string; exampleTr: string }[] = [];
 
 // ─── Scan ─────────────────────────────────────────────────────────────────────
 
@@ -70,6 +73,15 @@ for (const w of vocabulary) {
   // Example check
   if (!w.example || w.example.trim().length < MIN_EXAMPLE_LENGTH) {
     shortExample.push({ id: w.id, word: w.word, example: w.example ?? '' });
+  }
+
+  // exampleTr check — optional; count when present, warn if too short
+  if (w.exampleTr) {
+    if (w.exampleTr.trim().length >= 5) {
+      withExTr++;
+    } else {
+      shortExampleTr.push({ id: w.id, word: w.word, exampleTr: w.exampleTr });
+    }
   }
 
   // Translation check
@@ -127,6 +139,7 @@ console.log(`   hard        : ${distribution.hard}`);
 
 // ── Metadata coverage ───────────────────────────────────────────────────────
 console.log(`\n📊 Metadata coverage`);
+console.log(`   exampleTr    : ${withExTr} / ${vocabulary.length} (${pct(withExTr, vocabulary.length)})`);
 console.log(`   partOfSpeech : ${withPOS} / ${vocabulary.length} (${pct(withPOS, vocabulary.length)})`);
 console.log(`   topic        : ${withTopic} / ${vocabulary.length} (${pct(withTopic, vocabulary.length)})`);
 
@@ -177,6 +190,16 @@ if (noTranslation.length === 0) {
   console.log(`❌ Missing translations (${noTranslation.length}):`);
   for (const t of noTranslation) {
     console.log(`   id:${t.id} "${t.word}"`);
+  }
+}
+
+console.log(`\n${hr}`);
+if (shortExampleTr.length === 0) {
+  console.log('✅ All present exampleTr values are valid (or none set yet).');
+} else {
+  console.log(`⚠️  exampleTr values too short — < 5 chars (${shortExampleTr.length}):`);
+  for (const e of shortExampleTr) {
+    console.log(`   id:${e.id} "${e.word}" → "${e.exampleTr}"`);
   }
 }
 

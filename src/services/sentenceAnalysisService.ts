@@ -2818,7 +2818,10 @@ export function analyzeSentenceLocal(input: LocalAnalysisInput): LocalAnalysisRe
 }
 
 function _localAnalyze({ targetWord, sentence }: LocalAnalysisInput): LocalAnalysisResult {
-  const trimmed = sentence.trim();
+  // Normalize typographic/smart apostrophes (U+2018 ' and U+2019 ') to the
+  // plain ASCII apostrophe (U+0027) so all downstream regex patterns that use
+  // don'?t / doesn'?t / ... work regardless of the keyboard/input source.
+  const trimmed = sentence.trim().replace(/[‘’]/g, "'");
 
   // ── Guard: empty input ────────────────────────────────────────────────────
   if (!trimmed) {

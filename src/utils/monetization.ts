@@ -29,6 +29,18 @@ export const FREE_DAILY_AI_ANALYSES = 50;
 /** Extra AI analysis uses granted to a free user when they watch a rewarded ad. */
 export const REWARDED_AD_AI_BONUS = 20;
 
+// ─── QA / testing flags ───────────────────────────────────────────────────────
+// ⚠️  TESTING ONLY — set all flags below to false before production release.
+
+/**
+ * When true, bypasses the "daily base session already started" gate in
+ * HomeScreen so free users can press "Derse Başla" unlimited times per day.
+ *
+ * Production value: false
+ * Restore by setting this constant back to false.
+ */
+export const DEBUG_BYPASS_DAILY_LESSON_GATE = true; // TODO: restore to false before production
+
 // ─── Rewarded Ad ─────────────────────────────────────────────────────────────
 //
 // The implementation lives in src/services/rewardedAdService:

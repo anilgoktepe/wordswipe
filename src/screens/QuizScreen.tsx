@@ -56,11 +56,13 @@ function generateQuiz(words: Word[], level: 'easy' | 'medium' | 'hard'): QuizQue
 
 interface Props {
   navigation: any;
+  route?: { params?: { selfRatings?: Record<number, 'know' | 'dont_know'> } };
 }
 
-export const QuizScreen: React.FC<Props> = ({ navigation }) => {
+export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
   const { state, dispatch } = useApp();
   const theme = getTheme(state.darkMode);
+  const selfRatings = route?.params?.selfRatings ?? {};
 
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
@@ -148,6 +150,15 @@ export const QuizScreen: React.FC<Props> = ({ navigation }) => {
         newCorrect = correctCount + 1;
         setCorrectCount(newCorrect);
         dispatch({ type: 'MARK_WORD_LEARNED', wordId: q.word.id });
+        // User didn't feel confident during flashcard phase → review again tomorrow
+        // even though they answered correctly (avoids premature long SRS interval).
+        if (selfRatings[q.word.id] === 'dont_know') {
+          dispatch({ type: 'SCHEDULE_WORD_REVIEW', wordId: q.word.id });
+        }
+      } else {
+        // Wrong first, eventually correct — word stays difficult but move review to tomorrow
+        // so it doesn't resurface immediately in the next lesson.
+        dispatch({ type: 'SCHEDULE_WORD_REVIEW', wordId: q.word.id });
       }
 
       setTimeout(() => {

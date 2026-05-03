@@ -22,6 +22,7 @@ import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import {
   ALL_LESSON_SIZES,
   FREE_SESSION_CAP,
+  DEBUG_BYPASS_DAILY_LESSON_GATE,
   showRewardedAd,
   isRewardedAdReady,
 } from '../utils/monetization';
@@ -206,7 +207,8 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     // bonus bypass is no longer active.
     // bonusWordsActive is false when: bonus not claimed, OR bonus session
     // already started, OR dailyProgress >= 10 — all three cases should block.
-    if (!isPremium && state.dailyBaseSessionStarted && !bonusWordsActive) {
+    // TODO: restore gate (remove DEBUG_BYPASS_DAILY_LESSON_GATE) before production
+    if (!isPremium && state.dailyBaseSessionStarted && !bonusWordsActive && !DEBUG_BYPASS_DAILY_LESSON_GATE) {
       showPremiumModal(
         'Günlük Limit Doldu',
         'Bugünkü ücretsiz dersini tamamladın. Yarın yeni kelimeler seni bekliyor ya da Premium\'a geçerek sınırsız öğren.',

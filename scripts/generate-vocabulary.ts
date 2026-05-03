@@ -82,6 +82,7 @@ interface CSVRow {
   word:         string;
   translation:  string;
   example:      string;
+  exampleTr:    string;
   level:        string;
   cefrLevel:    string;
   partOfSpeech: string;
@@ -120,6 +121,7 @@ interface ParsedWord {
   word:          string;
   translation:   string;
   example:       string;
+  exampleTr?:    string;
   level:         'easy' | 'medium' | 'hard';
   cefrLevel?:    string;
   partOfSpeech?: string;
@@ -201,6 +203,7 @@ function validateRows(rows: CSVRow[]): ValidationResult {
       word:         r.word.trim(),
       translation:  r.translation.trim(),
       example:      r.example.trim(),
+      exampleTr:    r.exampleTr?.trim() || undefined,
       level:        r.level as 'easy' | 'medium' | 'hard',
       cefrLevel:    VALID_CEFR.has(r.cefrLevel)    ? r.cefrLevel    : undefined,
       partOfSpeech: VALID_POS.has(r.partOfSpeech)   ? r.partOfSpeech : undefined,
@@ -245,6 +248,7 @@ function wordToLine(w: ParsedWord & { id: number }): string {
     `example: '${escapeStr(w.example)}'`,
     `level: '${w.level}'`,
   ];
+  if (w.exampleTr)    parts.push(`exampleTr: '${escapeStr(w.exampleTr)}'`);
   if (w.cefrLevel)    parts.push(`cefrLevel: '${w.cefrLevel}'`);
   if (w.partOfSpeech) parts.push(`partOfSpeech: '${w.partOfSpeech}'`);
   if (w.topic)        parts.push(`topic: '${w.topic}'`);
@@ -300,10 +304,12 @@ function printReport(
   console.log(`   medium      : ${medium}`);
   console.log(`   hard        : ${hard}`);
 
-  // POS coverage
+  // Field coverage
+  const withExTr  = words.filter(w => w.exampleTr).length;
   const withPOS   = words.filter(w => w.partOfSpeech).length;
   const withTopic = words.filter(w => w.topic).length;
   console.log(`\n📊 Metadata coverage`);
+  console.log(`   exampleTr    : ${withExTr} / ${words.length} (${pct(withExTr, words.length)})`);
   console.log(`   partOfSpeech : ${withPOS} / ${words.length} (${pct(withPOS, words.length)})`);
   console.log(`   topic        : ${withTopic} / ${words.length} (${pct(withTopic, words.length)})`);
 

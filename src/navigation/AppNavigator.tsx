@@ -30,7 +30,7 @@ export type RootStackParamList = {
   LevelSelection: undefined;
   Main: undefined;
   Flashcard: undefined;
-  Quiz: undefined;
+  Quiz: { selfRatings?: Record<number, 'know' | 'dont_know'> } | undefined;
   Results: undefined;
   DifficultWords: undefined;
   Settings: undefined;
@@ -192,17 +192,17 @@ export const AppNavigator: React.FC = () => {
         <Stack.Screen
           name="Flashcard"
           component={FlashcardScreen}
-          options={{ animation: 'slide_from_bottom' }}
+          options={{ animation: 'slide_from_bottom', gestureEnabled: false }}
         />
         <Stack.Screen
           name="Quiz"
           component={QuizScreen}
-          options={{ animation: 'slide_from_right' }}
+          options={{ animation: 'slide_from_right', gestureEnabled: false }}
         />
         <Stack.Screen
           name="Results"
           component={ResultsScreen}
-          options={{ animation: 'fade' }}
+          options={{ animation: 'fade', gestureEnabled: false }}
         />
         <Stack.Screen
           name="DifficultWords"
@@ -212,7 +212,7 @@ export const AppNavigator: React.FC = () => {
         <Stack.Screen
           name="SentenceBuilder"
           component={SentenceBuilderScreen}
-          options={{ animation: 'slide_from_bottom' }}
+          options={{ animation: 'slide_from_bottom', gestureEnabled: false }}
         />
         <Stack.Screen
           name="Premium"

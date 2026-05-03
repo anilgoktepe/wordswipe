@@ -153,7 +153,7 @@ export interface AppState {
 }
 
 // ─── Actions (unchanged surface API so all screens keep working) ─────────────
-type Action =
+export type Action =
   | { type: 'SET_LEVEL'; level: Level }
   | { type: 'ADD_XP'; amount: number }
   | { type: 'UPDATE_STREAK' }
@@ -182,7 +182,7 @@ type Action =
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const initialState: AppState = {
+export const initialState: AppState = {
   level: null,
   xp: 0,
   streak: 0,
@@ -212,7 +212,7 @@ const initialState: AppState = {
 };
 
 /** Build an empty progress entry for a word that has never been seen */
-function emptyProgress(): WordProgress {
+export function emptyProgress(): WordProgress {
   return {
     seenCount: 0,
     correctCount: 0,
@@ -275,7 +275,7 @@ function migrateFromLegacy(
 }
 
 // ─── Reducer ─────────────────────────────────────────────────────────────────
-function reducer(state: AppState, action: Action): AppState {
+export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     // ── Simple non-progress actions ──────────────────────────────────────────
     case 'SET_LEVEL':
@@ -777,7 +777,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (result.length < target) {
       for (const w of [...newWords, ...reviewCandidates]) {
         if (result.length >= target) break;
-        if (!added.has(w.id)) {
+        if (!added.has(w.id) && !lastLesson.has(w.id)) {
           added.add(w.id);
           result.push(w);
         }

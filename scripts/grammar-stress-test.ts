@@ -1472,6 +1472,86 @@ const TEST_CASES: TestCase[] = [
     expectedStatus: 'perfect', shouldAwardXp: true,
     note: 'Must-not-flag: "technology" used correctly with no errors. Baseline control for the spelling-severity category.',
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CATEGORY: neg-imperative-valid  (Sprint 10 — "Don't / do not + base verb")
+  //
+  // Smart-apostrophe normalization fix: ‘/’ → U+0027 before all
+  // regex processing, so _FINITE_AUX_RE (don'?t) matches correctly.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  {
+    id: 196, category: 'neg-imperative-valid',
+    targetWord: 'expect', sentence: 'Don’t expect us to come',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Primary failing case — smart apostrophe (U+2019) in "Don’t". After normalization _FINITE_AUX_RE matches and finite-verb check passes.',
+  },
+  {
+    id: 197, category: 'neg-imperative-valid',
+    targetWord: 'expect', sentence: "Don't expect us to come",
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Baseline: regular ASCII apostrophe — was already handled by _FINITE_AUX_RE (don\'?t).',
+  },
+  {
+    id: 198, category: 'neg-imperative-valid',
+    targetWord: 'expect', sentence: 'Do not expect us to come',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: '"do not" negative imperative — "do" matched by _FINITE_AUX_RE directly.',
+  },
+  {
+    id: 199, category: 'neg-imperative-valid',
+    targetWord: 'open', sentence: 'Don’t open the door',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Smart apostrophe, different verb. Confirms fix generalises beyond "expect".',
+  },
+  {
+    id: 200, category: 'neg-imperative-valid',
+    targetWord: 'forget', sentence: 'Don’t forget your keys',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Smart apostrophe negative imperative — short sentence, base verb.',
+  },
+  {
+    id: 201, category: 'neg-imperative-valid',
+    targetWord: 'compare', sentence: 'Don’t compare yourself to others',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Smart apostrophe, sentence contains "to" — ensures neg-aux-to rule does NOT fire (trigger not immediately adjacent to "to").',
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CATEGORY: neg-imperative-invalid  (invalid negative imperative forms)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  {
+    id: 202, category: 'neg-imperative-invalid',
+    targetWord: 'go', sentence: "Don't went there",
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"don\'t + irregular past" — Rule 10 (_checkWrongFormAfterAuxiliary) fires: "went" is past of "go"; base form required after don\'t.',
+  },
+  {
+    id: 203, category: 'neg-imperative-invalid',
+    targetWord: 'open', sentence: "Don't opened the door",
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"don\'t + regular -ed form" — _localHasDoDidPastForm fires: "opened" ends in consonant+ed.',
+  },
+  {
+    id: 204, category: 'neg-imperative-invalid',
+    targetWord: 'expect', sentence: 'Do not expected us to come',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"do not + regular -ed form" — _localHasDoDidPastForm fires: "expected" ends in consonant+ed.',
+  },
+  {
+    id: 205, category: 'neg-imperative-invalid',
+    targetWord: 'go', sentence: "Don't to go there",
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"don\'t to + base verb" — neg-aux-to pattern fires: trigger immediately followed by "to".',
+  },
+  {
+    id: 206, category: 'neg-imperative-invalid',
+    targetWord: 'use', sentence: "Don't using your phone here",
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"don\'t + gerund" — local engine cannot detect this pattern (no don\'t+gerund rule); known local-rule limit.',
+    knownLimit: true,
+  },
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────
