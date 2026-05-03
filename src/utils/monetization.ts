@@ -24,22 +24,19 @@ export const FREE_SESSION_CAP = 5;
 export const FREE_SENTENCE_SESSION_CAP = 5;
 
 /** Max automatic detailed AI analyses a free user may receive per calendar day. */
-export const FREE_DAILY_AI_ANALYSES = 50;
+export const FREE_DAILY_AI_ANALYSES = 5;
 
 /** Extra AI analysis uses granted to a free user when they watch a rewarded ad. */
-export const REWARDED_AD_AI_BONUS = 20;
+export const REWARDED_AD_AI_BONUS = 5;
 
-// ─── QA / testing flags ───────────────────────────────────────────────────────
-// ⚠️  TESTING ONLY — set all flags below to false before production release.
+// ─── Feature flags ────────────────────────────────────────────────────────────
 
 /**
  * When true, bypasses the "daily base session already started" gate in
  * HomeScreen so free users can press "Derse Başla" unlimited times per day.
- *
- * Production value: false
- * Restore by setting this constant back to false.
+ * Keep false in all non-debug builds.
  */
-export const DEBUG_BYPASS_DAILY_LESSON_GATE = true; // TODO: restore to false before production
+export const DEBUG_BYPASS_DAILY_LESSON_GATE = false;
 
 // ─── Rewarded Ad ─────────────────────────────────────────────────────────────
 //
