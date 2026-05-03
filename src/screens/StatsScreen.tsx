@@ -50,7 +50,7 @@ const AnimatedProgressBar: React.FC<{
       <Animated.View style={{ width: anim, height: '100%', borderRadius: height / 2, overflow: 'hidden' }}>
         {isGradient ? (
           <LinearGradient
-            colors={color as string[]}
+            colors={color as [string, string, ...string[]]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={{ flex: 1 }}

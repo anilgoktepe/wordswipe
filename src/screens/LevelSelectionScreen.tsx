@@ -82,19 +82,19 @@ const HOW_IT_WORKS = [
     num: '1',
     gradient: ['#43D99D', '#38BDF8'] as [string, string],
     title: 'Kartı çevir',
-    desc: 'Kelimeyi gör, anlamını öğren. Biliyorsan ilerle, bilmiyorsan tekrar gör.',
+    desc: 'Kelimeyi gör, anlamını öğren. Biliyorsan sağa, bilmiyorsan sola kaydır.',
   },
   {
     num: '2',
     gradient: ['#6C63FF', '#9B5CF6'] as [string, string],
-    title: 'Cümle kur',
-    desc: 'Öğrendiğin kelimeyi kullanarak kendi cümleni yaz. Pratik yapmak en iyi öğrenme yöntemi.',
+    title: 'Quiz\'de kendini test et',
+    desc: 'Hemen ardından kısa bir çoktan seçmeli quiz. Ne kadarını aklında tuttuğunu göster.',
   },
   {
     num: '3',
     gradient: ['#FF6584', '#F59E0B'] as [string, string],
-    title: 'AI feedback al',
-    desc: 'Dilbilgisi ve doğallık hatalarını anında öğren. Premium\'da sınırsız, ücretsizde günde 3 kez.',
+    title: 'Cümle yaz, AI kontrol et',
+    desc: 'Öğrendiğin kelimeyle kendi cümleni yaz. Gramer ve doğallık hatalarını anında öğren.',
   },
 ];
 

@@ -183,6 +183,7 @@ export const AppNavigator: React.FC = () => {
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
+        id="root"
         initialRouteName={hasLevel ? 'Main' : 'LevelSelection'}
         screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
       >

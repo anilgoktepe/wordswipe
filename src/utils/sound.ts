@@ -8,6 +8,7 @@
  *         playsInSilentModeIOS: true so sounds work without unmuting.
  */
 import { Platform } from 'react-native';
+import { setAudioModeAsync, createAudioPlayer, AudioPlayer } from 'expo-audio';
 
 // ─── Web Audio synthesis (web only) ──────────────────────────────────────────
 
@@ -52,7 +53,7 @@ const soundFiles: Record<SoundKey, any> = {
   flip:     require('../../assets/sounds/correct.wav'),
 };
 
-const cache: Partial<Record<SoundKey, Audio.Sound>> = {};
+const cache: Partial<Record<SoundKey, AudioPlayer>> = {};
 let audioReady = false;
 
 /**
@@ -62,24 +63,20 @@ let audioReady = false;
 async function init(): Promise<void> {
   if (Platform.OS === 'web') return;
   try {
-    await Audio.setAudioModeAsync({
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: false,
-      shouldDuckAndroid: true,
+    await setAudioModeAsync({
+      playsInSilentMode: true,
+      interruptionMode: 'duckOthers',
+      shouldPlayInBackground: false,
     });
 
-    // Preload all sounds in parallel
-    await Promise.all(
-      (Object.keys(soundFiles) as SoundKey[]).map(async (key) => {
-        try {
-          const { sound } = await Audio.Sound.createAsync(soundFiles[key], {
-            shouldPlay: false,
-            volume: key === 'flip' ? 0.25 : 0.5,
-          });
-          cache[key] = sound;
-        } catch (_) {}
-      }),
-    );
+    // Preload all sounds
+    for (const key of Object.keys(soundFiles) as SoundKey[]) {
+      try {
+        const player = createAudioPlayer(soundFiles[key]);
+        player.volume = key === 'flip' ? 0.25 : 0.5;
+        cache[key] = player;
+      } catch (_) {}
+    }
 
     audioReady = true;
   } catch (_) {}
@@ -91,13 +88,13 @@ async function init(): Promise<void> {
  */
 async function playNative(key: SoundKey): Promise<void> {
   if (!audioReady) return;
-  const sound = cache[key];
-  if (!sound) return;
+  const player = cache[key];
+  if (!player) return;
   try {
-    // Stop + rewind so rapid triggers don't stack
-    await sound.stopAsync();
-    await sound.setPositionAsync(0);
-    await sound.playAsync();
+    // Pause + rewind so rapid triggers don't stack
+    player.pause();
+    await player.seekTo(0);
+    player.play();
   } catch (_) {}
 }
 

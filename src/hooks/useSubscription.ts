@@ -158,9 +158,14 @@ export function useSubscription(): UseSubscriptionReturn {
         // again is a no-op (idempotent SET_PREMIUM) and ensures correctness even
         // if the callback fires after component unmount.
         dispatch({ type: 'SET_PREMIUM', isPremium: true });
-      } else if (!result.userCancelled && result.error) {
+      } else {
         // User cancellations are silent — no error message shown.
-        setPurchaseError(result.error);
+        // Explicit cast because TS doesn't narrow discriminated unions inside
+        // async useCallback try blocks reliably.
+        const failResult = result as { success: false; userCancelled?: boolean; error?: string };
+        if (!failResult.userCancelled && failResult.error) {
+          setPurchaseError(failResult.error);
+        }
       }
     } finally {
       if (_mounted.current) {
@@ -186,10 +191,14 @@ export function useSubscription(): UseSubscriptionReturn {
       if (result.found) {
         dispatch({ type: 'SET_PREMIUM', isPremium: true });
         setRestoreMessage('Aboneliğiniz başarıyla geri yüklendi!');
-      } else if (result.error) {
-        setRestoreMessage(`Geri yükleme başarısız: ${result.error}`);
       } else {
-        setRestoreMessage('Aktif abonelik bulunamadı.');
+        // Explicit cast — same TS narrowing limitation as above.
+        const failResult = result as { found: false; error?: string };
+        if (failResult.error) {
+          setRestoreMessage(`Geri yükleme başarısız: ${failResult.error}`);
+        } else {
+          setRestoreMessage('Aktif abonelik bulunamadı.');
+        }
       }
     } finally {
       if (_mounted.current) {

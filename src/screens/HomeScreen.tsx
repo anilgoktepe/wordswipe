@@ -306,7 +306,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   // Learned word count for Cümle Kur badge
   const learnedCount = vocabulary.filter(w => {
     const wp = state.wordProgress[w.id];
-    return wp ? wp.correctCount >= 2 : false;
+    return wp ? wp.correctCount >= 1 : false;
   }).length;
 
   // Goal-complete bar animation: fades between purple → green
@@ -610,11 +610,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <MaterialCommunityIcons name="format-list-bulleted" size={24} color="#6C63FF" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.actionTitle, { color: theme.text }]}>Kelime Havuzu</Text>
+              <Text style={[styles.actionTitle, { color: theme.text }]}>Zorlu Kelimelerim</Text>
               <Text style={[styles.actionSub, { color: theme.textSecondary }]}>
-                {seenCount > 0
-                  ? `${seenCount} kelime görüldü · ${difficultWords.length > 0 ? `${difficultWords.length} zorlu` : 'Zor yok'}`
-                  : 'Henüz kelime yok · Derse başla'}
+                {difficultWords.length > 0
+                  ? `${difficultWords.length} kelime tekrar gerektiriyor`
+                  : 'Henüz zorlu kelimen yok — harika!'}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.textTertiary} />
