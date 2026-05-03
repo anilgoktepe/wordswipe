@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "description": "Swipe yaparak İngilizce kelime öğren! 300+ kelime, günlük dersler, akıllı tekrar sistemi ve XP ödül sistemi ile eğlenceli öğrenme.",
+    "description": "Swipe yaparak İngilizce kelime öğren! 500+ kelime, günlük dersler, akıllı tekrar sistemi ve XP ödül sistemi ile eğlenceli öğrenme.",
     "primaryColor": "#6C63FF",
     "githubUrl": "https://github.com/wordswipe/wordswipe",
     "splash": {
@@ -56,7 +56,7 @@
       "favicon": "./assets/favicon.png",
       "name": "WordSwipe - İngilizce Öğren",
       "shortName": "WordSwipe",
-      "description": "Swipe yaparak İngilizce kelime öğren. 300+ kelime, günlük dersler.",
+      "description": "Swipe yaparak İngilizce kelime öğren. 500+ kelime, günlük dersler.",
       "themeColor": "#6C63FF",
       "backgroundColor": "#6C63FF",
       "lang": "tr",
