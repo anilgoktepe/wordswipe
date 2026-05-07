@@ -1,0 +1,51 @@
+id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
+auto,report,rapor,She wrote a detailed report about the company's sales performance.,Şirketin satış performansı hakkında ayrıntılı bir rapor yazdı.,medium,B1,noun,business
+auto,group,grup,A group of students gathered in the library to work on their project.,Bir grup öğrenci projeleri üzerinde çalışmak için kütüphanede toplandı.,easy,A2,noun,social
+auto,case,durum,This is a difficult case that requires careful thinking and attention.,Bu dikkatli düşünme ve dikkat gerektiren zor bir durumdur.,medium,B1,noun,academic
+auto,around,etrafına,She looked around but could not find her keys anywhere in the house.,Etrafına baktı ama evde anahtarlarını hiçbir yerde bulamadı.,easy,A2,adverb,daily
+auto,seem,görünmek,You seem tired after working all day without a single break.,Bütün gün mola vermeden çalıştıktan sonra yorgun görünüyorsun.,medium,B1,verb,daily
+auto,let,izin vermek,Her parents let her go to the concert with her friends.,Ailesi arkadaşlarıyla konsere gitmesine izin verdi.,easy,A2,verb,social
+auto,again,tekrar,Please read the instructions again before starting the exam.,Sınava başlamadan önce lütfen talimatları tekrar okuyun.,easy,A2,adverb,daily
+auto,kind,nazik,She is always kind to everyone she meets in the workplace.,İş yerinde tanıştığı herkese her zaman nazik davranır.,easy,A2,adjective,social
+auto,keep,saklamak,Please keep the receipt in case you need to return the item.,Ürünü iade etmeniz gerekebilir diye lütfen fişi saklayın.,easy,A2,verb,daily
+auto,hear,duymak,I could not hear the teacher clearly because the room was very noisy.,Sınıf çok gürültülü olduğundan öğretmeni net bir şekilde duyamadım.,easy,A2,verb,daily
+auto,system,sistem,The school uses a digital system to track student attendance every day.,Okul her gün öğrenci devam durumunu takip etmek için dijital bir sistem kullanıyor.,medium,B1,noun,technology
+auto,always,her zaman,She always arrives at the office before everyone else in the morning.,Sabahları her zaman ofise herkesten önce gelir.,easy,A1,adverb,daily
+auto,set,ayarlamak,Please set your alarm for six o'clock tomorrow morning.,Lütfen yarın sabah için alarmanızı saat altıya ayarlayın.,easy,A2,verb,daily
+auto,study,çalışmak,I need to study for my exam at the end of this week.,Bu haftanın sonundaki sınavım için çalışmam gerekiyor.,easy,A2,verb,education
+auto,follow,takip etmek,Please follow the safety instructions carefully before boarding the plane.,Lütfen uçağa binmeden önce güvenlik talimatlarını dikkatlice takip edin.,easy,A2,verb,daily
+auto,begin,başlamak,The concert will begin in thirty minutes so please take your seats.,Konser otuz dakika içinde başlayacağı için lütfen yerlerinizi alın.,easy,A2,verb,daily
+auto,turn,dönmek,Turn left at the traffic lights and then walk straight to the hotel.,Trafik ışıklarında sola dönün ve ardından otele doğru düz yürüyün.,easy,A2,verb,daily
+auto,early,erken,She woke up early to catch the first train to the city center.,Şehir merkezine giden ilk trene yetişmek için erken kalktı.,easy,A2,adverb,daily
+auto,hand,el,She reached out her hand to help him stand up after he fell.,Düştükten sonra kalkmasına yardım etmek için elini uzattı.,easy,A1,noun,daily
+auto,state,devlet,The state provides free education for all children under the age of eighteen.,Devlet on sekiz yaşın altındaki tüm çocuklara ücretsiz eğitim sağlar.,medium,B1,noun,academic
+auto,move,taşınmak,They decided to move to a bigger apartment closer to the city center.,Şehir merkezine daha yakın büyük bir daireye taşınmaya karar verdiler.,easy,A2,verb,daily
+auto,fact,gerçek,It is a well-known fact that regular exercise improves your overall health.,Düzenli egzersizin genel sağlığınızı iyileştirdiği iyi bilinen bir gerçektir.,medium,B1,noun,academic
+auto,area,bölge,The hotel is located in a quiet area close to the city center.,Otel şehir merkezine yakın sakin bir bölgede yer almaktadır.,medium,B1,noun,daily
+auto,large,büyük,The museum has a large collection of paintings from the nineteenth century.,Müzede on dokuzuncu yüzyıldan kalma büyük bir resim koleksiyonu bulunuyor.,easy,A2,adjective,daily
+auto,business,iş,She travels to different cities for business almost every single week.,Neredeyse her hafta iş için farklı şehirlere seyahat ediyor.,medium,B1,noun,business
+auto,order,sipariş vermek,Please order a drink while you wait for the others to arrive.,Diğerleri gelene kadar beklerken lütfen bir içecek sipariş verin.,easy,A2,verb,daily
+auto,government,hükümet,The government announced new plans to improve public transportation in the city.,Hükümet şehirde toplu taşımayı geliştirmeye yönelik yeni planlar açıkladı.,medium,B1,noun,social
+auto,issue,sorun,We need to discuss this issue before it becomes a much bigger problem.,Bu sorun çok daha büyük bir hal almadan önce tartışmamız gerekiyor.,medium,B1,noun,social
+auto,pay,ödemek,I always pay for my groceries with my credit card at the supermarket.,Süpermarkette market alışverişlerimi her zaman kredi kartımla öderim.,easy,A2,verb,daily
+auto,build,inşa etmek,The company plans to build a new office in the city center next year.,Şirket gelecek yıl şehir merkezinde yeni bir ofis inşa etmeyi planlıyor.,medium,B1,verb,business
+auto,hold,tutmak,Please hold the door open for the people coming in behind you.,Lütfen arkanızdan içeri giren insanlar için kapıyı tutun.,easy,A2,verb,daily
+auto,service,hizmet,The restaurant is well known for its excellent food and friendly service.,Restoran mükemmel yemeği ve samimi hizmetiyle geniş çapta tanınıyor.,medium,B1,noun,business
+auto,believe,inanmak,I believe that working hard and staying focused will lead to success.,Sıkı çalışmanın ve odaklanmanın başarıya yol açacağına inanıyorum.,medium,B1,verb,daily
+auto,second,ikinci,Her apartment is on the second floor of the building near the park.,Dairesi parka yakın binanın ikinci katında bulunuyor.,easy,A1,adjective,daily
+auto,hour,saat,I study for at least one hour every evening to improve my English.,İngilizcemi geliştirmek için her akşam en az bir saat çalışıyorum.,easy,A2,noun,daily
+auto,job,iş,She found a new job at a technology company after finishing her degree.,Mezun olduktan sonra bir teknoloji şirketinde yeni bir iş buldu.,easy,A2,noun,business
+auto,plan,plan,What is your plan for the summer holiday this year?,Bu yıl yaz tatili için planın ne?,easy,A2,noun,daily
+auto,result,sonuç,The exam results will be published on the school website next Monday.,Sınav sonuçları gelecek Pazartesi okul web sitesinde yayınlanacak.,medium,B1,noun,education
+auto,away,uzakta,The nearest pharmacy is only five minutes away from this hotel.,En yakın eczane bu otele sadece beş dakika uzakta.,easy,A2,adverb,travel
+auto,example,örnek,Can you give me an example of how to use this word in a sentence?,Bu kelimeyi cümlede nasıl kullanacağıma dair bir örnek verebilir misiniz?,medium,B1,noun,education
+auto,happen,gerçekleşmek,Strange things often happen when you least expect them in life.,Hayatta en az beklediğin anda tuhaf şeyler gerçekleşir.,easy,A2,verb,daily
+auto,offer,teklif etmek,They decided to offer the position to the most experienced candidate.,Pozisyonu en deneyimli adaya teklif etmeye karar verdiler.,medium,B1,verb,business
+auto,young,genç,She is a young doctor who recently opened her own private clinic.,Yakın zamanda kendi özel kliniğini açan genç bir doktor.,easy,A2,adjective,social
+auto,program,program,The university program includes both theoretical lessons and practical training sessions.,Üniversite programı hem teorik dersler hem de pratik eğitim oturumları içeriyor.,medium,B1,noun,education
+auto,lead,yönetmek,She was chosen to lead the project because of her experience and skills.,Deneyimi ve becerileri nedeniyle projeyi yönetmek için seçildi.,medium,B1,verb,business
+auto,buy,satın almak,I want to buy a new laptop before the start of the school year.,Okul yılı başlamadan önce yeni bir dizüstü bilgisayar satın almak istiyorum.,easy,A1,verb,daily
+auto,understand,anlamak,Could you please explain this again because I do not understand the question.,Lütfen tekrar açıklar mısınız çünkü soruyu anlamıyorum.,easy,A2,verb,education
+auto,thank,teşekkür etmek,She called her friend to thank her for the lovely birthday surprise.,Güzel doğum günü sürprizi için arkadaşını arayarak teşekkür etti.,easy,A1,verb,social
+auto,far,uzak,Is the train station far from here or can we walk there?,Tren istasyonu buradan uzak mı yoksa yürüyerek gidebilir miyiz?,easy,A2,adjective,travel
+auto,today,bugün,I have three important meetings today and a presentation in the afternoon.,Bugün üç önemli toplantım ve öğleden sonra bir sunumum var.,easy,A1,adverb,daily

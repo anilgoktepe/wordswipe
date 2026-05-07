@@ -192,6 +192,7 @@ const STOP_WORDS = new Set<string>([
 // flashcard targets: particles, indefinite pronouns, and phrase-bound nouns.
 const BORDERLINE_WORDS = new Set<string>([
   'one', 'out', 'down', 'off', 'something', 'another', 'lot',
+  'yes',
 ]);
 
 function isTeachable(word: string): boolean {

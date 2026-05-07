@@ -1,0 +1,51 @@
+id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
+auto,room,oda,The hotel room was clean and had a view of the sea.,Otel odası temizdi ve deniz manzarası vardı.,easy,A2,noun,travel
+auto,town,kasaba,We spent the afternoon exploring the charming old town together.,Öğleden sonrayı birlikte büyüleyici eski kasabayı keşfederek geçirdik.,easy,A2,noun,travel
+auto,minute,dakika,Please wait a minute while I finish sending this message.,Bu mesajı göndermeyi bitirirken lütfen bir dakika bekleyin.,easy,A2,noun,daily
+auto,eye,göz,The doctor checked my eye and said everything was perfectly fine.,Doktor gözümü kontrol etti ve her şeyin mükemmel olduğunu söyledi.,easy,A2,noun,health
+auto,paper,kağıt,Please write your name and student number at the top of the paper.,Lütfen kağıdın en üstüne adınızı ve öğrenci numaranızı yazın.,easy,A2,noun,education
+auto,note,not,She wrote a note to herself so she would not forget the assignment.,Ödevi unutmamak için kendine bir not yazdı.,easy,A2,noun,education
+auto,picture,resim,There is a beautiful picture of the mountains on the living room wall.,Oturma odası duvarında dağların güzel bir resmi var.,easy,A2,noun,daily
+auto,sign,işaret,Follow the sign to the exit and turn left at the corner.,Çıkış işaretini takip edin ve köşede sola dönün.,easy,A2,noun,travel
+auto,body,vücut,Regular exercise is important for keeping your body healthy and strong.,Düzenli egzersiz vücudunuzu sağlıklı ve güçlü tutmak için önemlidir.,easy,A2,noun,health
+auto,hope,umut,She had hope that things would get better after such a difficult year.,Bu kadar zor bir yılın ardından işlerin daha iyi olacağına dair umudu vardı.,easy,A2,noun,emotions
+auto,light,ışık,The morning light coming through the window made the room feel warm.,Pencereden giren sabah ışığı odayı sıcak hissettirdi.,easy,A2,noun,nature
+auto,film,film,We watched an exciting film together at the cinema on Saturday evening.,Cumartesi akşamı sinemada birlikte heyecan verici bir film izledik.,easy,A2,noun,social
+auto,detail,ayrıntı,We discussed every detail of the contract during the meeting yesterday.,Dün toplantıda sözleşmenin her ayrıntısını konuştuk.,medium,B1,noun,business
+auto,period,dönem,Students must complete all assignments within the exam period.,Öğrenciler tüm ödevleri sınav döneminde tamamlamak zorundadır.,medium,B1,noun,education
+auto,role,rol,Each team member has an important role to play in the project.,Her takım üyesinin projede oynayacağı önemli bir rol var.,medium,B1,noun,social
+auto,learn,öğrenmek,It is never too late to learn a new skill or language.,Yeni bir beceri veya dil öğrenmek için asla geç değildir.,easy,A2,verb,education
+auto,lose,kaybetmek,I always lose my keys when I am in a hurry in the morning.,Sabah acele ettiğimde her zaman anahtarlarımı kaybederim.,easy,A2,verb,daily
+auto,send,göndermek,I will send you the document as soon as I finish editing it.,Düzenlemeyi bitirir bitirmez belgeyi size göndereceğim.,easy,A2,verb,technology
+auto,remember,hatırlamak,Do you remember the name of the restaurant where we had dinner?,Yemek yediğimiz restoranın adını hatırlıyor musun?,easy,A2,verb,daily
+auto,decide,karar vermek,The company decided to open a new branch in a different city.,Şirket farklı bir şehirde yeni bir şube açmaya karar verdi.,easy,A2,verb,business
+auto,enjoy,tadını çıkarmak,We really enjoyed our trip to the coast during the summer holiday.,Yaz tatilinde kıyıya yaptığımız gezinin tadını gerçekten çıkardık.,easy,A2,verb,travel
+auto,wear,giymek,She always wears comfortable shoes when she walks to the office.,Ofise yürürken her zaman rahat ayakkabı giyer.,easy,A2,verb,daily
+auto,stay,kalmak,We decided to stay at a small hotel near the beach for five nights.,Beş gece plaja yakın küçük bir otelde kalmaya karar verdik.,easy,A2,verb,travel
+auto,grow,büyümek,The plant grows quickly when you water it every day.,Bitkiyi her gün suladığınızda hızla büyür.,easy,A2,verb,nature
+auto,agree,hemfikir olmak,I agree that we should meet earlier to discuss the new plans.,Yeni planları tartışmak için daha erken buluşmamız gerektiğine katılıyorum.,medium,B1,verb,social
+auto,create,oluşturmak,She used her laptop to create a new document for the presentation.,Sunum için yeni bir belge oluşturmak amacıyla dizüstü bilgisayarını kullandı.,medium,B1,verb,technology
+auto,receive,teslim almak,We expect to receive the order by the end of this week.,Siparişi bu haftanın sonuna kadar teslim almayı bekliyoruz.,medium,B1,verb,business
+auto,sure,emin,Are you sure you left your phone on the kitchen table this morning?,Bu sabah telefonunu mutfak masasına bıraktığından emin misin?,easy,A2,adjective,daily
+auto,hard,zor,The final exam was hard but most students managed to pass it.,Final sınavı zordu ama öğrencilerin çoğu geçmeyi başardı.,easy,A2,adjective,education
+auto,clear,açık,The teacher gave a clear explanation so everyone understood the topic.,Öğretmen açık bir açıklama yaptı ve herkes konuyu anladı.,easy,A2,adjective,education
+auto,full,dolu,The bus was completely full so we had to wait for the next one.,Otobüs tamamen doluydu bu yüzden bir sonrakini beklemek zorunda kaldık.,easy,A2,adjective,daily
+auto,free,ücretsiz,The hotel offers free breakfast for all guests staying more than two nights.,Otel iki geceden fazla kalan tüm misafirlere ücretsiz kahvaltı sunuyor.,easy,A2,adjective,business
+auto,short,kısa,The meeting was short and we finished everything in just twenty minutes.,Toplantı kısaydı ve her şeyi yalnızca yirmi dakikada bitirdik.,easy,A2,adjective,daily
+auto,strong,güçlü,A strong body requires regular exercise and a balanced diet every day.,Güçlü bir vücut her gün düzenli egzersiz ve dengeli beslenme gerektirir.,easy,A2,adjective,health
+auto,nice,güzel,It was really nice to meet your family at the dinner party last night.,Dün gece akşam yemeğinde ailenizle tanışmak gerçekten güzeldi.,easy,A2,adjective,social
+auto,low,düşük,The restaurant was popular because the prices were low and the food was good.,Restoran fiyatları düşük ve yemekleri iyi olduğu için popülerdi.,easy,A2,adjective,business
+auto,proud,gururlu,Her parents were very proud when she graduated from university.,Üniversiteden mezun olduğunda ailesi çok gururluydu.,easy,A2,adjective,emotions
+auto,certain,kesin,I am certain this is the right address because I checked it twice.,Bu doğru adres olduğundan kesinlikle eminim çünkü iki kez kontrol ettim.,medium,B1,adjective,daily
+auto,main,ana,The main idea of the text is explained clearly in the first paragraph.,Metnin ana fikri ilk paragrafta açıkça açıklanmaktadır.,medium,B1,adjective,education
+auto,quite,oldukça,It was quite cold outside so I decided to wear my winter coat.,Dışarısı oldukça soğuktu bu yüzden kışlık montumu giymeye karar verdim.,easy,A2,adverb,daily
+auto,often,sık sık,Doctors recommend that you exercise often to stay healthy and avoid illness.,Doktorlar sağlıklı kalmak ve hastalıktan kaçınmak için sık sık egzersiz yapmanızı önerir.,easy,A2,adverb,health
+auto,almost,neredeyse,I have almost finished reading the book and will return it tomorrow.,Kitabı okumayı neredeyse bitirdim ve yarın geri vereceğim.,easy,A2,adverb,daily
+auto,together,birlikte,The whole family ate dinner together every evening during the holidays.,Tatil boyunca tüm aile her akşam birlikte yemek yedi.,easy,A2,adverb,social
+auto,soon,yakında,The train will arrive soon so please make sure you have your ticket ready.,Tren yakında gelecek bu yüzden biletinizin hazır olduğundan emin olun.,easy,A2,adverb,travel
+auto,ever,hiç,Have you ever studied a language other than English or your native language?,İngilizce veya ana diliniz dışında hiç başka bir dil çalıştınız mı?,easy,A2,adverb,education
+auto,ago,önce,She moved to this city two years ago and loves living here.,İki yıl önce bu şehre taşındı ve burada yaşamayı seviyor.,easy,A2,adverb,daily
+auto,outside,dışarıda,We waited outside the museum until it opened at nine in the morning.,Müze sabah dokuzda açılana kadar dışarıda bekledik.,easy,A2,adverb,travel
+auto,sometimes,bazen,I sometimes use a translation app on my phone when I travel abroad.,Yurt dışına seyahat ettiğimde bazen telefonumdaki çeviri uygulamasını kullanırım.,easy,A2,adverb,technology
+auto,actually,aslında,I thought the film would be boring but it was actually very exciting.,Filmin sıkıcı olacağını düşündüm ama aslında çok heyecan vericiydi.,medium,B1,adverb,social
+auto,perhaps,belki,Perhaps we should book the hotel now before all the rooms are taken.,Belki tüm odalar dolmadan önce şimdi oteli rezerve etmeliyiz.,medium,B1,adverb,travel
