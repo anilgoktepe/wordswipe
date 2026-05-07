@@ -111,6 +111,10 @@ WHAT YOU MUST EVALUATE (check ALL of these)
        consist OF       (NOT consist from)
        result IN        (NOT result to/with)
        belong TO        (NOT belong of)
+       listen TO        (NOT listen [noun] without "to")
+         WRONG: "I listen music"           → CORRECT: "I listen to music"
+         WRONG: "I listen the radio"       → CORRECT: "I listen to the radio"
+         CORRECT: "I listen carefully" (adverb follows — no object, no error)
        look forward TO + gerund  ("look forward to meeting" — CORRECT; "look forward to meet" — WRONG)
 
    - Dependent prepositions — noun + preposition:
@@ -121,6 +125,25 @@ WHAT YOU MUST EVALUATE (check ALL of these)
        WRONG: "The importance for learning" → CORRECT: "The importance of learning"
        WRONG: "She has an interest for painting" → CORRECT: "She has an interest in painting"
        type: 'preposition', subtype: 'dependent-preposition', severity: 'error'
+
+   COMMUNICATION VERB + INSTRUMENT: when a communication verb is followed by a person
+   object and then a device/channel noun WITHOUT a preposition, the preposition is missing.
+     WRONG: "I call you my phone"     → CORRECT: "I call you on my phone" / "from my phone"
+     WRONG: "I text you my phone"     → CORRECT: "I text you on my phone" / "from my phone"
+     WRONG: "I contact you my phone"  → CORRECT: "I contact you by phone" / "on my phone"
+     WRONG: "I message you my phone"  → CORRECT: "I message you on my phone"
+   Use severity: "error", type: "preposition", subtype: "missing-preposition".
+
+   GUARD — do NOT confuse with the NAMING / OBJECT-COMPLEMENT pattern, which is CORRECT:
+     CORRECT: "I call you my friend."     (naming — "my friend" is a relational noun / title)
+     CORRECT: "I call you sweetheart."    (address term)
+     CORRECT: "They named him president." (title / role)
+     CORRECT: "I consider him a mentor."  (role / description)
+     CORRECT: "She made him captain."     (role / title)
+   Distinguisher: if the second noun is a DEVICE or CHANNEL (phone, computer, laptop,
+   tablet, email, app, WhatsApp, etc.) → missing preposition error.
+   If it is a HUMAN RELATIONAL NOUN, TITLE, or ADDRESS TERM (friend, sweetheart,
+   president, mentor, captain, boss, teacher, etc.) → valid object complement, no error.
 
    If you are uncertain whether a preposition is wrong (borderline or context-dependent),
    flag it as "suggestion" severity only, NOT "error".

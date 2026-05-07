@@ -438,6 +438,237 @@ test('G6: CHECK_NEW_DAY is a no-op when todayDate already matches today', () => 
   assert(s2.dailyProgress === 7, 'should be no-op when same day');
 });
 
+// ── H. Lesson selection policy (mirrors simplified getDailyWords) ─────────────
+//
+// getDailyWords now returns ONLY words with correctCount===0 AND wrongCount===0
+// at the user's level, excluding lastLessonWordIds, up to lessonSize.
+// No review-candidate fallback.
+
+interface MockWord { id: number; level: string; }
+
+/**
+ * Mirrors the new getDailyWords logic (AppContext.tsx).
+ * Takes a flat word list and a wordProgress map and returns new-only words.
+ */
+function selectNewLessonWords(
+  allVocab: MockWord[],
+  level: string,
+  wp: WP,
+  lastLessonIds: number[],
+  lessonSize: number,
+): MockWord[] {
+  const lastLesson    = new Set(lastLessonIds);
+  const interactedIds = new Set(
+    Object.entries(wp)
+      .filter(([, p]) => p.correctCount > 0 || p.wrongCount > 0)
+      .map(([id]) => Number(id)),
+  );
+  return allVocab
+    .filter(w => w.level === level && !interactedIds.has(w.id) && !lastLesson.has(w.id))
+    .slice(0, lessonSize);
+}
+
+/**
+ * Mirrors the Zorlandıklarım filter (HomeScreen.tsx):
+ *   isDifficult === true OR (wrongCount > 0 AND correctCount === 0)
+ */
+function selectDifficultWords(allIds: number[], wp: WP): number[] {
+  return allIds.filter(id => {
+    const p = wp[id];
+    return p ? p.isDifficult || (p.wrongCount > 0 && p.correctCount === 0) : false;
+  });
+}
+
+/**
+ * Mirrors the Tekrar Et filter (HomeScreen.tsx):
+ *   correctCount > 0 AND nextReviewAt <= now
+ */
+function selectReviewDueWords(allIds: number[], wp: WP, now: number): number[] {
+  return allIds.filter(id => {
+    const p = wp[id];
+    return p && p.correctCount > 0 && p.nextReviewAt <= now;
+  });
+}
+
+const VOCAB: MockWord[] = [
+  { id: 1, level: 'easy' },
+  { id: 2, level: 'easy' },
+  { id: 3, level: 'easy' },
+  { id: 4, level: 'easy' },
+  { id: 5, level: 'easy' },
+  { id: 6, level: 'medium' }, // different level — should not appear in easy lessons
+];
+const ALL_IDS = VOCAB.map(w => w.id);
+
+test('H1: getDailyWords returns words with correctCount===0 AND wrongCount===0 only', () => {
+  // word 1: learned, word 2: wrong — both should be excluded
+  const wp: WP = {
+    1: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: Date.now() + MS_PER_DAY },
+    2: { ...emptyProgress(), wrongCount: 1, isDifficult: true, nextReviewAt: Date.now() + MS_PER_DAY },
+  };
+  const result = selectNewLessonWords(VOCAB, 'easy', wp, [], 10);
+  assert(!result.some(w => w.id === 1), 'learned word (id=1) must not appear');
+  assert(!result.some(w => w.id === 2), 'wrong word (id=2) must not appear');
+  assert(result.some(w => w.id === 3), 'unseen word (id=3) must appear');
+});
+
+test('H2: a word with correctCount=1 is excluded from getDailyWords', () => {
+  const wp: WP = { 1: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: Date.now() + MS_PER_DAY } };
+  const result = selectNewLessonWords(VOCAB, 'easy', wp, [], 10);
+  assert(!result.some(w => w.id === 1), 'correctCount=1 word must be excluded');
+});
+
+test('H3: a word with wrongCount=1 (isDifficult) is excluded from getDailyWords', () => {
+  const wp: WP = { 1: { ...emptyProgress(), wrongCount: 1, isDifficult: true, nextReviewAt: Date.now() + MS_PER_DAY } };
+  const result = selectNewLessonWords(VOCAB, 'easy', wp, [], 10);
+  assert(!result.some(w => w.id === 1), 'wrongCount=1 word must be excluded');
+});
+
+test('H4: in-recovery word (wrongCount=1, correctCount=1) is excluded from getDailyWords', () => {
+  const wp: WP = { 1: { ...emptyProgress(), wrongCount: 1, correctCount: 1, isDifficult: true, isLearned: true, nextReviewAt: Date.now() + MS_PER_DAY } };
+  const result = selectNewLessonWords(VOCAB, 'easy', wp, [], 10);
+  assert(!result.some(w => w.id === 1), 'in-recovery word must be excluded');
+});
+
+test('H5: lastLessonWordIds excludes words from getDailyWords', () => {
+  const result = selectNewLessonWords(VOCAB, 'easy', {}, [1, 2], 10);
+  assert(!result.some(w => w.id === 1), 'lastLesson word (id=1) must be excluded');
+  assert(!result.some(w => w.id === 2), 'lastLesson word (id=2) must be excluded');
+  assert(result.some(w => w.id === 3), 'non-lastLesson word (id=3) must appear');
+});
+
+test('H6: getDailyWords returns at most lessonSize words', () => {
+  const result = selectNewLessonWords(VOCAB, 'easy', {}, [], 3);
+  assert(result.length <= 3, `result length ${result.length} must be ≤ 3`);
+});
+
+test('H7: getDailyWords returns fewer than lessonSize when pool is smaller (no padding)', () => {
+  // Only 2 easy words are unseen; lessonSize is 10
+  const wp: WP = {
+    1: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: Date.now() + MS_PER_DAY },
+    2: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: Date.now() + MS_PER_DAY },
+    3: { ...emptyProgress(), wrongCount: 1, isDifficult: true, nextReviewAt: Date.now() + MS_PER_DAY },
+    4: { ...emptyProgress(), wrongCount: 1, isDifficult: true, nextReviewAt: Date.now() + MS_PER_DAY },
+    5: { ...emptyProgress(), wrongCount: 1, isDifficult: true, nextReviewAt: Date.now() + MS_PER_DAY },
+  };
+  // Wait — 1-5 are all interacted; but we need at least one unseen. Let's redo:
+  // Use only ids 1-3 as interacted, 4-5 remain new
+  const wp2: WP = {
+    1: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: Date.now() + MS_PER_DAY },
+    2: { ...emptyProgress(), wrongCount: 1, isDifficult: true, nextReviewAt: Date.now() + MS_PER_DAY },
+    3: { ...emptyProgress(), wrongCount: 1, isDifficult: true, nextReviewAt: Date.now() + MS_PER_DAY },
+  };
+  // 2 unseen easy words remain (id=4, id=5)
+  const result = selectNewLessonWords(VOCAB, 'easy', wp2, [], 10);
+  assert(result.length === 2, `expected 2 words (no padding), got ${result.length}`);
+});
+
+test('H8: getDailyWords returns [] when all words at level are interacted', () => {
+  const wp: WP = {};
+  for (let i = 1; i <= 5; i++) {
+    wp[i] = { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: Date.now() + MS_PER_DAY };
+  }
+  const result = selectNewLessonWords(VOCAB, 'easy', wp, [], 10);
+  assert(result.length === 0, `expected 0 words, got ${result.length}`);
+});
+
+test('H9: Zorlandıklarım includes isDifficult=true words even with correctCount>0 (in-recovery)', () => {
+  const wp: WP = {
+    1: { ...emptyProgress(), isDifficult: true, wrongCount: 1, correctCount: 1, isLearned: true, nextReviewAt: Date.now() + MS_PER_DAY },
+  };
+  const result = selectDifficultWords([1, 2, 3], wp);
+  assert(result.includes(1), 'in-recovery word (isDifficult=true, correctCount=1) must appear in Zorlandıklarım');
+});
+
+test('H10: Zorlandıklarım includes wrongCount>0, correctCount===0 words', () => {
+  const wp: WP = {
+    1: { ...emptyProgress(), wrongCount: 1, isDifficult: true },
+  };
+  const result = selectDifficultWords([1, 2, 3], wp);
+  assert(result.includes(1), 'wrong-never-correct word must appear in Zorlandıklarım');
+});
+
+test('H11: Zorlandıklarım excludes unseen words (correctCount===0, wrongCount===0)', () => {
+  const result = selectDifficultWords([1, 2, 3], {});
+  assert(!result.includes(1), 'unseen word must not appear in Zorlandıklarım');
+  assert(result.length === 0, 'empty wp → empty Zorlandıklarım');
+});
+
+// ── Voluntary Tekrar Et selection (mirrors HomeScreen.tsx learnedReviewWords) ─
+
+interface MockWordWithId { id: number; }
+
+/**
+ * Mirrors the learnedReviewWords computation in HomeScreen:
+ *   - includes all words with correctCount > 0 (no nextReviewAt gate)
+ *   - sorted: due first → isDifficult → lowest correctCount → most overdue
+ */
+function selectVoluntaryReviewWords(
+  allIds: number[],
+  wp: WP,
+  now: number,
+): number[] {
+  return allIds
+    .filter(id => {
+      const p = wp[id];
+      return p && p.correctCount > 0;
+    })
+    .sort((a, b) => {
+      const pA = wp[a];
+      const pB = wp[b];
+      const aDue = pA.nextReviewAt <= now;
+      const bDue = pB.nextReviewAt <= now;
+      if (aDue !== bDue) return aDue ? -1 : 1;
+      if (pA.isDifficult !== pB.isDifficult) return pA.isDifficult ? -1 : 1;
+      if (pA.correctCount !== pB.correctCount) return pA.correctCount - pB.correctCount;
+      return pA.nextReviewAt - pB.nextReviewAt;
+    });
+}
+
+test('H12: Tekrar Et includes all correctCount>0 words regardless of nextReviewAt', () => {
+  const now = Date.now();
+  const wp: WP = {
+    1: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now - 1000 },        // due
+    2: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },   // future
+    3: { ...emptyProgress(), wrongCount: 1, isDifficult: true, nextReviewAt: now - 1000 },         // wrong, correctCount=0
+  };
+  const result = selectVoluntaryReviewWords([1, 2, 3], wp, now);
+  assert(result.includes(1),  'due correct word must appear in Tekrar Et');
+  assert(result.includes(2),  'future-due correct word must ALSO appear (voluntary review)');
+  assert(!result.includes(3), 'wrong-never-correct word must not appear in Tekrar Et');
+});
+
+test('H13: Tekrar Et priority — due words appear before future words', () => {
+  const now = Date.now();
+  const wp: WP = {
+    1: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },   // future
+    2: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now - 1000 },         // due
+  };
+  const result = selectVoluntaryReviewWords([1, 2], wp, now);
+  assert(result[0] === 2, `due word (id=2) should be first, got id=${result[0]}`);
+  assert(result[1] === 1, `future word (id=1) should be second, got id=${result[1]}`);
+});
+
+test('H14: Tekrar Et priority — among future words, isDifficult before non-difficult', () => {
+  const now = Date.now();
+  const wp: WP = {
+    1: { ...emptyProgress(), correctCount: 2, isLearned: true, isDifficult: false, nextReviewAt: now + MS_PER_DAY },
+    2: { ...emptyProgress(), correctCount: 1, isLearned: true, isDifficult: true,  nextReviewAt: now + MS_PER_DAY },
+  };
+  const result = selectVoluntaryReviewWords([1, 2], wp, now);
+  assert(result[0] === 2, `in-recovery word (id=2, isDifficult) should be first, got id=${result[0]}`);
+});
+
+test('H15: Tekrar Et priority — among same-due-status non-difficult words, lower correctCount first', () => {
+  const now = Date.now();
+  const wp: WP = {
+    1: { ...emptyProgress(), correctCount: 3, isLearned: true, nextReviewAt: now + 2 * MS_PER_DAY },
+    2: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+  };
+  const result = selectVoluntaryReviewWords([1, 2], wp, now);
+  assert(result[0] === 2, `lower correctCount (id=2) should be first, got id=${result[0]}`);
+});
+
 // ─── Summary ───────────────────────────────────────────────────────────────────
 
 function run(): void {

@@ -181,6 +181,13 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleRetryWrong = () => _withRewardedAd('wrong', _execRetryWrong);
 
+  const handleSentenceBuilder = () => {
+    const wordIds = state.sessionWords?.length
+      ? state.sessionWords.map(w => w.id)
+      : undefined;
+    navigation.navigate('SentenceBuilder', wordIds ? { wordIds } : undefined);
+  };
+
   const getCircleColor = (): [string, string] => {
     if (successRate >= 90) return ['#10B981', '#34D399'];
     if (successRate >= 70) return ['#6C63FF', '#9B5CF6'];
@@ -236,6 +243,21 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Ad banner — free users only, max 2 per day */}
           {shouldShowAd && <AdBanner darkMode={state.darkMode} />}
+
+          {/* Sentence Builder CTA */}
+          <Animated.View style={[styles.sentenceCta, { opacity: fadeAnim }]}>
+            <Text style={[styles.sentenceHint, { color: theme.textSecondary }]}>
+              Yeni öğrendiğin kelimeleri cümlede kullanarak pekiştir.
+            </Text>
+            <Button
+              title="Cümle Kur"
+              onPress={handleSentenceBuilder}
+              theme={theme}
+              size="lg"
+              style={styles.btn}
+              icon={<Ionicons name="create" size={18} color="#fff" />}
+            />
+          </Animated.View>
 
           {/* Buttons */}
           <Animated.View style={[styles.buttons, { opacity: fadeAnim }]}>
@@ -350,6 +372,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     fontFamily: 'Inter_700Bold',
+  },
+  sentenceCta: {
+    width: '100%',
+    gap: spacing.sm,
+    alignItems: 'stretch',
+    marginBottom: spacing.sm,
+  },
+  sentenceHint: {
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 18,
+    fontFamily: 'Inter_400Regular',
   },
   buttons: {
     width: '100%',

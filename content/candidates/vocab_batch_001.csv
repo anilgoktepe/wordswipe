@@ -1,0 +1,51 @@
+id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
+auto,village,köy,The small village near the river was very peaceful.,Nehrin yakınındaki küçük köy çok huzurluydu.,easy,A2,noun,social
+auto,weather,hava,The weather today is perfect for a long walk outside.,Bugün hava dışarıda uzun bir yürüyüş için mükemmel.,easy,A2,noun,nature
+auto,weekend,hafta sonu,We usually visit our grandparents on the weekend.,Genellikle hafta sonları büyükanne ve büyükbabamızı ziyaret ederiz.,easy,A2,noun,daily
+auto,opinion,fikir,In my opinion this city has the best food I have ever tasted.,Benim fikrime göre bu şehir yediğim en iyi yemeklere sahip.,easy,A2,noun,social
+auto,kitchen,mutfak,She cooked a delicious meal in the kitchen for the whole family.,Tüm aile için mutfakta lezzetli bir yemek pişirdi.,easy,A2,noun,daily
+auto,library,kütüphane,I borrowed three interesting books from the library last week.,Geçen hafta kütüphaneden üç ilginç kitap ödünç aldım.,easy,A2,noun,education
+auto,party,parti,We are planning a birthday party for my sister this Saturday.,Bu cumartesi kız kardeşim için bir doğum günü partisi planlıyoruz.,easy,A2,noun,social
+auto,lesson,ders,My English lesson starts at nine o'clock every Monday morning.,İngilizce dersim her pazartesi sabahı saat dokuzda başlıyor.,easy,A2,noun,education
+auto,office,ofis,The new office has large windows and a beautiful view of the city.,Yeni ofis büyük pencerelere ve şehrin güzel bir manzarasına sahip.,easy,A2,noun,business
+auto,airport,havalimanı,We arrived at the airport two hours before our flight departed.,Uçuşumuz kalkmadan iki saat önce havalimanına vardık.,easy,A2,noun,travel
+auto,ask,sormak,Please ask the teacher if you do not understand the question.,Soruyu anlamıyorsan lütfen öğretmene sor.,easy,A2,verb,social
+auto,wait,beklemek,We had to wait for almost forty minutes before the bus arrived.,Otobüs gelene kadar neredeyse kırk dakika beklemek zorunda kaldık.,easy,A2,verb,daily
+auto,meet,buluşmak,Let us meet at the café near the station at three o'clock.,Hadi istasyonun yakınındaki kafede saat üçte buluşalım.,easy,A2,verb,social
+auto,bring,getirmek,Could you bring me a glass of water please?,Bana bir bardak su getirir misin lütfen?,easy,A2,verb,daily
+auto,leave,ayrılmak,They decided to leave the city and move somewhere quieter.,Şehirden ayrılıp daha sakin bir yere taşınmaya karar verdiler.,easy,A2,verb,travel
+auto,prefer,tercih etmek,I prefer tea over coffee in the morning when I wake up.,Sabah uyandığımda kahve yerine çayı tercih ederim.,easy,A2,verb,daily
+auto,hungry,aç,The children were very hungry after playing outside all afternoon.,Çocuklar tüm öğleden sonra dışarıda oynadıktan sonra çok açtı.,easy,A2,adjective,health
+auto,busy,meşgul,She was too busy to answer the phone during the long meeting.,Uzun toplantı sırasında telefonu yanıtlamak için çok meşguldü.,easy,A2,adjective,daily
+auto,quiet,sessiz,The library must be quiet so that everyone can study effectively.,Herkes etkili biçimde çalışabilsin diye kütüphane sessiz olmalıdır.,easy,A2,adjective,education
+auto,lucky,şanslı,You are very lucky to have such a supportive and kind family.,Böyle destekleyici ve nazik bir aileye sahip olduğun için çok şanslısın.,easy,A2,adjective,emotions
+auto,already,zaten,The meeting has already started and everyone is waiting for you.,Toplantı zaten başladı ve herkes seni bekliyor.,easy,A2,adverb,daily
+auto,quickly,hızlıca,She quickly finished her homework before dinner and watched TV.,Akşam yemeğinden önce ödevini hızlıca bitirdi ve TV izledi.,easy,A2,adverb,daily
+auto,still,hâlâ,He still lives in the same house where he grew up as a child.,Hâlâ çocukken büyüdüğü aynı evde yaşıyor.,medium,B1,adverb,daily
+auto,yet,henüz,I have not received my exam results yet and I am feeling nervous.,Sınav sonuçlarımı henüz almadım ve gergin hissediyorum.,medium,B1,adverb,education
+auto,nearly,neredeyse,She nearly missed her flight because of the heavy traffic in the city.,Şehirdeki yoğun trafik nedeniyle uçuşunu neredeyse kaçırıyordu.,medium,B1,adverb,travel
+auto,carefully,dikkatle,Read the instructions carefully before you start the exam.,Sınava başlamadan önce talimatları dikkatle okuyun.,medium,B1,adverb,education
+auto,recently,geçenlerde,I recently moved to a new apartment that is closer to my office.,Geçenlerde ofisime daha yakın yeni bir daireye taşındım.,medium,B1,adverb,daily
+auto,immediately,hemen,You should call the doctor immediately if the pain gets worse.,Ağrı kötüleşirse hemen doktoru aramalısınız.,medium,B1,adverb,health
+auto,suddenly,aniden,The lights went out suddenly during the storm last night.,Dün gece fırtına sırasında ışıklar aniden söndü.,medium,B1,adverb,nature
+auto,especially,özellikle,People especially enjoy outdoor activities during warm summer evenings.,İnsanlar sıcak yaz akşamlarında özellikle açık hava etkinliklerinin tadını çıkarır.,medium,B1,adverb,social
+auto,generally,genellikle,People generally prefer warmer weather during their holidays abroad.,İnsanlar genellikle tatillerinde daha sıcak hava tercih eder.,medium,B1,adverb,social
+auto,probably,muhtemelen,It will probably rain tomorrow and you should bring an umbrella.,Yarın muhtemelen yağmur yağacak bu yüzden yanına şemsiye almalısın.,medium,B1,adverb,daily
+auto,clearly,açıkça,She clearly explained the rules before the game started.,Oyun başlamadan önce kuralları açıkça açıkladı.,medium,B1,adverb,social
+auto,currently,şu an,The company is currently working on a new product for international markets.,Şirket şu an uluslararası pazarlar için yeni bir ürün üzerinde çalışıyor.,medium,B2,adverb,business
+auto,increasingly,giderek,Online education is becoming increasingly common in universities around the world.,Çevrimiçi eğitim dünya genelindeki üniversitelerde giderek daha yaygın hale geliyor.,medium,B2,adverb,technology
+auto,crowded,kalabalık,The beach was so crowded that we could not find a comfortable spot.,Plaj o kadar kalabalıktı ki rahat bir yer bulamadık.,medium,B1,adjective,travel
+auto,direct,direkt,We took a direct flight to Tokyo without any stops or layovers.,Tokyo'ya hiç durmadan veya aktarma yapmadan direkt uçuş aldık.,medium,B1,adjective,travel
+auto,scenic,manzaralı,The scenic drive along the coastal road was absolutely breathtaking.,Kıyı yolu boyunca manzaralı sürüş gerçekten nefes kesiciydi.,medium,B2,adjective,travel
+auto,remote,uzak,The village is so remote that very few visitors ever find their way there.,Köy o kadar uzak ki oraya giden çok az ziyaretçi oluyor.,medium,B2,adjective,travel
+auto,domestic,yurt içi,There are many domestic flights available between major cities in the country.,Ülkedeki büyük şehirler arasında pek çok yurt içi uçuş mevcut.,medium,B2,adjective,travel
+auto,compulsory,zorunlu,Wearing a seatbelt is compulsory for all passengers in the vehicle.,Araçtaki tüm yolcular için emniyet kemeri takmak zorunludur.,medium,B2,adjective,education
+auto,advanced,ileri,This course is designed for advanced students who already know the basics.,Bu ders temel bilgilere sahip olan ileri düzey öğrenciler için tasarlanmıştır.,medium,B2,adjective,education
+auto,interactive,etkileşimli,The museum has many interactive exhibits that children really enjoy visiting.,Müzede çocukların ziyaret etmekten gerçekten hoşlandığı birçok etkileşimli sergi var.,medium,B2,adjective,education
+auto,challenging,zorlu,The final exam was very challenging but the students performed exceptionally well.,Final sınavı çok zorlu idi ancak öğrenciler son derece iyi performans gösterdi.,medium,B1,adjective,education
+auto,theoretical,kuramsal,The professor gave a detailed theoretical lecture on the development of language.,Profesör dilin gelişimi üzerine ayrıntılı bir kuramsal ders verdi.,hard,C1,adjective,education
+auto,discuss,tartışmak,We need to discuss this project with the team before our next meeting.,Bu projeyi bir sonraki toplantıdan önce ekiple tartışmamız gerekiyor.,medium,B1,verb,social
+auto,connection,bağlantı,The hotel room has a fast internet connection and a comfortable workspace.,Otel odası hızlı internet bağlantısına ve rahat bir çalışma alanına sahip.,medium,B1,noun,technology
+auto,reason,sebep,The main reason she moved abroad was to improve her career opportunities.,Yurt dışına taşınmasının ana sebebi kariyer fırsatlarını geliştirmekti.,medium,B1,noun,academic
+auto,ability,yetenek,Her ability to speak three languages impressed everyone at the job interview.,Üç dil konuşma yeteneği iş görüşmesinde herkesi etkiledi.,medium,B1,noun,education
+auto,attention,dikkat,Please pay attention to the safety instructions before boarding the plane.,Lütfen uçağa binmeden önce güvenlik talimatlarına dikkat edin.,medium,B1,noun,daily

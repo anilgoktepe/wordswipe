@@ -14,7 +14,10 @@
     "validate:vocab": "tsx scripts/validate-vocabulary.ts",
     "vocab:export": "tsx scripts/export-vocabulary.ts",
     "vocab:generate": "tsx scripts/generate-vocabulary.ts",
-    "vocab:sync": "npm run vocab:generate -- --write && npm run validate:vocab"
+    "vocab:sync": "npm run vocab:generate -- --write && npm run validate:vocab",
+    "validate:candidates": "tsx scripts/validate-vocab-candidates.ts",
+    "merge:candidates": "tsx scripts/merge-vocab-candidates.ts",
+    "select:candidates": "tsx scripts/select-vocab-candidates.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.0",

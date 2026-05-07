@@ -179,14 +179,40 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     : rawDailyWords.slice(0, effectiveCap);
 
   // ── User-facing word classifications (raw counts, not internal SRS flags) ─
-  // difficult = wrong at least once AND never yet answered correctly.
-  //             Matches isDisplayDifficult() in DifficultWordsScreen: the first
-  //             correct answer immediately exits the word from the difficult pool.
+  // difficult = words the user has not yet recovered from:
+  //             • isDifficult flag still set (in active recovery: got some right
+  //               but hasn't cleared 3 consecutive yet), OR
+  //             • wrongCount > 0 AND correctCount === 0 (wrong, never correct)
   // seenCount = words answered at least once (not just seeded at session start)
   const difficultWords = vocabulary.filter(w => {
     const wp = state.wordProgress[w.id];
-    return wp ? wp.wrongCount > 0 && wp.correctCount === 0 : false;
+    return wp ? wp.isDifficult || (wp.wrongCount > 0 && wp.correctCount === 0) : false;
   });
+  // learnedReviewWords = all words with at least one correct answer, sorted by
+  // smart review priority so the most urgent words surface first in a session:
+  //   1. SRS-due words (nextReviewAt <= now)
+  //   2. Difficult / in-recovery learned words (isDifficult === true)
+  //   3. Least-practiced words (lowest correctCount)
+  //   4. Most-overdue by date (tiebreak within same group)
+  // Tekrar Et is available anytime there is at least one learned word — no gate
+  // on nextReviewAt. The SRS schedule still governs what appears *first*, not
+  // whether the card is enabled.
+  const now = Date.now();
+  const learnedReviewWords = vocabulary
+    .filter(w => {
+      const wp = state.wordProgress[w.id];
+      return wp && wp.correctCount > 0;
+    })
+    .sort((a, b) => {
+      const wpA = state.wordProgress[a.id];
+      const wpB = state.wordProgress[b.id];
+      const aDue = wpA.nextReviewAt <= now;
+      const bDue = wpB.nextReviewAt <= now;
+      if (aDue !== bDue) return aDue ? -1 : 1;
+      if (wpA.isDifficult !== wpB.isDifficult) return wpA.isDifficult ? -1 : 1;
+      if (wpA.correctCount !== wpB.correctCount) return wpA.correctCount - wpB.correctCount;
+      return wpA.nextReviewAt - wpB.nextReviewAt;
+    });
   const seenCount = vocabulary.filter(w => {
     const p = state.wordProgress[w.id];
     return p !== undefined && (p.correctCount > 0 || p.wrongCount > 0);
@@ -242,6 +268,14 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
       : difficultWords.slice(0, FREE_SESSION_CAP);
     dispatch({ type: 'SET_SESSION_WORDS', words });
     navigation.navigate('Quiz');
+  };
+
+  const handleReviewWords = () => {
+    if (learnedReviewWords.length === 0) return;
+    const cap = isPremium ? (state.lessonSize ?? 20) : FREE_SESSION_CAP;
+    const words = learnedReviewWords.slice(0, cap);
+    dispatch({ type: 'SET_SESSION_WORDS', words });
+    navigation.navigate('Flashcard');
   };
 
   // ── Bonus words rewarded ad ───────────────────────────────────────────────
@@ -427,13 +461,22 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <Animated.View style={slideStyle(ctaAnim)}>
           <View style={[styles.ctaCard, { backgroundColor: theme.surface, borderColor: theme.cardBorder, ...shadows.lg }]}>
             <View style={styles.ctaHeader}>
-              <Text style={[styles.ctaTitle, { color: theme.text }]}>Bugünün dersi hazır!</Text>
-              <View style={[styles.wordCountBadge, { backgroundColor: theme.primaryLight }]}>
-                <Text style={[styles.wordCountText, { color: theme.primary }]}>{cappedDailyWords.length} kelime</Text>
-              </View>
+              <Text style={[styles.ctaTitle, { color: theme.text }]}>
+                {cappedDailyWords.length > 0 ? 'Bugünün dersi hazır!' : 'Yeni kelime kalmadı'}
+              </Text>
+              {cappedDailyWords.length > 0 ? (
+                <View style={[styles.wordCountBadge, { backgroundColor: theme.primaryLight }]}>
+                  <Text style={[styles.wordCountText, { color: theme.primary }]}>{cappedDailyWords.length} kelime</Text>
+                </View>
+              ) : null}
             </View>
-            {/* Lesson size picker */}
-            <View style={styles.sizePicker}>
+            {cappedDailyWords.length === 0 && (
+              <Text style={[styles.ctaSubtitle, { color: theme.textSecondary, marginBottom: spacing.sm }]}>
+                Bu seviyedeki tüm kelimeleri gördün. Tekrar Et ile pekiştir!
+              </Text>
+            )}
+            {/* Lesson size picker — hidden when no new words remain */}
+            <View style={[styles.sizePicker, cappedDailyWords.length === 0 && { display: 'none' }]}>
               <Text style={[styles.sizeLabel, { color: theme.textSecondary, marginBottom: spacing.xs }]}>
                 Ders büyüklüğü:
               </Text>
@@ -492,6 +535,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               size="lg"
               style={{ marginTop: spacing.lg }}
               icon={<Ionicons name="play" size={20} color="#fff" />}
+              disabled={cappedDailyWords.length === 0}
             />
 
             {/* ── Bonus +5 words rewarded ad (free users, after base session) ── */}
@@ -599,22 +643,30 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
           </Animated.View>
 
-          {/* ── Word Management ── */}
+          {/* ── Tekrar Et (voluntary review) ── */}
           <Animated.View style={slideStyle(card4Anim)}>
           <TouchableOpacity
-            onPress={() => navigation.navigate('DifficultWords')}
-            activeOpacity={0.85}
-            style={[styles.actionCard, { backgroundColor: theme.surface, borderColor: theme.border, ...shadows.sm }]}
+            onPress={handleReviewWords}
+            activeOpacity={learnedReviewWords.length > 0 ? 0.85 : 1}
+            style={[
+              styles.actionCard,
+              {
+                backgroundColor: theme.surface,
+                borderColor: learnedReviewWords.length > 0 ? '#93C5FD' : theme.border,
+                opacity: learnedReviewWords.length === 0 ? 0.55 : 1,
+                ...shadows.sm,
+              },
+            ]}
           >
-            <View style={[styles.actionIcon, { backgroundColor: '#E8E6FF', borderWidth: 1.5, borderColor: '#6C63FF4D' }]}>
-              <MaterialCommunityIcons name="format-list-bulleted" size={24} color="#6C63FF" />
+            <View style={[styles.actionIcon, { backgroundColor: '#DBEAFE', borderWidth: 1.5, borderColor: '#2563EB4D' }]}>
+              <MaterialCommunityIcons name="refresh" size={24} color="#2563EB" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.actionTitle, { color: theme.text }]}>Zorlu Kelimelerim</Text>
+              <Text style={[styles.actionTitle, { color: theme.text }]}>Tekrar Et</Text>
               <Text style={[styles.actionSub, { color: theme.textSecondary }]}>
-                {difficultWords.length > 0
-                  ? `${difficultWords.length} kelime tekrar gerektiriyor`
-                  : 'Henüz zorlu kelimen yok — harika!'}
+                {learnedReviewWords.length > 0
+                  ? 'Öğrendiğin kelimeleri pekiştir'
+                  : 'Önce birkaç kelime öğren'}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.textTertiary} />

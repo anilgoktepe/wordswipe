@@ -1,0 +1,51 @@
+id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
+auto,say,söylemek,Please say your name clearly so everyone in the room can hear you.,Odadaki herkes duyabilsin diye lütfen adınızı net bir şekilde söyleyin.,easy,A2,verb,daily
+auto,know,bilmek,I know the answer to every question on this test.,Bu testteki her sorunun cevabını biliyorum.,easy,A1,verb,daily
+auto,get,almak,I always get a coffee on my way to work in the morning.,Sabahları işe giderken her zaman bir kahve alırım.,easy,A2,verb,daily
+auto,like,sevmek,I like spending time with my family on the weekend.,Hafta sonları ailemle vakit geçirmeyi severim.,easy,A1,verb,daily
+auto,think,düşünmek,I think this restaurant serves the best food in the city.,Bu restoranın şehirdeki en iyi yemeği sunduğunu düşünüyorum.,easy,A2,verb,daily
+auto,make,yapmak,I make a fresh cup of tea for myself every morning.,Her sabah kendime taze bir fincan çay yaparım.,easy,A1,verb,daily
+auto,see,görmek,You can see the mountains clearly from the top of the hill.,Tepeden dağları net bir şekilde görebilirsiniz.,easy,A1,verb,daily
+auto,people,insanlar,Many people visit this museum every year during their holidays.,Pek çok insan her yıl tatillerinde bu müzeyi ziyaret eder.,easy,A1,noun,social
+auto,take,götürmek,She will take her children to school by car this morning.,Bu sabah çocuklarını arabayla okula götürecek.,easy,A1,verb,daily
+auto,come,gelmek,My friends will come to my house for dinner this evening.,Arkadaşlarım bu akşam yemeği için evime gelecek.,easy,A1,verb,daily
+auto,use,kullanmak,I use my phone to set an alarm every morning before work.,Her sabah işten önce alarm kurmak için telefonumu kullanırım.,easy,A2,verb,daily
+auto,look,bakmak,Please look at the board and write down the important notes.,Lütfen tahtaya bakın ve önemli notları yazın.,easy,A1,verb,daily
+auto,want,istemek,I want to travel around Europe during my summer holiday.,Yaz tatilimde Avrupa'yı gezmek istiyorum.,easy,A1,verb,daily
+auto,give,vermek,Please give me your phone number so I can contact you later.,Daha sonra sana ulaşabilmem için lütfen bana telefon numaranı ver.,easy,A1,verb,daily
+auto,first,ilk,This is my first time visiting this beautiful historic city.,Bu güzel tarihi şehri ilk kez ziyaret ediyorum.,easy,A2,adjective,daily
+auto,way,yol,Is there a faster way to get to the train station?,Tren istasyonuna gitmenin daha hızlı bir yolu var mı?,easy,A2,noun,daily
+auto,find,bulmak,I cannot find my keys anywhere in the apartment.,Dairemde anahtarlarımı hiçbir yerde bulamıyorum.,easy,A2,verb,daily
+auto,need,ihtiyaç duymak,You need to study every day if you want to improve your English.,İngilizceni geliştirmek istiyorsan her gün çalışman gerekiyor.,easy,A1,verb,daily
+auto,right,doğru,She gave the right answer and the teacher was very pleased.,Doğru cevabı verdi ve öğretmen çok memnun oldu.,easy,A2,adjective,daily
+auto,back,geri,She came back home after a long and tiring day at work.,Uzun ve yorucu bir iş gününden sonra eve geri döndü.,easy,A2,adverb,daily
+auto,mean,anlamına gelmek,I do not know what this expression is supposed to mean.,Bu ifadenin ne anlama geldiğini bilmiyorum.,medium,B1,verb,education
+auto,last,geçen,We visited Paris last summer and had an amazing time there.,Geçen yaz Paris'i ziyaret ettik ve orada harika vakit geçirdik.,easy,A2,adjective,daily
+auto,child,çocuk,Every child should have access to good education and healthcare.,Her çocuğun kaliteli eğitime ve sağlık hizmetlerine erişimi olmalıdır.,easy,A1,noun,social
+auto,tell,anlatmak,Please tell me what happened at the meeting this morning.,Lütfen bu sabah toplantıda neler olduğunu bana anlatın.,easy,A1,verb,daily
+auto,really,gerçekten,I am really tired after working late every night this week.,Bu hafta her gece geç çalıştıktan sonra gerçekten çok yoruldum.,easy,A2,adverb,daily
+auto,call,aramak,I will call you as soon as I arrive at the airport.,Havalimanına varır varmaz seni arayacağım.,easy,A2,verb,daily
+auto,company,şirket,She started her own company after working in finance for ten years.,On yıl finans sektöründe çalıştıktan sonra kendi şirketini kurdu.,medium,B1,noun,business
+auto,show,göstermek,Can you show me how to get to the nearest metro station?,En yakın metro istasyonuna nasıl gideceğimi gösterebilir misiniz?,easy,A2,verb,daily
+auto,life,hayat,A balanced diet and exercise are important for a healthy life.,Dengeli beslenme ve egzersiz sağlıklı bir hayat için önemlidir.,easy,A2,noun,daily
+auto,change,değiştirmek,I need to change my password because it is not secure enough.,Şifrem yeterince güvenli olmadığı için değiştirmem gerekiyor.,easy,A2,verb,daily
+auto,long,uzun,It was a long drive but we finally arrived at our hotel.,Uzun bir yolculuktu ama sonunda otelimizdeyiz.,easy,A2,adjective,daily
+auto,feel,hissetmek,I always feel happy when I spend time with my close friends.,Yakın arkadaşlarımla vakit geçirdiğimde her zaman mutlu hissederim.,easy,A2,verb,emotions
+auto,great,harika,The concert last night was great and everyone had a wonderful time.,Dün geceki konser harikaydı ve herkes harika vakit geçirdi.,easy,A2,adjective,daily
+auto,try,denemek,You should try the traditional food when you visit a new country.,Yeni bir ülkeye gittiğinizde geleneksel yemeği denemelisiniz.,easy,A2,verb,daily
+auto,part,bölüm,The second part of the exam was more difficult than the first.,Sınavın ikinci bölümü birincisinden daha zordu.,medium,B1,noun,education
+auto,point,nokta,The main point of the presentation was easy to understand.,Sunumun ana noktası anlaşılması kolaydı.,medium,B1,noun,academic
+auto,little,küçük,She lives in a little house near the edge of the forest.,Ormanın kenarına yakın küçük bir evde yaşıyor.,easy,A2,adjective,daily
+auto,talk,konuşmak,We need to talk about the plans for the upcoming weekend.,Yaklaşan hafta sonu planlarını konuşmamız gerekiyor.,easy,A2,verb,social
+auto,put,koymak,Please put the groceries on the kitchen table when you come in.,İçeri girdiğinde alışveriş poşetlerini mutfak masasına koy lütfen.,easy,A2,verb,daily
+auto,become,olmak,She worked very hard every day to become a professional photographer.,Profesyonel bir fotoğrafçı olmak için her gün çok çalıştı.,medium,B1,verb,daily
+auto,interest,ilgi,Reading is my main interest outside of work and daily study.,Okumak iş ve günlük çalışma dışındaki ana ilgi alanımdır.,medium,B1,noun,daily
+auto,late,geç,I was late for the meeting because the traffic was terrible today.,Trafik bugün çok kötüydü bu yüzden toplantıya geç kaldım.,easy,A2,adjective,daily
+auto,high,yüksek,The prices at this restaurant are quite high for a weekday lunch.,Bu restoranın hafta içi öğle yemeği için fiyatları oldukça yüksek.,easy,A2,adjective,daily
+auto,next,sonraki,The next train to the city center will arrive in five minutes.,Şehir merkezine gidecek sonraki tren beş dakika içinde gelecek.,easy,A1,adjective,daily
+auto,end,son,We stayed until the end of the film and then walked home.,Filmin sonuna kadar kaldık ve sonra yürüyerek eve gittik.,easy,A2,noun,daily
+auto,live,yaşamak,My grandparents live in a small village near the coast.,Büyükanne ve büyükbabam kıyıya yakın küçük bir köyde yaşıyor.,easy,A1,verb,daily
+auto,world,dünya,Learning a new language helps you connect with people around the world.,Yeni bir dil öğrenmek dünyanın her yerindeki insanlarla bağlantı kurmanıza yardımcı olur.,easy,A2,noun,social
+auto,play,oynamak,The children play football in the park after school every day.,Çocuklar her gün okuldan sonra parkta futbol oynuyor.,easy,A1,verb,daily
+auto,never,hiçbir zaman,I have never tried sushi but I would like to one day.,Hiçbir zaman suşi denemedim ama bir gün denemek istiyorum.,easy,A2,adverb,daily
+auto,course,ders,She enrolled in an online course to improve her English skills.,İngilizce becerilerini geliştirmek için çevrimiçi bir derse kaydoldu.,medium,B1,noun,education

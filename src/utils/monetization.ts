@@ -35,8 +35,9 @@ export const REWARDED_AD_AI_BONUS = 5;
  * When true, bypasses the "daily base session already started" gate in
  * HomeScreen so free users can press "Derse Başla" unlimited times per day.
  * Keep false in all non-debug builds.
+ * INTERNAL TESTING ONLY — must be set back to false before external beta / TestFlight.
  */
-export const DEBUG_BYPASS_DAILY_LESSON_GATE = false;
+export const DEBUG_BYPASS_DAILY_LESSON_GATE = true;
 
 // ─── Rewarded Ad ─────────────────────────────────────────────────────────────
 //

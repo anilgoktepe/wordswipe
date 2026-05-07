@@ -499,3 +499,103 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 500,semester,dönem,She completed four courses in her first semester.,İlk döneminde dört ders tamamladı.,medium,B1,noun,education
 501,syllabus,ders izlencesi,The professor handed out the syllabus on the first day.,Profesör ilk gün ders programını dağıttı.,medium,B2,noun,education
 502,plagiarism,intihal,Submitting someone else's work as your own is plagiarism.,Başkasının çalışmasını kendininkiymiş gibi sunmak intihaldir.,medium,B2,noun,education
+503,village,köy,The small village near the river was very peaceful.,Nehrin yakınındaki küçük köy çok huzurluydu.,easy,A2,noun,social
+504,weather,hava,The weather today is perfect for a long walk outside.,Bugün hava dışarıda uzun bir yürüyüş için mükemmel.,easy,A2,noun,nature
+505,weekend,hafta sonu,We usually visit our grandparents on the weekend.,Genellikle hafta sonları büyükanne ve büyükbabamızı ziyaret ederiz.,easy,A2,noun,daily
+506,opinion,fikir,In my opinion this city has the best food I have ever tasted.,Benim fikrime göre bu şehir yediğim en iyi yemeklere sahip.,easy,A2,noun,social
+507,kitchen,mutfak,She cooked a delicious meal in the kitchen for the whole family.,Tüm aile için mutfakta lezzetli bir yemek pişirdi.,easy,A2,noun,daily
+508,library,kütüphane,I borrowed three interesting books from the library last week.,Geçen hafta kütüphaneden üç ilginç kitap ödünç aldım.,easy,A2,noun,education
+509,party,parti,We are planning a birthday party for my sister this Saturday.,Bu cumartesi kız kardeşim için bir doğum günü partisi planlıyoruz.,easy,A2,noun,social
+510,lesson,ders,My English lesson starts at nine o'clock every Monday morning.,İngilizce dersim her pazartesi sabahı saat dokuzda başlıyor.,easy,A2,noun,education
+511,office,ofis,The new office has large windows and a beautiful view of the city.,Yeni ofis büyük pencerelere ve şehrin güzel bir manzarasına sahip.,easy,A2,noun,business
+512,airport,havalimanı,We arrived at the airport two hours before our flight departed.,Uçuşumuz kalkmadan iki saat önce havalimanına vardık.,easy,A2,noun,travel
+513,ask,sormak,Please ask the teacher if you do not understand the question.,Soruyu anlamıyorsan lütfen öğretmene sor.,easy,A2,verb,social
+514,wait,beklemek,We had to wait for almost forty minutes before the bus arrived.,Otobüs gelene kadar neredeyse kırk dakika beklemek zorunda kaldık.,easy,A2,verb,daily
+515,meet,buluşmak,Let us meet at the café near the station at three o'clock.,Hadi istasyonun yakınındaki kafede saat üçte buluşalım.,easy,A2,verb,social
+516,bring,getirmek,Could you bring me a glass of water please?,Bana bir bardak su getirir misin lütfen?,easy,A2,verb,daily
+517,leave,ayrılmak,They decided to leave the city and move somewhere quieter.,Şehirden ayrılıp daha sakin bir yere taşınmaya karar verdiler.,easy,A2,verb,travel
+518,prefer,tercih etmek,I prefer tea over coffee in the morning when I wake up.,Sabah uyandığımda kahve yerine çayı tercih ederim.,easy,A2,verb,daily
+519,hungry,aç,The children were very hungry after playing outside all afternoon.,Çocuklar tüm öğleden sonra dışarıda oynadıktan sonra çok açtı.,easy,A2,adjective,health
+520,busy,meşgul,She was too busy to answer the phone during the long meeting.,Uzun toplantı sırasında telefonu yanıtlamak için çok meşguldü.,easy,A2,adjective,daily
+521,quiet,sessiz,The library must be quiet so that everyone can study effectively.,Herkes etkili biçimde çalışabilsin diye kütüphane sessiz olmalıdır.,easy,A2,adjective,education
+522,lucky,şanslı,You are very lucky to have such a supportive and kind family.,Böyle destekleyici ve nazik bir aileye sahip olduğun için çok şanslısın.,easy,A2,adjective,emotions
+523,already,zaten,The meeting has already started and everyone is waiting for you.,Toplantı zaten başladı ve herkes seni bekliyor.,easy,A2,adverb,daily
+524,quickly,hızlıca,She quickly finished her homework before dinner and watched TV.,Akşam yemeğinden önce ödevini hızlıca bitirdi ve TV izledi.,easy,A2,adverb,daily
+525,still,hâlâ,He still lives in the same house where he grew up as a child.,Hâlâ çocukken büyüdüğü aynı evde yaşıyor.,medium,B1,adverb,daily
+526,yet,henüz,I have not received my exam results yet and I am feeling nervous.,Sınav sonuçlarımı henüz almadım ve gergin hissediyorum.,medium,B1,adverb,education
+527,nearly,neredeyse,She nearly missed her flight because of the heavy traffic in the city.,Şehirdeki yoğun trafik nedeniyle uçuşunu neredeyse kaçırıyordu.,medium,B1,adverb,travel
+528,carefully,dikkatle,Read the instructions carefully before you start the exam.,Sınava başlamadan önce talimatları dikkatle okuyun.,medium,B1,adverb,education
+529,recently,geçenlerde,I recently moved to a new apartment that is closer to my office.,Geçenlerde ofisime daha yakın yeni bir daireye taşındım.,medium,B1,adverb,daily
+530,immediately,hemen,You should call the doctor immediately if the pain gets worse.,Ağrı kötüleşirse hemen doktoru aramalısınız.,medium,B1,adverb,health
+531,suddenly,aniden,The lights went out suddenly during the storm last night.,Dün gece fırtına sırasında ışıklar aniden söndü.,medium,B1,adverb,nature
+532,especially,özellikle,People especially enjoy outdoor activities during warm summer evenings.,İnsanlar sıcak yaz akşamlarında özellikle açık hava etkinliklerinin tadını çıkarır.,medium,B1,adverb,social
+533,generally,genellikle,People generally prefer warmer weather during their holidays abroad.,İnsanlar genellikle tatillerinde daha sıcak hava tercih eder.,medium,B1,adverb,social
+534,probably,muhtemelen,It will probably rain tomorrow and you should bring an umbrella.,Yarın muhtemelen yağmur yağacak bu yüzden yanına şemsiye almalısın.,medium,B1,adverb,daily
+535,clearly,açıkça,She clearly explained the rules before the game started.,Oyun başlamadan önce kuralları açıkça açıkladı.,medium,B1,adverb,social
+536,currently,şu an,The company is currently working on a new product for international markets.,Şirket şu an uluslararası pazarlar için yeni bir ürün üzerinde çalışıyor.,medium,B2,adverb,business
+537,increasingly,giderek,Online education is becoming increasingly common in universities around the world.,Çevrimiçi eğitim dünya genelindeki üniversitelerde giderek daha yaygın hale geliyor.,medium,B2,adverb,technology
+538,crowded,kalabalık,The beach was so crowded that we could not find a comfortable spot.,Plaj o kadar kalabalıktı ki rahat bir yer bulamadık.,medium,B1,adjective,travel
+539,direct,direkt,We took a direct flight to Tokyo without any stops or layovers.,Tokyo'ya hiç durmadan veya aktarma yapmadan direkt uçuş aldık.,medium,B1,adjective,travel
+540,scenic,manzaralı,The scenic drive along the coastal road was absolutely breathtaking.,Kıyı yolu boyunca manzaralı sürüş gerçekten nefes kesiciydi.,medium,B2,adjective,travel
+541,remote,uzak,The village is so remote that very few visitors ever find their way there.,Köy o kadar uzak ki oraya giden çok az ziyaretçi oluyor.,medium,B2,adjective,travel
+542,domestic,yurt içi,There are many domestic flights available between major cities in the country.,Ülkedeki büyük şehirler arasında pek çok yurt içi uçuş mevcut.,medium,B2,adjective,travel
+543,compulsory,zorunlu,Wearing a seatbelt is compulsory for all passengers in the vehicle.,Araçtaki tüm yolcular için emniyet kemeri takmak zorunludur.,medium,B2,adjective,education
+544,advanced,ileri,This course is designed for advanced students who already know the basics.,Bu ders temel bilgilere sahip olan ileri düzey öğrenciler için tasarlanmıştır.,medium,B2,adjective,education
+545,interactive,etkileşimli,The museum has many interactive exhibits that children really enjoy visiting.,Müzede çocukların ziyaret etmekten gerçekten hoşlandığı birçok etkileşimli sergi var.,medium,B2,adjective,education
+546,challenging,zorlu,The final exam was very challenging but the students performed exceptionally well.,Final sınavı çok zorlu idi ancak öğrenciler son derece iyi performans gösterdi.,medium,B1,adjective,education
+547,theoretical,kuramsal,The professor gave a detailed theoretical lecture on the development of language.,Profesör dilin gelişimi üzerine ayrıntılı bir kuramsal ders verdi.,hard,C1,adjective,education
+548,discuss,tartışmak,We need to discuss this project with the team before our next meeting.,Bu projeyi bir sonraki toplantıdan önce ekiple tartışmamız gerekiyor.,medium,B1,verb,social
+549,connection,bağlantı,The hotel room has a fast internet connection and a comfortable workspace.,Otel odası hızlı internet bağlantısına ve rahat bir çalışma alanına sahip.,medium,B1,noun,technology
+550,reason,sebep,The main reason she moved abroad was to improve her career opportunities.,Yurt dışına taşınmasının ana sebebi kariyer fırsatlarını geliştirmekti.,medium,B1,noun,academic
+551,ability,yetenek,Her ability to speak three languages impressed everyone at the job interview.,Üç dil konuşma yeteneği iş görüşmesinde herkesi etkiledi.,medium,B1,noun,education
+552,attention,dikkat,Please pay attention to the safety instructions before boarding the plane.,Lütfen uçağa binmeden önce güvenlik talimatlarına dikkat edin.,medium,B1,noun,daily
+553,say,söylemek,Please say your name clearly so everyone in the room can hear you.,Odadaki herkes duyabilsin diye lütfen adınızı net bir şekilde söyleyin.,easy,A2,verb,daily
+554,know,bilmek,I know the answer to every question on this test.,Bu testteki her sorunun cevabını biliyorum.,easy,A1,verb,daily
+555,get,almak,I always get a coffee on my way to work in the morning.,Sabahları işe giderken her zaman bir kahve alırım.,easy,A2,verb,daily
+556,like,sevmek,I like spending time with my family on the weekend.,Hafta sonları ailemle vakit geçirmeyi severim.,easy,A1,verb,daily
+557,think,düşünmek,I think this restaurant serves the best food in the city.,Bu restoranın şehirdeki en iyi yemeği sunduğunu düşünüyorum.,easy,A2,verb,daily
+558,make,yapmak,I make a fresh cup of tea for myself every morning.,Her sabah kendime taze bir fincan çay yaparım.,easy,A1,verb,daily
+559,see,görmek,You can see the mountains clearly from the top of the hill.,Tepeden dağları net bir şekilde görebilirsiniz.,easy,A1,verb,daily
+560,people,insanlar,Many people visit this museum every year during their holidays.,Pek çok insan her yıl tatillerinde bu müzeyi ziyaret eder.,easy,A1,noun,social
+561,take,götürmek,She will take her children to school by car this morning.,Bu sabah çocuklarını arabayla okula götürecek.,easy,A1,verb,daily
+562,come,gelmek,My friends will come to my house for dinner this evening.,Arkadaşlarım bu akşam yemeği için evime gelecek.,easy,A1,verb,daily
+563,use,kullanmak,I use my phone to set an alarm every morning before work.,Her sabah işten önce alarm kurmak için telefonumu kullanırım.,easy,A2,verb,daily
+564,look,bakmak,Please look at the board and write down the important notes.,Lütfen tahtaya bakın ve önemli notları yazın.,easy,A1,verb,daily
+565,want,istemek,I want to travel around Europe during my summer holiday.,Yaz tatilimde Avrupa'yı gezmek istiyorum.,easy,A1,verb,daily
+566,give,vermek,Please give me your phone number so I can contact you later.,Daha sonra sana ulaşabilmem için lütfen bana telefon numaranı ver.,easy,A1,verb,daily
+567,first,ilk,This is my first time visiting this beautiful historic city.,Bu güzel tarihi şehri ilk kez ziyaret ediyorum.,easy,A2,adjective,daily
+568,way,yol,Is there a faster way to get to the train station?,Tren istasyonuna gitmenin daha hızlı bir yolu var mı?,easy,A2,noun,daily
+569,find,bulmak,I cannot find my keys anywhere in the apartment.,Dairemde anahtarlarımı hiçbir yerde bulamıyorum.,easy,A2,verb,daily
+570,need,ihtiyaç duymak,You need to study every day if you want to improve your English.,İngilizceni geliştirmek istiyorsan her gün çalışman gerekiyor.,easy,A1,verb,daily
+571,right,doğru,She gave the right answer and the teacher was very pleased.,Doğru cevabı verdi ve öğretmen çok memnun oldu.,easy,A2,adjective,daily
+572,back,geri,She came back home after a long and tiring day at work.,Uzun ve yorucu bir iş gününden sonra eve geri döndü.,easy,A2,adverb,daily
+573,mean,anlamına gelmek,I do not know what this expression is supposed to mean.,Bu ifadenin ne anlama geldiğini bilmiyorum.,medium,B1,verb,education
+574,last,geçen,We visited Paris last summer and had an amazing time there.,Geçen yaz Paris'i ziyaret ettik ve orada harika vakit geçirdik.,easy,A2,adjective,daily
+575,child,çocuk,Every child should have access to good education and healthcare.,Her çocuğun kaliteli eğitime ve sağlık hizmetlerine erişimi olmalıdır.,easy,A1,noun,social
+576,tell,anlatmak,Please tell me what happened at the meeting this morning.,Lütfen bu sabah toplantıda neler olduğunu bana anlatın.,easy,A1,verb,daily
+577,really,gerçekten,I am really tired after working late every night this week.,Bu hafta her gece geç çalıştıktan sonra gerçekten çok yoruldum.,easy,A2,adverb,daily
+578,call,aramak,I will call you as soon as I arrive at the airport.,Havalimanına varır varmaz seni arayacağım.,easy,A2,verb,daily
+579,company,şirket,She started her own company after working in finance for ten years.,On yıl finans sektöründe çalıştıktan sonra kendi şirketini kurdu.,medium,B1,noun,business
+580,show,göstermek,Can you show me how to get to the nearest metro station?,En yakın metro istasyonuna nasıl gideceğimi gösterebilir misiniz?,easy,A2,verb,daily
+581,life,hayat,A balanced diet and exercise are important for a healthy life.,Dengeli beslenme ve egzersiz sağlıklı bir hayat için önemlidir.,easy,A2,noun,daily
+582,change,değiştirmek,I need to change my password because it is not secure enough.,Şifrem yeterince güvenli olmadığı için değiştirmem gerekiyor.,easy,A2,verb,daily
+583,long,uzun,It was a long drive but we finally arrived at our hotel.,Uzun bir yolculuktu ama sonunda otelimizdeyiz.,easy,A2,adjective,daily
+584,feel,hissetmek,I always feel happy when I spend time with my close friends.,Yakın arkadaşlarımla vakit geçirdiğimde her zaman mutlu hissederim.,easy,A2,verb,emotions
+585,great,harika,The concert last night was great and everyone had a wonderful time.,Dün geceki konser harikaydı ve herkes harika vakit geçirdi.,easy,A2,adjective,daily
+586,try,denemek,You should try the traditional food when you visit a new country.,Yeni bir ülkeye gittiğinizde geleneksel yemeği denemelisiniz.,easy,A2,verb,daily
+587,part,bölüm,The second part of the exam was more difficult than the first.,Sınavın ikinci bölümü birincisinden daha zordu.,medium,B1,noun,education
+588,point,nokta,The main point of the presentation was easy to understand.,Sunumun ana noktası anlaşılması kolaydı.,medium,B1,noun,academic
+589,little,küçük,She lives in a little house near the edge of the forest.,Ormanın kenarına yakın küçük bir evde yaşıyor.,easy,A2,adjective,daily
+590,talk,konuşmak,We need to talk about the plans for the upcoming weekend.,Yaklaşan hafta sonu planlarını konuşmamız gerekiyor.,easy,A2,verb,social
+591,put,koymak,Please put the groceries on the kitchen table when you come in.,İçeri girdiğinde alışveriş poşetlerini mutfak masasına koy lütfen.,easy,A2,verb,daily
+592,become,olmak,She worked very hard every day to become a professional photographer.,Profesyonel bir fotoğrafçı olmak için her gün çok çalıştı.,medium,B1,verb,daily
+593,interest,ilgi,Reading is my main interest outside of work and daily study.,Okumak iş ve günlük çalışma dışındaki ana ilgi alanımdır.,medium,B1,noun,daily
+594,late,geç,I was late for the meeting because the traffic was terrible today.,Trafik bugün çok kötüydü bu yüzden toplantıya geç kaldım.,easy,A2,adjective,daily
+595,high,yüksek,The prices at this restaurant are quite high for a weekday lunch.,Bu restoranın hafta içi öğle yemeği için fiyatları oldukça yüksek.,easy,A2,adjective,daily
+596,next,sonraki,The next train to the city center will arrive in five minutes.,Şehir merkezine gidecek sonraki tren beş dakika içinde gelecek.,easy,A1,adjective,daily
+597,end,son,We stayed until the end of the film and then walked home.,Filmin sonuna kadar kaldık ve sonra yürüyerek eve gittik.,easy,A2,noun,daily
+598,live,yaşamak,My grandparents live in a small village near the coast.,Büyükanne ve büyükbabam kıyıya yakın küçük bir köyde yaşıyor.,easy,A1,verb,daily
+599,world,dünya,Learning a new language helps you connect with people around the world.,Yeni bir dil öğrenmek dünyanın her yerindeki insanlarla bağlantı kurmanıza yardımcı olur.,easy,A2,noun,social
+600,play,oynamak,The children play football in the park after school every day.,Çocuklar her gün okuldan sonra parkta futbol oynuyor.,easy,A1,verb,daily
+601,never,hiçbir zaman,I have never tried sushi but I would like to one day.,Hiçbir zaman suşi denemedim ama bir gün denemek istiyorum.,easy,A2,adverb,daily
+602,course,ders,She enrolled in an online course to improve her English skills.,İngilizce becerilerini geliştirmek için çevrimiçi bir derse kaydoldu.,medium,B1,noun,education

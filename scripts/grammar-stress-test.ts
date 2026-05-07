@@ -1552,6 +1552,80 @@ const TEST_CASES: TestCase[] = [
     note: '"don\'t + gerund" — local engine cannot detect this pattern (no don\'t+gerund rule); known local-rule limit.',
     knownLimit: true,
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CATEGORY: instrument-preposition
+  // Missing preposition between communication verb and device/channel noun.
+  // e.g. "I call you my phone" → "I call you on my phone".
+  //
+  // Local limit: these sentences parse as grammatically valid object-complement
+  // structures (verb + object + complement noun). The local engine has no
+  // semantic access to classify whether the second noun is a device (error) or a
+  // relational noun / title (valid). Detection is AI-only.
+  //
+  // False-positive guards MUST pass locally — valid object-complement patterns
+  // ("I call you my friend") must never be flagged by any layer.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  {
+    id: 207, category: 'instrument-preposition',
+    targetWord: 'phone', sentence: 'I call you my phone.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: 'Missing "on/from" before device noun "my phone". Correct: "I call you on my phone." Local engine cannot distinguish device from relational noun; AI-only catch.',
+    knownLimit: true,
+  },
+  {
+    id: 208, category: 'instrument-preposition',
+    targetWord: 'phone', sentence: 'I text you my phone.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: 'Missing "on/from" before device noun "my phone". Correct: "I text you on my phone." AI-only catch.',
+    knownLimit: true,
+  },
+  {
+    id: 209, category: 'instrument-preposition',
+    targetWord: 'phone', sentence: 'I contact you my phone.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: 'Missing "by/on" before device noun "my phone". Correct: "I contact you by phone." AI-only catch.',
+    knownLimit: true,
+  },
+  {
+    id: 210, category: 'instrument-preposition',
+    targetWord: 'phone', sentence: 'I call you on my phone.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "on my phone" — preposition present, correct usage.',
+  },
+  {
+    id: 211, category: 'instrument-preposition',
+    targetWord: 'friend', sentence: 'I call you my friend.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: valid object-complement / naming pattern. "my friend" is a relational noun, not a device. No preposition error.',
+  },
+  {
+    id: 212, category: 'instrument-preposition',
+    targetWord: 'consider', sentence: 'I consider him a mentor.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: valid object-complement pattern. "a mentor" is a role/title, not a device.',
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CATEGORY: listen-missing-to
+  // "listen" requires "to" before a noun object. "I listen music" is wrong.
+  // Local limit: no local rule for this pattern. AI-only catch.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  {
+    id: 213, category: 'listen-missing-to',
+    targetWord: 'listen', sentence: 'I listen music every day.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"listen music" — missing "to". Correct: "I listen to music every day." No local rule for listen+missing-to; AI-only catch.',
+    knownLimit: true,
+  },
+  {
+    id: 214, category: 'listen-missing-to',
+    targetWord: 'listen', sentence: 'I like to listen to music every day.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "listen to music" — correct preposition present. "like" used as the recognizable finite verb because "listen" alone is not in THIRD_PERSON_VERBS (local-engine finite-verb vocabulary limit).',
+  },
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

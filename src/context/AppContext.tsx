@@ -108,6 +108,14 @@ export interface AppState {
    */
   customWords: Word[];
 
+  /**
+   * True once the user has made a deliberate choice in the first-time
+   * "Biliyorum" hint modal (either "Evet" or "Öğrenmeye başla").
+   * Physical right-swipe also marks it as seen silently.
+   * Resets to false on RESET_PROGRESS.
+   */
+  hasSeenKnowHint: boolean;
+
   // ── Word Management practice cycle ─────────────────────────────────────────
   /**
    * IDs of words already practiced in the current Word Management cycle.
@@ -178,7 +186,8 @@ export type Action =
   | { type: 'ADD_CUSTOM_WORD'; word: Word }
   | { type: 'CHECK_NEW_DAY' }
   | { type: 'DELETE_CUSTOM_WORD'; wordId: number }
-  | { type: 'SCHEDULE_WORD_REVIEW'; wordId: number };
+  | { type: 'SCHEDULE_WORD_REVIEW'; wordId: number }
+  | { type: 'MARK_KNOW_HINT_SEEN' };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -209,6 +218,7 @@ export const initialState: AppState = {
   dailyLessonBonusClaimed: false,
   dailyBonusSessionStarted: false,
   customWords: [],
+  hasSeenKnowHint: false,
 };
 
 /** Build an empty progress entry for a word that has never been seen */
@@ -480,6 +490,8 @@ export function reducer(state: AppState, action: Action): AppState {
         dailyBonusSessionStarted:  isNewDay ? false : (loaded.dailyBonusSessionStarted  ?? false),
         // Custom words — always restored as-is
         customWords: loaded.customWords ?? [],
+        // Know hint — persisted; new installs/missing field defaults to false
+        hasSeenKnowHint: loaded.hasSeenKnowHint ?? false,
       };
     }
 
@@ -578,6 +590,10 @@ export function reducer(state: AppState, action: Action): AppState {
         ...deriveFromProgress(wordProgress),
       };
     }
+
+    // ── First-time "Biliyorum" hint ───────────────────────────────────────────
+    case 'MARK_KNOW_HINT_SEEN':
+      return { ...state, hasSeenKnowHint: true };
 
     // ── Sentence Builder review signal ───────────────────────────────────────
     // Dispatched when a Sentence Builder attempt produces FLAWED or REJECTED.
@@ -685,106 +701,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(persistable));
   }, [state, isLoaded]);
 
-  // ─── getDailyWords — 80/20 new-vs-review lesson composition ────────────
+  // ─── getDailyWords — new-words-only lesson pool ──────────────────────────
   //
-  // Lesson shape:
-  //   ~80% new words   — truly unseen (correctCount === 0 AND wrongCount === 0)
-  //   ~20% review words — words that need reinforcement, selected by:
-  //       • isDifficult flag, OR
-  //       • wrongCount > 0 (ever struggled), OR
-  //       • SRS review is due (nextReviewAt ≤ now)
+  // Returns only words the user has never interacted with at the current level:
+  //   correctCount === 0 AND wrongCount === 0
   //
-  // Priorities within the review pool:
-  //   1. Difficult first
-  //   2. Most wrong-answers (more struggle = higher urgency)
-  //   3. Most overdue SRS date
+  // Words answered correctly are routed exclusively through Tekrar Et (SRS
+  // schedule). Words answered incorrectly go to Zorlandıklarım. Derse Başla
+  // is reserved for first-time exposure only — the pools never overlap.
   //
-  // Deduplication and no-consecutive-repetition are preserved from the
-  // original implementation. A fallback pass backfills from the other pool
-  // if either allocation comes up short (small vocabulary edge case).
+  // lastLessonWordIds prevents the same new words from appearing in two
+  // consecutive sessions (handles the "session abandoned mid-flashcard" case
+  // where seeded words still have correctCount===0, wrongCount===0).
   const getDailyWords = (): Word[] => {
     if (!state.level) return [];
-    const now       = Date.now();
-    const target    = state.lessonSize ?? 20;
-    const wp        = state.wordProgress;
+    const target     = state.lessonSize ?? 20;
+    const wp         = state.wordProgress;
     const lastLesson = new Set(state.lastLessonWordIds);
 
     // Merge built-in and user-added words; custom words shadow built-in duplicates.
     const allVocab = getEffectiveVocab(localVocabulary, state.customWords);
 
-    // ── Review cap: at most 20% of the lesson (minimum 1 slot when target ≥ 5)
-    const reviewCap = target >= 5 ? Math.round(target * 0.20) : 0;
-    const newCap    = target - reviewCap;
-
-    // ── New words: level-matched, never answered ──────────────────────────────
-    // "Never answered" aligns with the Home screen seenCount definition:
-    // seeded entries (correctCount === 0 && wrongCount === 0) are still "new".
+    // Words the user has answered at least once — excluded from new-lesson pool.
     const interactedIds = new Set(
       Object.entries(wp)
         .filter(([, p]) => p.correctCount > 0 || p.wrongCount > 0)
         .map(([id]) => Number(id)),
     );
-    const levelWords = allVocab.filter(w => w.level === state.level);
-    const newWords   = levelWords.filter(w => !interactedIds.has(w.id));
 
-    // ── Review candidates: actually seen + qualifies for reinforcement ────────
-    const reviewCandidates: Word[] = Object.entries(wp)
-      .filter(([, p]) =>
-        // Must have been answered at least once (not just seeded)
-        (p.correctCount > 0 || p.wrongCount > 0) &&
-        // Must qualify for review via at least one condition
-        (p.isDifficult ||
-          p.wrongCount > 0 ||
-          (p.nextReviewAt > 0 && p.nextReviewAt <= now)),
-      )
-      .sort(([, a], [, b]) => {
-        // Difficult words always surface first
-        if (a.isDifficult !== b.isDifficult) return a.isDifficult ? -1 : 1;
-        // Then by most wrong answers (higher struggle = higher urgency)
-        if (b.wrongCount !== a.wrongCount) return b.wrongCount - a.wrongCount;
-        // Finally most overdue SRS date
-        return a.nextReviewAt - b.nextReviewAt;
-      })
-      .map(([id]) => allVocab.find(w => w.id === Number(id)))
-      .filter((w): w is Word => w !== undefined && w.level === state.level);
+    const newWords = allVocab.filter(w =>
+      w.level === state.level &&
+      !interactedIds.has(w.id) &&
+      !lastLesson.has(w.id),
+    );
 
-    // ── Primary pass: new words fill ~80%, review words fill ~20% ────────────
-    const added  = new Set<number>();
-    const result: Word[] = [];
-    let   reviewCount = 0;
-
-    // New words first (up to newCap), skipping last-lesson words
-    for (const w of newWords) {
-      if (result.length - reviewCount >= newCap) break;
-      if (!added.has(w.id) && !lastLesson.has(w.id)) {
-        added.add(w.id);
-        result.push(w);
-      }
-    }
-
-    // Review words next (up to reviewCap), skipping last-lesson words
-    for (const w of reviewCandidates) {
-      if (reviewCount >= reviewCap) break;
-      if (!added.has(w.id) && !lastLesson.has(w.id)) {
-        added.add(w.id);
-        result.push(w);
-        reviewCount++;
-      }
-    }
-
-    // ── Fallback pass: backfill from whichever pool has remaining words ───────
-    // Ensures a full lesson even when vocabulary pool is small.
-    if (result.length < target) {
-      for (const w of [...newWords, ...reviewCandidates]) {
-        if (result.length >= target) break;
-        if (!added.has(w.id) && !lastLesson.has(w.id)) {
-          added.add(w.id);
-          result.push(w);
-        }
-      }
-    }
-
-    return result;
+    return newWords.slice(0, target);
   };
 
   // ─── Helper accessors ─────────────────────────────────────────────────────

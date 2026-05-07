@@ -15,7 +15,6 @@
 import express  from 'express';
 import cors     from 'cors';
 import dotenv   from 'dotenv';
-import OpenAI   from 'openai';
 
 import { validateEnv }          from './backend/env';
 import { log }                  from './backend/logger';
@@ -36,9 +35,9 @@ const config = validateEnv();
 
 const app = express();
 
-// If running behind a reverse proxy (nginx, Cloudflare, etc.), uncomment the
-// next line so express-rate-limit uses the real client IP from X-Forwarded-For.
-// app.set('trust proxy', 1);
+// Running behind a reverse proxy (Railway, Render, Cloudflare, etc.) —
+// trust the X-Forwarded-For header so rate limiting uses the real client IP.
+app.set('trust proxy', 1);
 
 // ── Global middleware ─────────────────────────────────────────────────────────
 
@@ -103,49 +102,6 @@ app.use('/api/sentence-analysis/detailed', analyzeSentenceRouter);
 //
 app.use('/api/translate', translateRouter);
 
-// ── Legacy sentence analysis endpoint (preserved for compatibility) ───────────
-//
-//   POST /api/sentence-analysis
-//
-//   Original prototype — kept intact so existing callers are not broken.
-//   New callers should use /detailed instead.
-//
-const _legacyClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-app.post('/api/sentence-analysis', async (req, res) => {
-  try {
-    const { sentence, targetWord } = req.body;
-    const prompt = `
-You are an English teacher.
-
-Analyze this sentence:
-"${sentence}"
-
-Target word: "${targetWord}"
-
-Return JSON:
-{
-  "isValid": boolean,
-  "feedback": "short Turkish explanation",
-  "corrected": "corrected sentence",
-  "better": "more natural version"
-}
-`;
-    const completion = await _legacyClient.chat.completions.create({
-      model:       'gpt-4o-mini',
-      messages:    [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-    });
-    const text = completion.choices[0].message.content;
-    res.json(JSON.parse(text!));
-  } catch (err) {
-    log.error('legacy_endpoint_error', null, {
-      message: (err instanceof Error) ? err.message.slice(0, 100) : 'unknown',
-    });
-    res.status(500).json({ error: 'AI error' });
-  }
-});
-
 // ── 404 catch-all ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });
@@ -174,7 +130,8 @@ app.listen(config.port, () => {
   });
   process.stdout.write(
     `\n🚀  API running on http://localhost:${config.port}\n` +
-    `   POST /api/sentence-analysis/detailed  ← production endpoint\n` +
-    `   POST /api/sentence-analysis           ← legacy endpoint\n\n`,
+    `   POST /api/sentence-analysis/detailed\n` +
+    `   POST /api/translate\n` +
+    `   GET  /health\n\n`,
   );
 });

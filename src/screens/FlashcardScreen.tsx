@@ -10,6 +10,8 @@ import {
   PanResponder,
   Platform,
   Pressable,
+  Modal,
+  BackHandler,
 } from 'react-native';
 import * as Speech from 'expo-speech';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -365,6 +367,8 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
   const theme = getTheme(state.darkMode);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeCommand, setSwipeCommand] = useState<'left' | 'right' | null>(null);
+  const [showExitModal, setShowExitModal] = useState(false);
+  const [showKnowHintModal, setShowKnowHintModal] = useState(false);
   const { showInterstitial } = useInterstitialAd();
 
   const words = state.sessionWords.length > 0 ? state.sessionWords : getDailyWords();
@@ -378,6 +382,33 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
       prefetchEnrichments(words.map(w => w.word));
     }
   }, [words.length, words]);
+
+  // Intercept Android hardware back button
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      setShowExitModal(true);
+      return true; // consume the event
+    });
+    return () => sub.remove();
+  }, []);
+
+  // Intercept iOS gesture / React Navigation back (beforeRemove fires before pop)
+  useEffect(() => {
+    const unsub = navigation.addListener('beforeRemove', (e: any) => {
+      // Only intercept default back actions (gesture / header back).
+      // navigate() and replace() have their own e.data.action.type.
+      if (e.data.action.type !== 'GO_BACK') return;
+      e.preventDefault();
+      setShowExitModal(true);
+    });
+    return unsub;
+  }, [navigation]);
+
+  const markKnowHintSeen = useCallback(() => {
+    if (!state.hasSeenKnowHint) {
+      dispatch({ type: 'MARK_KNOW_HINT_SEEN' });
+    }
+  }, [state.hasSeenKnowHint, dispatch]);
 
   const finishLesson = useCallback((seenUpToIndex: number) => {
     const seenWords = words.slice(0, seenUpToIndex + 1);
@@ -402,9 +433,10 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
   }, [currentIndex, finishLesson, showInterstitial]);
 
   const handleSwipeRight = useCallback(() => {
+    markKnowHintSeen(); // physical swipe → mark silently, no modal
     selfRatingsRef.current[words[currentIndex].id] = 'know';
     handleNext();
-  }, [currentIndex, words, handleNext]);
+  }, [currentIndex, words, handleNext, markKnowHintSeen]);
 
   const handleSwipeLeft = useCallback(() => {
     selfRatingsRef.current[words[currentIndex].id] = 'dont_know';
@@ -413,6 +445,10 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleKnow = () => {
     if (swipeCommand) return;
+    if (!state.hasSeenKnowHint) {
+      setShowKnowHintModal(true);
+      return;
+    }
     haptic('success');
     setSwipeCommand('right');
   };
@@ -446,7 +482,7 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.navigate('Main')} style={styles.backBtn}>
+          <TouchableOpacity onPress={() => setShowExitModal(true)} style={styles.backBtn}>
             <Ionicons name="close" size={22} color={theme.textSecondary} />
           </TouchableOpacity>
           <View style={{ flex: 1, marginHorizontal: spacing.md }}>
@@ -531,6 +567,84 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+
+      {/* ── Exit confirmation modal ──────────────────────────────────────────── */}
+      <Modal
+        visible={showExitModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowExitModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: theme.card }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Ops</Text>
+            <Text style={[styles.modalMessage, { color: theme.textSecondary }]}>
+              Sadece {words.length - currentIndex} kelime kaldı.
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowExitModal(false)}
+              style={[styles.modalBtnPrimary, { backgroundColor: theme.primary }]}
+            >
+              <Text style={styles.modalBtnPrimaryText}>Öğrenmeye Devam</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setShowExitModal(false);
+                navigation.navigate('Main');
+              }}
+              style={styles.modalBtnSecondary}
+            >
+              <Text style={[styles.modalBtnSecondaryText, { color: theme.textSecondary }]}>Yine de çık</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── First-time "Biliyorum" hint modal ───────────────────────────────── */}
+      <Modal
+        visible={showKnowHintModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowKnowHintModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: theme.card }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Biliyor musun?</Text>
+            <Text style={[styles.modalMessage, { color: theme.textSecondary }]}>
+              Bu kelimeyi bildiğin için, testlerde ve tekrarlarda daha az karşına çıkaracağız.{'\n\n'}
+              Pratik yapmak istiyorsan "Öğrenmeye başla" seçeneğini kullanabilirsin.
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setShowKnowHintModal(false);
+                markKnowHintSeen();
+                haptic('success');
+                setSwipeCommand('right');
+              }}
+              style={[styles.modalBtnPrimary, { backgroundColor: theme.correct }]}
+            >
+              <Text style={styles.modalBtnPrimaryText}>Evet, bu kelimeyi iyi biliyorum</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setShowKnowHintModal(false);
+                markKnowHintSeen();
+                haptic('warning');
+                setSwipeCommand('left');
+              }}
+              style={[styles.modalBtnPrimary, { backgroundColor: theme.primary, marginTop: spacing.sm }]}
+            >
+              <Text style={styles.modalBtnPrimaryText}>Öğrenmeye başla</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowKnowHintModal(false)}
+              style={styles.modalBtnSecondary}
+            >
+              <Text style={[styles.modalBtnSecondaryText, { color: theme.textSecondary }]}>İptal</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -698,4 +812,52 @@ const styles = StyleSheet.create({
   finishBtn: { borderRadius: radius.full, overflow: 'hidden' },
   finishGradient: { height: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   finishText: { color: '#fff', fontSize: 16, fontWeight: '700', fontFamily: 'Inter_700Bold' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    alignItems: 'stretch',
+    ...shadows.lg,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  modalMessage: {
+    fontSize: 15,
+    lineHeight: 22,
+    fontFamily: 'Inter_400Regular',
+    textAlign: 'center',
+    marginBottom: spacing.xl,
+  },
+  modalBtnPrimary: {
+    borderRadius: radius.lg,
+    paddingVertical: spacing.md + 2,
+    alignItems: 'center',
+  },
+  modalBtnPrimaryText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
+  },
+  modalBtnSecondary: {
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  modalBtnSecondaryText: {
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
+  },
 });
