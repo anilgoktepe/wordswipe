@@ -1,0 +1,11 @@
+id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
+auto,cost,maliyet,The cost of renting an office in the city center is very high.,Şehir merkezinde ofis kiralamanın maliyeti çok yüksek.,medium,B1,noun,business
+auto,member,üye,She became a member of the local book club last year.,Geçen yıl yerel kitap kulübüne üye oldu.,easy,A2,noun,social
+auto,enough,yeterince,Make sure you get enough sleep before the important exam tomorrow.,Yarınki önemli sınavdan önce yeterince uyuduğundan emin ol.,easy,A2,adverb,health
+auto,view,manzara,From the hotel balcony we had a stunning view of the mountains.,Otel balkonundan dağların muhteşem bir manzarası vardı.,easy,A2,noun,travel
+auto,public,genel,Taking public transport is cheaper and better for the environment.,Toplu taşıma kullanmak hem daha ucuz hem de çevre için daha iyidir.,medium,B1,adjective,travel
+auto,term,dönem,The new school term begins on the first Monday of September.,Yeni okul dönemi Eylül'ün ilk pazartesi günü başlar.,medium,B1,noun,education
+auto,present,sunmak,She will present her research findings to the team on Friday.,Cuma günü araştırma bulgularını ekibe sunacak.,medium,B1,verb,education
+auto,concern,endişe,The doctor expressed concern about the high blood pressure of the patient.,Doktor hastanın yüksek tansiyonuyla ilgili endişesini dile getirdi.,medium,B1,noun,health
+auto,product,ürün,The company launched a new product that quickly became popular online.,Şirket çevrimiçi ortamda hızla popüler olan yeni bir ürün piyasaya sürdü.,medium,B1,noun,business
+auto,control,kontrol etmek,The software allows you to control your smart devices from anywhere.,Yazılım akıllı cihazlarınızı her yerden kontrol etmenizi sağlar.,medium,B1,verb,technology

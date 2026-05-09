@@ -1,0 +1,11 @@
+id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
+auto,price,fiyat,The price of the new laptop was much higher than I expected.,Yeni dizüstü bilgisayarın fiyatı beklediğimden çok daha yüksekti.,easy,A2,noun,business
+auto,effect,etki,Regular exercise has a positive effect on both your body and mind.,Düzenli egzersizin hem vücudunuz hem de zihniniz üzerinde olumlu bir etkisi vardır.,medium,B1,noun,health
+auto,deal,anlaşma,The two companies signed a deal to work together for three years.,İki şirket üç yıl boyunca birlikte çalışmak için bir anlaşma imzaladı.,medium,B1,noun,business
+auto,power,güç,The new server requires a lot of power to run all its processes.,Yeni sunucu tüm işlemlerini çalıştırmak için çok fazla güç gerektiriyor.,medium,B1,noun,technology
+auto,whole,bütün,She spent the whole afternoon preparing for her presentation the next day.,Tüm öğleden sonrasını ertesi günkü sunumuna hazırlanarak geçirdi.,easy,A2,adjective,daily
+auto,care,önemsemek,I care about getting enough rest to stay healthy and feel energetic.,Sağlıklı kalmak ve enerjik hissetmek için yeterince dinlenmeyi önemsiyorum.,medium,B1,verb,health
+auto,face,yüzleşmek,Every new manager must face challenges when leading a team for the first time.,Her yeni yönetici ilk kez ekibe liderlik ettiğinde zorluklarla yüzleşmek zorundadır.,medium,B1,verb,business
+auto,level,seviye,Students at the intermediate level can read and write basic sentences well.,Orta seviyedeki öğrenciler temel cümleleri iyi okuyup yazabilir.,easy,A2,noun,education
+auto,form,form,Please fill in the form with your personal details before the interview.,Lütfen görüşmeden önce formu kişisel bilgilerinizle doldurun.,medium,B1,noun,education
+auto,rate,oran,The unemployment rate in the country has decreased over the past two years.,Ülkedeki işsizlik oranı son iki yılda düştü.,medium,B1,noun,business
