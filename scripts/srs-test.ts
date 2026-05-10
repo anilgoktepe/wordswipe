@@ -669,6 +669,87 @@ test('H15: Tekrar Et priority — among same-due-status non-difficult words, low
   assert(result[0] === 2, `lower correctCount (id=2) should be first, got id=${result[0]}`);
 });
 
+// ─── Review rotation helper ───────────────────────────────────────────────────
+// Mirrors handleReviewWords in HomeScreen: fresh words fill first, stale backfill.
+
+function selectRotatingReviewWords(
+  allIds: number[],
+  wp: WP,
+  lastReviewIds: number[],
+  cap: number,
+  now: number,
+): number[] {
+  const sorted  = selectVoluntaryReviewWords(allIds, wp, now);
+  const lastSet = new Set(lastReviewIds);
+  const fresh   = sorted.filter(id => !lastSet.has(id));
+  const stale   = sorted.filter(id =>  lastSet.has(id));
+  return [...fresh, ...stale].slice(0, cap);
+}
+
+test('H16: review rotation — fresh words preferred when alternatives exist', () => {
+  const now = Date.now();
+  const wp: WP = {
+    1: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+    2: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+    3: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+    4: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+    5: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+    6: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+  };
+  const result = selectRotatingReviewWords([1,2,3,4,5,6], wp, [1,2,3], 3, now);
+  assert(!result.includes(1), 'last-session word id=1 should be excluded when fresh words available');
+  assert(!result.includes(2), 'last-session word id=2 should be excluded when fresh words available');
+  assert(!result.includes(3), 'last-session word id=3 should be excluded when fresh words available');
+  assert(result.includes(4), 'fresh word id=4 should be selected');
+  assert(result.includes(5), 'fresh word id=5 should be selected');
+  assert(result.includes(6), 'fresh word id=6 should be selected');
+  assert(result.length === 3, `should return exactly 3 words, got ${result.length}`);
+});
+
+test('H17: review rotation — stale words backfill when fresh pool is smaller than cap', () => {
+  const now = Date.now();
+  const wp: WP = {
+    1: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+    2: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+    3: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+    4: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+  };
+  const result = selectRotatingReviewWords([1,2,3,4], wp, [1,2,3], 3, now);
+  assert(result.includes(4), 'fresh word id=4 must appear first');
+  assert(result.length === 3, `should return exactly 3 words, got ${result.length}`);
+  const staleInResult = result.filter(id => [1,2,3].includes(id));
+  assert(staleInResult.length === 2, `should backfill 2 stale words, got ${staleInResult.length}`);
+});
+
+test('H18: review rotation — no starvation when entire pool was last session', () => {
+  const now = Date.now();
+  const wp: WP = {
+    1: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+    2: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+    3: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+  };
+  const result = selectRotatingReviewWords([1,2,3], wp, [1,2,3], 3, now);
+  assert(result.length === 3, `all 3 words must be returned to prevent starvation, got ${result.length}`);
+  assert(result.includes(1) && result.includes(2) && result.includes(3), 'all ids must be present');
+});
+
+test('H19: review rotation — empty lastReviewWordIds behaves identically to base selection', () => {
+  const now = Date.now();
+  const wp: WP = {
+    1: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+    2: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+    3: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+    4: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+    5: { ...emptyProgress(), correctCount: 1, isLearned: true, nextReviewAt: now + MS_PER_DAY },
+  };
+  const base    = selectVoluntaryReviewWords([1,2,3,4,5], wp, now).slice(0, 3);
+  const rotated = selectRotatingReviewWords([1,2,3,4,5], wp, [], 3, now);
+  assert(
+    JSON.stringify(base) === JSON.stringify(rotated),
+    `empty lastReviewIds should produce identical result: base=${base} rotated=${rotated}`,
+  );
+});
+
 // ─── Summary ───────────────────────────────────────────────────────────────────
 
 function run(): void {

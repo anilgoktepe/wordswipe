@@ -18,6 +18,8 @@ import { getLocalWords } from '../services/vocabularyService';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import { clearEnrichmentCache } from '../services/wordEnrichment';
 import { pickChallengeWord, buildChallengeContent } from '../services/curiosityNotification';
+import { ALL_LESSON_SIZES, FREE_SESSION_CAP } from '../utils/monetization';
+import { PremiumGateModal } from '../components/MonetizationModals';
 
 const vocabulary = getLocalWords();
 
@@ -100,7 +102,12 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const { state, dispatch } = useApp();
   const theme = getTheme(state.darkMode);
   const [showLevelPicker, setShowLevelPicker] = useState(false);
+  const [showSizePicker, setShowSizePicker] = useState(false);
+  const [premiumModal, setPremiumModal] = useState({ visible: false, featureTitle: '', featureDescription: '' });
   const [testNotifStatus, setTestNotifStatus] = useState<'idle' | 'sent' | 'unsupported' | 'denied'>('idle');
+
+  const isPremium = state.isPremium;
+  const lessonSize = state.lessonSize ?? 20;
 
   const handleTestNotification = async () => {
     // Build notification content (shared between web and native)
@@ -290,6 +297,58 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           )}
 
+          {/* Review session size */}
+          <SettingRow
+            icon={<MaterialCommunityIcons name="refresh" size={20} color={theme.primary} />}
+            title="Tekrar Et Boyutu"
+            subtitle={`${isPremium ? lessonSize : FREE_SESSION_CAP} kelime`}
+            onPress={() => setShowSizePicker(!showSizePicker)}
+            theme={theme}
+          />
+
+          {/* Size Picker */}
+          {showSizePicker && (
+            <View style={[styles.levelPicker, { backgroundColor: theme.surface, borderColor: theme.border, ...shadows.md }]}>
+              {(ALL_LESSON_SIZES as number[]).map((size, idx) => {
+                const isLocked = !isPremium && size > FREE_SESSION_CAP;
+                const isSelected = isPremium
+                  ? lessonSize === size
+                  : size === FREE_SESSION_CAP;
+                return (
+                  <TouchableOpacity
+                    key={size}
+                    onPress={() => {
+                      if (isLocked) {
+                        setPremiumModal({
+                          visible: true,
+                          featureTitle: 'Daha Uzun Tekrar Seansları',
+                          featureDescription: '8, 10, 15 ve 20 kelimelik tekrar seansları Premium ile açılır.',
+                        });
+                        return;
+                      }
+                      dispatch({ type: 'SET_LESSON_SIZE', size });
+                      setShowSizePicker(false);
+                    }}
+                    style={[
+                      styles.levelOption,
+                      {
+                        backgroundColor: isSelected ? theme.primaryLight : 'transparent',
+                        borderBottomWidth: idx < ALL_LESSON_SIZES.length - 1 ? 1 : 0,
+                        borderBottomColor: theme.border,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.levelOptionText, { flex: 1, color: isLocked ? theme.textTertiary : isSelected ? theme.primary : theme.text }]}>
+                      {size} kelime
+                    </Text>
+                    {isLocked && <Ionicons name="lock-closed" size={14} color={theme.textTertiary} />}
+                    {isSelected && !isLocked && <Ionicons name="checkmark" size={18} color={theme.primary} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
           <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
             GÖRÜNÜM
           </Text>
@@ -396,6 +455,18 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </ScrollView>
       </SafeAreaView>
+
+      <PremiumGateModal
+        visible={premiumModal.visible}
+        featureTitle={premiumModal.featureTitle}
+        featureDescription={premiumModal.featureDescription}
+        theme={theme}
+        onClose={() => setPremiumModal(m => ({ ...m, visible: false }))}
+        onUpgrade={() => {
+          setPremiumModal(m => ({ ...m, visible: false }));
+          navigation.navigate('Premium');
+        }}
+      />
     </View>
   );
 };

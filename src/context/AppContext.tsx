@@ -76,6 +76,7 @@ export interface AppState {
     wrongWordIds: number[];
   } | null;
   lastLessonWordIds: number[];
+  lastReviewWordIds: number[];
   lessonSize: number;
 
   /** Daily progress tracking — resets every new calendar day */
@@ -172,6 +173,7 @@ export type Action =
   | { type: 'SET_SESSION_WORDS'; words: Word[] }
   | { type: 'SET_SESSION_RESULTS'; results: AppState['sessionResults'] }
   | { type: 'SET_LAST_LESSON_WORDS'; wordIds: number[] }
+  | { type: 'SET_LAST_REVIEW_WORDS'; wordIds: number[] }
   | { type: 'SET_LESSON_SIZE'; size: number }
   | { type: 'LOAD_STATE'; state: Partial<AppState> }
   | { type: 'RESET_PROGRESS' }
@@ -203,6 +205,7 @@ export const initialState: AppState = {
   sessionWords: [],
   sessionResults: null,
   lastLessonWordIds: [],
+  lastReviewWordIds: [],
   lessonSize: 20,
   dailyProgress: 0,
   todayDate: new Date().toDateString(),
@@ -333,6 +336,9 @@ export function reducer(state: AppState, action: Action): AppState {
 
     case 'SET_LAST_LESSON_WORDS':
       return { ...state, lastLessonWordIds: action.wordIds };
+
+    case 'SET_LAST_REVIEW_WORDS':
+      return { ...state, lastReviewWordIds: action.wordIds };
 
     case 'SET_LESSON_SIZE':
       return { ...state, lessonSize: action.size };

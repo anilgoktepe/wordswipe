@@ -47,7 +47,7 @@ const BENEFITS = [
     icon: 'infinity' as const,
     iconLib: 'mci' as const,
     title: 'Sınırsız tekrar seansları',
-    desc: 'Tüm öğrenilmiş kelimelerini istediğin kadar çalış',
+    desc: '8, 10, 15 ve 20 kelimelik tekrar seansları — daha hızlı pekiştir',
   },
   {
     icon: 'dumbbell' as const,

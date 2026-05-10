@@ -147,6 +147,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   // If the user was previously premium (or has a stale default of 20), and
   // is now free, quietly reset their lesson size to the free base of 5.
   const lessonSize = state.lessonSize ?? 20;
+  const reviewCap  = isPremium ? lessonSize : FREE_SESSION_CAP;
   useEffect(() => {
     if (!isPremium && lessonSize > FREE_SESSION_CAP) {
       dispatch({ type: 'SET_LESSON_SIZE', size: FREE_SESSION_CAP });
@@ -273,7 +274,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const handleReviewWords = () => {
     if (learnedReviewWords.length === 0) return;
     const cap = isPremium ? (state.lessonSize ?? 20) : FREE_SESSION_CAP;
-    const words = learnedReviewWords.slice(0, cap);
+    const lastReviewSet = new Set(state.lastReviewWordIds);
+    const fresh = learnedReviewWords.filter(w => !lastReviewSet.has(w.id));
+    const stale = learnedReviewWords.filter(w =>  lastReviewSet.has(w.id));
+    const words = [...fresh, ...stale].slice(0, cap);
+    dispatch({ type: 'SET_LAST_REVIEW_WORDS', wordIds: words.map(w => w.id) });
     dispatch({ type: 'SET_SESSION_WORDS', words });
     navigation.navigate('Flashcard');
   };
@@ -662,7 +667,14 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <MaterialCommunityIcons name="refresh" size={24} color="#2563EB" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.actionTitle, { color: theme.text }]}>Tekrar Et</Text>
+              <View style={styles.actionTitleRow}>
+                <Text style={[styles.actionTitle, { color: theme.text }]}>Tekrar Et</Text>
+                {learnedReviewWords.length > 0 && (
+                  <View style={styles.reviewCapBadge}>
+                    <Text style={styles.reviewCapBadgeText}>{reviewCap} kelime</Text>
+                  </View>
+                )}
+              </View>
               <Text style={[styles.actionSub, { color: theme.textSecondary }]}>
                 {learnedReviewWords.length > 0
                   ? 'Öğrendiğin kelimeleri pekiştir'
@@ -1016,6 +1028,20 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     color: '#7C3AED',
+    fontFamily: 'Inter_700Bold',
+  },
+
+  /* Tekrar Et session-size badge */
+  reviewCapBadge: {
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+  },
+  reviewCapBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#2563EB',
     fontFamily: 'Inter_700Bold',
   },
 
