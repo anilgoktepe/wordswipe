@@ -38,7 +38,7 @@ export const TabNavigator: React.FC<Props> = ({ navigation }) => {
   const renderScreen = () => {
     switch (activeTab) {
       case 'home':            return <HomeScreen navigation={navigation} />;
-      case 'sentenceBuilder': return <SentenceBuilderScreen navigation={navigation} />;
+      case 'sentenceBuilder': return <SentenceBuilderScreen navigation={navigation} onBack={() => setActiveTab('home')} />;
       case 'myWords':         return <MyWordsScreen navigation={navigation} />;
       case 'stats':           return <StatsScreen />;
       case 'settings':        return <SettingsScreen navigation={navigation} />;

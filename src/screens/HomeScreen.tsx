@@ -214,6 +214,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
       if (wpA.correctCount !== wpB.correctCount) return wpA.correctCount - wpB.correctCount;
       return wpA.nextReviewAt - wpB.nextReviewAt;
     });
+  const lastReviewSet = new Set(state.lastReviewWordIds);
+  const freshReviewWords = learnedReviewWords.filter(w => !lastReviewSet.has(w.id));
+  const reviewSessionSize = Math.min(freshReviewWords.length, reviewCap);
+
   const seenCount = vocabulary.filter(w => {
     const p = state.wordProgress[w.id];
     return p !== undefined && (p.correctCount > 0 || p.wrongCount > 0);
@@ -272,12 +276,9 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleReviewWords = () => {
-    if (learnedReviewWords.length === 0) return;
+    if (freshReviewWords.length === 0) return;
     const cap = isPremium ? (state.lessonSize ?? 20) : FREE_SESSION_CAP;
-    const lastReviewSet = new Set(state.lastReviewWordIds);
-    const fresh = learnedReviewWords.filter(w => !lastReviewSet.has(w.id));
-    const stale = learnedReviewWords.filter(w =>  lastReviewSet.has(w.id));
-    const words = [...fresh, ...stale].slice(0, cap);
+    const words = freshReviewWords.slice(0, cap);
     dispatch({ type: 'SET_LAST_REVIEW_WORDS', wordIds: words.map(w => w.id) });
     dispatch({ type: 'SET_SESSION_WORDS', words });
     navigation.navigate('Flashcard');
@@ -652,13 +653,13 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <Animated.View style={slideStyle(card4Anim)}>
           <TouchableOpacity
             onPress={handleReviewWords}
-            activeOpacity={learnedReviewWords.length > 0 ? 0.85 : 1}
+            activeOpacity={freshReviewWords.length > 0 ? 0.85 : 1}
             style={[
               styles.actionCard,
               {
                 backgroundColor: theme.surface,
-                borderColor: learnedReviewWords.length > 0 ? '#93C5FD' : theme.border,
-                opacity: learnedReviewWords.length === 0 ? 0.55 : 1,
+                borderColor: freshReviewWords.length > 0 ? '#93C5FD' : theme.border,
+                opacity: freshReviewWords.length === 0 ? 0.55 : 1,
                 ...shadows.sm,
               },
             ]}
@@ -669,16 +670,18 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             <View style={{ flex: 1 }}>
               <View style={styles.actionTitleRow}>
                 <Text style={[styles.actionTitle, { color: theme.text }]}>Tekrar Et</Text>
-                {learnedReviewWords.length > 0 && (
+                {freshReviewWords.length > 0 && (
                   <View style={styles.reviewCapBadge}>
-                    <Text style={styles.reviewCapBadgeText}>{reviewCap} kelime</Text>
+                    <Text style={styles.reviewCapBadgeText}>{reviewSessionSize} kelime</Text>
                   </View>
                 )}
               </View>
               <Text style={[styles.actionSub, { color: theme.textSecondary }]}>
-                {learnedReviewWords.length > 0
+                {freshReviewWords.length > 0
                   ? 'Öğrendiğin kelimeleri pekiştir'
-                  : 'Önce birkaç kelime öğren'}
+                  : learnedReviewWords.length > 0
+                    ? 'Bu kelimeleri az önce tekrar ettin'
+                    : 'Önce birkaç kelime öğren'}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.textTertiary} />

@@ -41,6 +41,7 @@ const vocabulary = getLocalWords();
 interface Props {
   navigation: any;
   route?: { params?: { wordIds?: number[] } };
+  onBack?: () => void;
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -83,7 +84,8 @@ function shouldAutoAnalyze(result: LocalAnalysisResult, sentence: string): boole
 
 // ─── Screen ────────────────────────────────────────────────────────────────────
 
-export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) => {
+export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route, onBack }) => {
+  const goBack = onBack ?? (() => navigation.goBack());
   const { state, dispatch } = useApp();
   const theme = getTheme(state.darkMode);
 
@@ -461,7 +463,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
         <Text style={{ color: theme.textSecondary, textAlign: 'center', marginBottom: spacing.xl }}>
           Önce bir ders tamamla ve kelimeleri öğren, sonra cümle kurma pratiği yap.
         </Text>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.actionBtn, { backgroundColor: theme.primary }]}>
+        <TouchableOpacity onPress={goBack} style={[styles.actionBtn, { backgroundColor: theme.primary }]}>
           <Text style={styles.actionBtnText}>Geri Dön</Text>
         </TouchableOpacity>
       </View>
@@ -499,7 +501,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
               <Ionicons name="refresh" size={16} color={theme.text} style={{ marginRight: 6 }} />
               <Text style={{ color: theme.text, fontWeight: '700', fontSize: 14 }}>Tekrar Başla</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.finishBtnGradient, { overflow: 'hidden' }]}>
+            <TouchableOpacity onPress={goBack} style={[styles.finishBtnGradient, { overflow: 'hidden' }]}>
               <LinearGradient colors={['#6C63FF', '#9B5CF6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>Ana Sayfa</Text>
               <Ionicons name="home" size={16} color="#fff" style={{ marginLeft: 6 }} />
@@ -525,7 +527,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route }) =>
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             style={styles.header}
           >
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBackBtn}>
+            <TouchableOpacity onPress={goBack} style={styles.headerBackBtn}>
               <Ionicons name="arrow-back" size={22} color="#fff" />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
