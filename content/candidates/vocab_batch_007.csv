@@ -1,0 +1,51 @@
+id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
+auto,mind,zihin,She took a short walk to clear her mind before the important presentation.,Önemli sunumdan önce zihnini boşaltmak için kısa bir yürüyüşe çıktı.,medium,B1,noun,emotions
+auto,worry,endişelenmek,Try not to worry about things you cannot change and focus on what you can.,Değiştiremeyeceğin şeyler için endişelenme ve yapabileceklerine odaklan.,medium,B1,verb,emotions
+auto,laugh,gülmek,The children laughed when the puppy kept chasing its own tail around the yard.,Çocuklar yavru köpek avluda kendi kuyruğunun peşinden koşmaya devam edince güldü.,easy,A2,verb,emotions
+auto,miss,özlemek,She missed her family deeply after moving abroad for a new job opportunity.,Yeni bir iş fırsatı için yurt dışına taşındıktan sonra ailesini derinden özledi.,medium,B1,verb,emotions
+auto,surprise,sürpriz,Finding out she had been accepted to her dream university was a wonderful surprise.,Hayalindeki üniversiteye kabul edildiğini öğrenmek harika bir sürprizdi.,medium,B1,noun,emotions
+auto,wish,dilemek,He wished his friend a quick recovery after hearing about the surgery.,Ameliyatı duyunca arkadaşına geçmiş olsun diledi.,medium,B1,verb,emotions
+auto,forget,unutmak,Do not forget to call your parents on their anniversary this weekend.,Bu hafta sonu ebeveynlerinin yıldönümünde onları aramayı unutma.,easy,A2,verb,emotions
+auto,heart,kalp,She felt a warm feeling in her heart when she saw how much her team cared.,Ekibinin ne kadar önem verdiğini gördüğünde kalbinde sıcak bir his belirdi.,easy,A2,noun,emotions
+auto,realize,fark etmek,She suddenly realized that she had forgotten to attach the file to the email.,Dosyayı e-postaya eklemeyi unuttuğunu aniden fark etti.,medium,B2,verb,emotions
+auto,response,tepki,His response to the unexpected news was complete silence for several minutes.,Beklenmedik habere verdiği tepki birkaç dakika boyunca tam bir sessizlik oldu.,medium,B2,noun,emotions
+auto,ground,zemin,The hikers sat on the ground and rested after climbing the steep mountain trail.,Yürüyüşçüler sarp dağ patikasını tırmandıktan sonra yere oturarak dinlendi.,medium,B1,noun,nature
+auto,air,hava,The mountain air felt so fresh and clean after the light rain in the morning.,Sabah hafif yağmurun ardından dağ havası çok taze ve temiz hissettirdi.,easy,A2,noun,nature
+auto,animal,hayvan,The national park is home to many rare and protected animals from around the world.,Ulusal park dünyanın dört bir yanından birçok nadir ve koruma altındaki hayvana ev sahipliği yapar.,easy,A2,noun,nature
+auto,field,tarla,The farmers worked in the field from sunrise until the afternoon sun became too strong.,Çiftçiler güneş doğuşundan öğleden sonranın güneşi çok sertleşene kadar tarlada çalıştı.,medium,B1,noun,nature
+auto,fire,ateş,The fire spread quickly through the dry forest during the long summer drought.,Yangın uzun yaz kuraklığı sırasında kuru ormanda hızla yayıldı.,easy,A2,noun,nature
+auto,fall,düşmek,The leaves fall from the trees each autumn and cover the ground in bright colors.,Yapraklar her sonbaharda ağaçlardan düşer ve yeri parlak renklerle kaplar.,easy,A2,verb,nature
+auto,rise,yükselmek,Sea levels continue to rise each year due to the effects of climate change.,İklim değişikliğinin etkileri nedeniyle deniz seviyeleri her yıl yükselmeye devam ediyor.,medium,B2,verb,nature
+auto,bear,ayı,Hikers in the forest were warned not to leave food unattended because of nearby bears.,Ormandaki yürüyüşçüler yakınlarda ayılar olduğu için yiyeceklerini gözetimsiz bırakmamaları konusunda uyarıldı.,easy,A2,noun,nature
+auto,park,park,The national park attracts thousands of visitors each year who come to see its wildlife.,Ulusal park her yıl vahşi yaşamını görmek için gelen binlerce ziyaretçiyi çekiyor.,easy,A2,noun,nature
+auto,pretty,güzel,The garden looked pretty in spring with rows of colorful flowers along every path.,Bahçe ilkbaharda her patika boyunca sıralanan renkli çiçeklerle güzel görünüyordu.,medium,B1,adjective,nature
+auto,cell,hücre,Red blood cells carry oxygen from the lungs to every part of the body.,Kırmızı kan hücreleri akciğerlerden vücudun her bölümüne oksijen taşır.,medium,B1,noun,health
+auto,arm,kol,She broke her arm while playing tennis and had to wear a cast for six weeks.,Tenis oynarken kolunu kırdı ve altı hafta boyunca alçı takmak zorunda kaldı.,easy,A2,noun,health
+auto,foot,ayak,Wearing comfortable shoes is important to prevent foot pain during long walks.,Uzun yürüyüşlerde ayak ağrısını önlemek için rahat ayakkabı giymek önemlidir.,easy,A2,noun,health
+auto,cut,kesmek,She cut her finger while chopping vegetables and immediately applied a bandage.,Sebzeleri doğrarken parmağını kesti ve hemen yara bandı taktı.,easy,A2,verb,health
+auto,step,adım,Taking ten thousand steps a day is a common goal for people trying to stay active.,Aktif kalmaya çalışan insanlar için günde on bin adım atmak yaygın bir hedeftir.,easy,A2,noun,health
+auto,practice,pratik yapmak,He practiced breathing exercises every morning to help manage his anxiety and stress.,Her sabah kaygı ve stresini yönetmeye yardımcı olmak için nefes egzersizleri yaptı.,medium,B1,verb,health
+auto,limit,sınırlamak,Doctors advise patients to limit their daily sugar intake to reduce the risk of diabetes.,Doktorlar hastalara diyabet riskini azaltmak için günlük şeker tüketimlerini sınırlamalarını tavsiye eder.,medium,B2,verb,health
+auto,drop,azalmak,The number of new infections began to drop after people started following safety guidelines.,İnsanlar güvenlik kurallarına uymaya başladıktan sonra yeni enfeksiyon sayısı azalmaya başladı.,medium,B1,verb,health
+auto,employee,çalışan,Every employee at the company received a bonus after the most successful year in history.,Şirketteki her çalışan tarihin en başarılı yılının ardından ikramiye aldı.,medium,B1,noun,business
+auto,industry,sektör,The technology industry has grown faster than any other sector over the past decade.,Teknoloji sektörü son on yılda diğer tüm sektörlerden daha hızlı büyüdü.,medium,B1,noun,business
+auto,fund,fon,The startup raised a large fund from investors to develop its new product line.,Girişim yeni ürün serisini geliştirmek için yatırımcılardan büyük bir fon topladı.,medium,B2,noun,business
+auto,trade,ticaret,The agreement opened new opportunities for trade between the two countries.,Anlaşma iki ülke arasındaki ticarete yönelik yeni fırsatlar açtı.,medium,B2,noun,business
+auto,financial,finansal,The company published its financial report showing strong growth over the previous quarter.,Şirket bir önceki çeyreğe kıyasla güçlü büyümeyi gösteren finansal raporunu yayımladı.,medium,B2,adjective,business
+auto,official,resmi,All employees must use the official company email for business communications.,Tüm çalışanlar iş iletişimleri için resmi şirket e-postasını kullanmak zorundadır.,medium,B2,adjective,business
+auto,total,toplam,The total cost of the project was higher than the original budget that was set.,Projenin toplam maliyeti belirlenen ilk bütçeden daha yüksek oldu.,medium,B1,adjective,business
+auto,firm,kararlı,The manager gave a firm answer to the team's request after reviewing all the data.,Yönetici tüm verileri inceledikten sonce ekibin talebine kararlı bir yanıt verdi.,medium,B2,adjective,business
+auto,feature,özellik,The latest update added a new feature that allows users to organize their files faster.,Son güncelleme kullanıcıların dosyalarını daha hızlı düzenlemesini sağlayan yeni bir özellik ekledi.,medium,B1,noun,technology
+auto,site,site,The company launched a new site where customers can track their orders in real time.,Şirket müşterilerin siparişlerini gerçek zamanlı olarak takip edebildiği yeni bir site başlattı.,medium,B1,noun,technology
+auto,store,depolamak,The app allows you to store all your important documents securely in the cloud.,Uygulama tüm önemli belgelerinizi bulutta güvenli bir şekilde depolamanıza olanak tanır.,medium,B1,verb,technology
+auto,address,adres,Double-check the email address before sending the confirmation link to the new user.,Onay bağlantısını yeni kullanıcıya göndermeden önce e-posta adresini iki kez kontrol edin.,medium,B1,noun,technology
+auto,page,sayfa,Click the link at the bottom of the page to access the full report online.,Raporun tamamına çevrimiçi erişmek için sayfanın altındaki bağlantıya tıklayın.,easy,A2,noun,technology
+auto,source,kaynak,Always check the source of online information before sharing it with others.,Çevrimiçi bilgileri başkalarıyla paylaşmadan önce her zaman kaynağını kontrol edin.,medium,B2,noun,technology
+auto,model,model,The engineers tested a new model of the device to improve its speed and battery life.,Mühendisler hızını ve pil ömrünü iyileştirmek için cihazın yeni bir modelini test etti.,medium,B1,noun,technology
+auto,test,test etmek,The team decided to test the new software with a small group of users before launch.,Ekip yeni yazılımı piyasaya sürmeden önce küçük bir kullanıcı grubuyla test etmeye karar verdi.,medium,B1,verb,technology
+auto,arrive,varmak,The tour group arrived at the hotel just in time for the welcome dinner.,Tur grubu karşılama yemeğine tam zamanında yetişmek için otele vardı.,medium,B1,verb,travel
+auto,street,sokak,The narrow street in the old part of the city was lined with colorful shops and cafes.,Şehrin eski bölümündeki dar sokak renkli dükkânlar ve kafelerle doluydu.,easy,A2,noun,travel
+auto,drive,sürmek,They decided to drive to the coast instead of taking the train for a change.,Değişiklik olsun diye trene binmek yerine sahile araba sürerek gitmeye karar verdiler.,easy,A2,verb,travel
+auto,return,dönmek,After two weeks of traveling she was happy to return home to her own bed.,İki haftalık seyahatin ardından kendi yatağına dönmekten mutlu oldu.,medium,B1,verb,travel
+auto,approach,yaklaşmak,As they approached the border the customs officer asked to see their passports.,Sınıra yaklaştıklarında gümrük memuru pasaportlarını görmek istedi.,medium,B2,verb,travel
+auto,front,ön,They asked for a room at the front of the hotel to have a view of the square.,Meydanın manzarasına sahip olmak için otelin ön tarafında bir oda istediler.,easy,A2,adjective,travel
