@@ -1,0 +1,26 @@
+id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
+auto,customer,müşteri,The customer asked if the product could be returned within thirty days.,Müşteri ürünün otuz gün içinde iade edilip edilemeyeceğini sordu.,easy,A2,noun,business
+auto,quality,kalite,The company invested in better equipment to improve the quality of its products.,Şirket ürünlerinin kalitesini artırmak için daha iyi ekipmana yatırım yaptı.,medium,B2,noun,business
+auto,raise,artırmak,The company decided to raise the minimum wage for all hourly workers.,Şirket tüm saatlik çalışanlar için asgari ücreti artırmaya karar verdi.,medium,B1,verb,business
+auto,economic,ekonomik,The economic growth of the country attracted many foreign investors last year.,Ülkenin ekonomik büyümesi geçen yıl birçok yabancı yatırımcıyı çekti.,medium,B2,adjective,business
+auto,account,hesap,You need to create an account before you can access the online platform.,Çevrimiçi platforma erişebilmek için önce bir hesap oluşturmanız gerekiyor.,medium,B1,noun,technology
+auto,produce,üretmek,This factory can produce up to five hundred units of the device per day.,Bu fabrika günde beş yüze kadar cihaz üretebilir.,medium,B1,verb,technology
+auto,design,tasarlamak,The engineers worked for months to design a faster and more secure system.,Mühendisler daha hızlı ve güvenli bir sistem tasarlamak için aylarca çalıştı.,medium,B1,verb,technology
+auto,forward,ileri,Click the arrow to move forward to the next page of the document.,Belgenin bir sonraki sayfasına geçmek için oka tıklayın.,medium,B1,adverb,technology
+auto,activity,aktivite,Physical activity for at least thirty minutes a day improves your overall health.,Günde en az otuz dakika fiziksel aktivite genel sağlığınızı iyileştirir.,medium,B1,noun,health
+auto,remain,kalmak,It is important to remain hydrated especially when exercising in hot weather.,Özellikle sıcak havada egzersiz yaparken vücudun nemli kalması önemlidir.,medium,B1,verb,health
+auto,claim,iddia etmek,Scientists claim that this supplement can naturally boost energy levels in the body.,Bilim insanları bu takviyenin vücuttaki enerji seviyelerini doğal yollarla artırabileceğini iddia ediyor.,medium,B2,verb,health
+auto,sound,sağlam,Following a sound diet and getting regular sleep are key habits for good health.,Sağlam bir diyet uygulamak ve düzenli uyumak iyi sağlık için temel alışkanlıklardır.,medium,B2,adjective,health
+auto,value,değer,The value of learning a second language goes far beyond simple communication.,İkinci bir dil öğrenmenin değeri basit iletişimin çok ötesine geçer.,medium,B1,noun,education
+auto,finally,sonunda,After years of hard work she finally received her PhD in biology.,Yıllarca süren sıkı çalışmanın ardından sonunda biyoloji alanında doktorasını aldı.,medium,B1,adverb,education
+auto,past,geçmiş,Looking at past exam papers is one of the most effective ways to prepare.,Geçmiş sınav sorularını incelemek hazırlanmanın en etkili yollarından biridir.,medium,B1,adjective,education
+auto,several,birkaç,She attended several workshops on communication skills during the summer course.,Yaz kursu süresince iletişim becerileri üzerine birkaç atölye çalışmasına katıldı.,medium,B1,adjective,education
+auto,event,etkinlik,The music festival was the biggest event in the city that entire summer.,Müzik festivali tüm yaz boyunca şehrin en büyük etkinliğiydi.,medium,B1,noun,travel
+auto,near,yakın,We chose a hotel near the airport so we would not miss our early flight.,Sabah erken uçağımızı kaçırmamak için havaalanına yakın bir otel seçtik.,easy,A2,adjective,travel
+auto,top,en iyi,The guide showed us the top sights to visit in the city in one day.,Rehber şehirde bir günde ziyaret edilecek en iyi yerleri bize gösterdi.,easy,A2,adjective,travel
+auto,join,katılmak,She was nervous but decided to join the yoga class at her local gym.,Gergin olmasına rağmen yerel spor salonundaki yoga dersine katılmaya karar verdi.,easy,A2,verb,social
+auto,team,takım,The team worked together to finish the project before the deadline.,Ekip projeyi son tarihten önce bitirmek için birlikte çalıştı.,easy,A2,noun,social
+auto,appear,görünmek,He appeared calm during the interview but was actually very nervous inside.,Mülakat sırasında sakin görünüyordu ama aslında içten içe çok gerginiydi.,medium,B1,verb,emotions
+auto,white,beyaz,The white clouds drifted slowly across the bright blue summer sky.,Beyaz bulutlar parlak mavi yaz gökyüzünde yavaşça süzüldü.,easy,A2,adjective,nature
+auto,therefore,bu nedenle,The road was closed for repairs; therefore we had to take a longer route.,Yol tadilat nedeniyle kapalıydı; bu nedenle daha uzun bir güzergah almak zorunda kaldık.,medium,B2,adverb,daily
+auto,above,yukarıda,Please review all the instructions listed above before starting the process.,İşleme başlamadan önce lütfen yukarıda listelenen tüm talimatları inceleyin.,medium,B2,adverb,daily

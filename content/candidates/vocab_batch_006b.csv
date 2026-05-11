@@ -1,0 +1,26 @@
+id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
+auto,certainly,kesinlikle,Reading every day certainly helps students improve their vocabulary and writing skills.,Her gün okumak öğrencilerin kelime hazinelerini ve yazma becerilerini kesinlikle geliştirir.,medium,B1,adverb,education
+auto,usually,genellikle,She usually packs light when traveling to avoid paying extra for luggage.,Fazladan bagaj ücreti ödememek için seyahate çıkarken genellikle az eşya alır.,easy,A2,adverb,travel
+auto,likely,muhtemelen,Sales figures are likely to improve if the new marketing campaign is successful.,Yeni pazarlama kampanyası başarılı olursa satış rakamlarının muhtemelen iyileşmesi bekleniyor.,medium,B2,adverb,business
+auto,simply,sadece,You can simply leave a note on the door if you're not home for the delivery.,Teslimat için evde değilseniz sadece kapıya bir not bırakabilirsiniz.,medium,B1,adverb,daily
+auto,instead,bunun yerine,Instead of taking the elevator she decided to walk up the stairs for exercise.,Asansör yerine egzersiz yapmak için merdivenleri çıkmaya karar verdi.,medium,B1,adverb,health
+auto,particularly,özellikle,She felt particularly anxious before presenting her research to the audience.,Araştırmasını izleyicilere sunarken özellikle gergin hissetti.,medium,B2,adverb,emotions
+auto,national,ulusal,The school took part in the national reading competition for the third year in a row.,Okul üçüncü yıl üst üste ulusal okuma yarışmasına katıldı.,medium,B1,adjective,education
+auto,standard,standart,All employees must follow the standard procedures for handling customer complaints.,Tüm çalışanlar müşteri şikayetlerini ele almak için standart prosedürlere uymak zorundadır.,medium,B1,adjective,business
+auto,wrong,yanlış,We took the wrong turn and ended up in a completely different part of the city.,Yanlış yöne döndük ve tamamen farklı bir şehir bölgesinde bulduk kendimizi.,easy,A2,adjective,travel
+auto,complete,eksiksiz,Please make sure your application is complete before submitting it to the university.,Lütfen başvurunuzu üniversiteye göndermeden önce eksiksiz olduğundan emin olun.,medium,B1,adjective,education
+auto,current,güncel,Make sure your device is running the current version of the operating system.,Cihazınızın işletim sisteminin güncel sürümünü çalıştırdığından emin olun.,medium,B2,adjective,technology
+auto,single,tek,Not a single person in the room had heard about the new policy before the meeting.,Toplantıdan önce odadaki tek bir kişi bile yeni politikadan haberdar değildi.,easy,A2,adjective,social
+auto,fine,güzel,The weather was fine throughout the trip so they spent most days outdoors.,Yolculuk boyunca hava güzeldi ve günlerin çoğunu dışarıda geçirdiler.,easy,A2,adjective,travel
+auto,foreign,yabancı,Meeting foreign students at university opened her eyes to many different cultures.,Üniversitede yabancı öğrencilerle tanışmak gözlerini birçok farklı kültüre açtı.,medium,B1,adjective,social
+auto,former,önceki,Her former colleague called to congratulate her on her new job and promotion.,Eski iş arkadaşı yeni işi ve terfisi için tebrik etmek üzere aradı.,medium,B2,adjective,daily
+auto,save,kurtarmak,Wearing a seatbelt can save your life in the event of a serious accident.,Emniyet kemeri takmak ciddi bir kaza durumunda hayatınızı kurtarabilir.,easy,A2,verb,health
+auto,focus,odaklanmak,The development team decided to focus on fixing bugs before releasing new features.,Geliştirme ekibi yeni özellikler yayınlamadan önce hataları düzeltmeye odaklanmaya karar verdi.,medium,B1,verb,technology
+auto,check,kontrol etmek,The doctor recommended that he check his blood pressure every morning at home.,Doktor her sabah evde tansiyonunu kontrol etmesini önerdi.,easy,A2,verb,health
+auto,apply,başvurmak,Students can apply for the scholarship by filling out the online form before March.,Öğrenciler Mart ayından önce çevrimiçi formu doldurarak bursa başvurabilirler.,medium,B1,verb,education
+auto,serve,hizmet etmek,The company serves clients in more than forty countries around the world.,Şirket dünya genelinde kırktan fazla ülkedeki müşterilere hizmet ediyor.,medium,B1,verb,business
+auto,security,güvenlik,Strong and unique passwords are essential for protecting your online security.,Güçlü ve benzersiz şifreler çevrimiçi güvenliğinizi korumak için çok önemlidir.,medium,B1,noun,technology
+auto,data,veri,All data collected by the app is encrypted and stored on a secure server.,Uygulama tarafından toplanan tüm veriler şifrelenerek güvenli bir sunucuda saklanır.,medium,B1,noun,technology
+auto,performance,performans,The company's performance improved significantly after the new strategy was introduced.,Şirketin performansı yeni strateji uygulamaya konulduktan sonra önemli ölçüde iyileşti.,medium,B2,noun,business
+auto,land,arazi,Large areas of land along the coast are protected as a national nature reserve.,Kıyı boyunca geniş arazi alanları ulusal doğa rezervi olarak koruma altındadır.,medium,B1,noun,nature
+auto,evidence,kanıt,There is strong evidence that regular physical activity helps reduce the risk of disease.,Düzenli fiziksel aktivitenin hastalık riskini azaltmaya yardımcı olduğuna dair güçlü kanıtlar var.,medium,B2,noun,health

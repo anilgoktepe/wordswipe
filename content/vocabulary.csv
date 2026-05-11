@@ -749,3 +749,53 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 750,policy,politika,The app has a clear privacy policy that explains how your data is used.,Uygulama verilerinizin nasıl kullanıldığını açıklayan net bir gizlilik politikasına sahip.,medium,B2,noun,technology
 751,record,kayıt,The system automatically creates a record of every login attempt on your account.,Sistem hesabınızdaki her oturum açma girişiminin otomatik olarak kaydını oluşturuyor.,medium,B2,noun,technology
 752,rather,oldukça,The weather was rather cold for spring so we wore warm jackets.,Hava ilkbahar için oldukça soğuktu bu yüzden kalın ceketler giydik.,medium,B1,adverb,daily
+753,customer,müşteri,The customer asked if the product could be returned within thirty days.,Müşteri ürünün otuz gün içinde iade edilip edilemeyeceğini sordu.,easy,A2,noun,business
+754,quality,kalite,The company invested in better equipment to improve the quality of its products.,Şirket ürünlerinin kalitesini artırmak için daha iyi ekipmana yatırım yaptı.,medium,B2,noun,business
+755,raise,artırmak,The company decided to raise the minimum wage for all hourly workers.,Şirket tüm saatlik çalışanlar için asgari ücreti artırmaya karar verdi.,medium,B1,verb,business
+756,economic,ekonomik,The economic growth of the country attracted many foreign investors last year.,Ülkenin ekonomik büyümesi geçen yıl birçok yabancı yatırımcıyı çekti.,medium,B2,adjective,business
+757,account,hesap,You need to create an account before you can access the online platform.,Çevrimiçi platforma erişebilmek için önce bir hesap oluşturmanız gerekiyor.,medium,B1,noun,technology
+758,produce,üretmek,This factory can produce up to five hundred units of the device per day.,Bu fabrika günde beş yüze kadar cihaz üretebilir.,medium,B1,verb,technology
+759,design,tasarlamak,The engineers worked for months to design a faster and more secure system.,Mühendisler daha hızlı ve güvenli bir sistem tasarlamak için aylarca çalıştı.,medium,B1,verb,technology
+760,forward,ileri,Click the arrow to move forward to the next page of the document.,Belgenin bir sonraki sayfasına geçmek için oka tıklayın.,medium,B1,adverb,technology
+761,activity,aktivite,Physical activity for at least thirty minutes a day improves your overall health.,Günde en az otuz dakika fiziksel aktivite genel sağlığınızı iyileştirir.,medium,B1,noun,health
+762,remain,kalmak,It is important to remain hydrated especially when exercising in hot weather.,Özellikle sıcak havada egzersiz yaparken vücudun nemli kalması önemlidir.,medium,B1,verb,health
+763,claim,iddia etmek,Scientists claim that this supplement can naturally boost energy levels in the body.,Bilim insanları bu takviyenin vücuttaki enerji seviyelerini doğal yollarla artırabileceğini iddia ediyor.,medium,B2,verb,health
+764,sound,sağlam,Following a sound diet and getting regular sleep are key habits for good health.,Sağlam bir diyet uygulamak ve düzenli uyumak iyi sağlık için temel alışkanlıklardır.,medium,B2,adjective,health
+765,value,değer,The value of learning a second language goes far beyond simple communication.,İkinci bir dil öğrenmenin değeri basit iletişimin çok ötesine geçer.,medium,B1,noun,education
+766,finally,sonunda,After years of hard work she finally received her PhD in biology.,Yıllarca süren sıkı çalışmanın ardından sonunda biyoloji alanında doktorasını aldı.,medium,B1,adverb,education
+767,past,geçmiş,Looking at past exam papers is one of the most effective ways to prepare.,Geçmiş sınav sorularını incelemek hazırlanmanın en etkili yollarından biridir.,medium,B1,adjective,education
+768,several,birkaç,She attended several workshops on communication skills during the summer course.,Yaz kursu süresince iletişim becerileri üzerine birkaç atölye çalışmasına katıldı.,medium,B1,adjective,education
+769,event,etkinlik,The music festival was the biggest event in the city that entire summer.,Müzik festivali tüm yaz boyunca şehrin en büyük etkinliğiydi.,medium,B1,noun,travel
+770,near,yakın,We chose a hotel near the airport so we would not miss our early flight.,Sabah erken uçağımızı kaçırmamak için havaalanına yakın bir otel seçtik.,easy,A2,adjective,travel
+771,top,en iyi,The guide showed us the top sights to visit in the city in one day.,Rehber şehirde bir günde ziyaret edilecek en iyi yerleri bize gösterdi.,easy,A2,adjective,travel
+772,join,katılmak,She was nervous but decided to join the yoga class at her local gym.,Gergin olmasına rağmen yerel spor salonundaki yoga dersine katılmaya karar verdi.,easy,A2,verb,social
+773,team,takım,The team worked together to finish the project before the deadline.,Ekip projeyi son tarihten önce bitirmek için birlikte çalıştı.,easy,A2,noun,social
+774,appear,görünmek,He appeared calm during the interview but was actually very nervous inside.,Mülakat sırasında sakin görünüyordu ama aslında içten içe çok gerginiydi.,medium,B1,verb,emotions
+775,white,beyaz,The white clouds drifted slowly across the bright blue summer sky.,Beyaz bulutlar parlak mavi yaz gökyüzünde yavaşça süzüldü.,easy,A2,adjective,nature
+776,therefore,bu nedenle,The road was closed for repairs; therefore we had to take a longer route.,Yol tadilat nedeniyle kapalıydı; bu nedenle daha uzun bir güzergah almak zorunda kaldık.,medium,B2,adverb,daily
+777,above,yukarıda,Please review all the instructions listed above before starting the process.,İşleme başlamadan önce lütfen yukarıda listelenen tüm talimatları inceleyin.,medium,B2,adverb,daily
+778,certainly,kesinlikle,Reading every day certainly helps students improve their vocabulary and writing skills.,Her gün okumak öğrencilerin kelime hazinelerini ve yazma becerilerini kesinlikle geliştirir.,medium,B1,adverb,education
+779,usually,genellikle,She usually packs light when traveling to avoid paying extra for luggage.,Fazladan bagaj ücreti ödememek için seyahate çıkarken genellikle az eşya alır.,easy,A2,adverb,travel
+780,likely,muhtemelen,Sales figures are likely to improve if the new marketing campaign is successful.,Yeni pazarlama kampanyası başarılı olursa satış rakamlarının muhtemelen iyileşmesi bekleniyor.,medium,B2,adverb,business
+781,simply,sadece,You can simply leave a note on the door if you're not home for the delivery.,Teslimat için evde değilseniz sadece kapıya bir not bırakabilirsiniz.,medium,B1,adverb,daily
+782,instead,bunun yerine,Instead of taking the elevator she decided to walk up the stairs for exercise.,Asansör yerine egzersiz yapmak için merdivenleri çıkmaya karar verdi.,medium,B1,adverb,health
+783,particularly,özellikle,She felt particularly anxious before presenting her research to the audience.,Araştırmasını izleyicilere sunarken özellikle gergin hissetti.,medium,B2,adverb,emotions
+784,national,ulusal,The school took part in the national reading competition for the third year in a row.,Okul üçüncü yıl üst üste ulusal okuma yarışmasına katıldı.,medium,B1,adjective,education
+785,standard,standart,All employees must follow the standard procedures for handling customer complaints.,Tüm çalışanlar müşteri şikayetlerini ele almak için standart prosedürlere uymak zorundadır.,medium,B1,adjective,business
+786,wrong,yanlış,We took the wrong turn and ended up in a completely different part of the city.,Yanlış yöne döndük ve tamamen farklı bir şehir bölgesinde bulduk kendimizi.,easy,A2,adjective,travel
+787,complete,eksiksiz,Please make sure your application is complete before submitting it to the university.,Lütfen başvurunuzu üniversiteye göndermeden önce eksiksiz olduğundan emin olun.,medium,B1,adjective,education
+788,current,güncel,Make sure your device is running the current version of the operating system.,Cihazınızın işletim sisteminin güncel sürümünü çalıştırdığından emin olun.,medium,B2,adjective,technology
+789,single,tek,Not a single person in the room had heard about the new policy before the meeting.,Toplantıdan önce odadaki tek bir kişi bile yeni politikadan haberdar değildi.,easy,A2,adjective,social
+790,fine,güzel,The weather was fine throughout the trip so they spent most days outdoors.,Yolculuk boyunca hava güzeldi ve günlerin çoğunu dışarıda geçirdiler.,easy,A2,adjective,travel
+791,foreign,yabancı,Meeting foreign students at university opened her eyes to many different cultures.,Üniversitede yabancı öğrencilerle tanışmak gözlerini birçok farklı kültüre açtı.,medium,B1,adjective,social
+792,former,önceki,Her former colleague called to congratulate her on her new job and promotion.,Eski iş arkadaşı yeni işi ve terfisi için tebrik etmek üzere aradı.,medium,B2,adjective,daily
+793,save,kurtarmak,Wearing a seatbelt can save your life in the event of a serious accident.,Emniyet kemeri takmak ciddi bir kaza durumunda hayatınızı kurtarabilir.,easy,A2,verb,health
+794,focus,odaklanmak,The development team decided to focus on fixing bugs before releasing new features.,Geliştirme ekibi yeni özellikler yayınlamadan önce hataları düzeltmeye odaklanmaya karar verdi.,medium,B1,verb,technology
+795,check,kontrol etmek,The doctor recommended that he check his blood pressure every morning at home.,Doktor her sabah evde tansiyonunu kontrol etmesini önerdi.,easy,A2,verb,health
+796,apply,başvurmak,Students can apply for the scholarship by filling out the online form before March.,Öğrenciler Mart ayından önce çevrimiçi formu doldurarak bursa başvurabilirler.,medium,B1,verb,education
+797,serve,hizmet etmek,The company serves clients in more than forty countries around the world.,Şirket dünya genelinde kırktan fazla ülkedeki müşterilere hizmet ediyor.,medium,B1,verb,business
+798,security,güvenlik,Strong and unique passwords are essential for protecting your online security.,Güçlü ve benzersiz şifreler çevrimiçi güvenliğinizi korumak için çok önemlidir.,medium,B1,noun,technology
+799,data,veri,All data collected by the app is encrypted and stored on a secure server.,Uygulama tarafından toplanan tüm veriler şifrelenerek güvenli bir sunucuda saklanır.,medium,B1,noun,technology
+800,performance,performans,The company's performance improved significantly after the new strategy was introduced.,Şirketin performansı yeni strateji uygulamaya konulduktan sonra önemli ölçüde iyileşti.,medium,B2,noun,business
+801,land,arazi,Large areas of land along the coast are protected as a national nature reserve.,Kıyı boyunca geniş arazi alanları ulusal doğa rezervi olarak koruma altındadır.,medium,B1,noun,nature
+802,evidence,kanıt,There is strong evidence that regular physical activity helps reduce the risk of disease.,Düzenli fiziksel aktivitenin hastalık riskini azaltmaya yardımcı olduğuna dair güçlü kanıtlar var.,medium,B2,noun,health
