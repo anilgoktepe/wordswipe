@@ -1,0 +1,26 @@
+id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
+auto,yesterday,dün,She met her best friend for coffee yesterday and they talked for hours.,Dün en yakın arkadaşıyla kahveye gitti ve saatlerce sohbet ettiler.,easy,A2,adverb,social
+auto,completely,tamamen,She has completely recovered from the illness and returned to her normal routine.,Hastalıktan tamamen iyileşti ve normal rutinine döndü.,medium,B1,adverb,health
+auto,easily,kolayca,You can easily sync your files across all devices with this cloud application.,Bu bulut uygulamasıyla dosyalarınızı tüm cihazlara kolayca senkronize edebilirsiniz.,medium,B1,adverb,technology
+auto,straight,doğruca,Walk straight ahead for two blocks and the museum will be on your left.,İki blok boyunca doğruca ilerleyin ve müze solunuzda olacak.,medium,B1,adverb,travel
+auto,ahead,ileride,The project is two weeks ahead of schedule thanks to the team's hard work.,Proje ekibin sıkı çalışması sayesinde takvimin iki hafta ilerisinde.,medium,B1,adverb,business
+auto,extra,ekstra,She tested the software extra thoroughly before the public launch to avoid any issues.,Herhangi bir sorun yaşamamak için yazılımı kamuya sunmadan önce ekstra kapsamlı şekilde test etti.,medium,B1,adverb,technology
+auto,slightly,hafifçe,The patient felt slightly better after resting for a few hours at home.,Hasta evde birkaç saat dinlendikten sonra kendini hafifçe daha iyi hissetti.,medium,B2,adverb,health
+auto,directly,doğrudan,You can contact the support team directly through the online chat system.,Destek ekibiyle çevrimiçi sohbet sistemi aracılığıyla doğrudan iletişime geçebilirsiniz.,medium,B2,adverb,business
+auto,otherwise,aksi takdirde,Submit your assignment by the deadline; otherwise you may receive a lower grade.,Ödevinizi son tarihe kadar teslim edin; aksi takdirde daha düşük not alabilirsiniz.,medium,B2,adverb,education
+auto,highly,son derece,She is highly motivated and consistently scores well in all her academic courses.,Son derece motive olmuş ve tüm akademik derslerinde tutarlı biçimde yüksek puan alıyor.,medium,B2,adverb,education
+auto,overall,genel olarak,The overall findings of the study suggest that sleep quality affects academic performance.,Araştırmanın genel bulguları uyku kalitesinin akademik performansı etkilediğini öne sürüyor.,medium,B2,adverb,academic
+auto,warm,sıcak,The warm spring sunshine encouraged people to spend more time outside this weekend.,Sıcak bahar güneşi insanları bu hafta sonu dışarıda daha fazla zaman geçirmeye yöneltti.,easy,A2,adjective,nature
+auto,dry,kuru,The summer was extremely dry and farmers struggled to find enough water for their crops.,Yaz son derece kurak geçti ve çiftçiler ürünleri için yeterli su bulmakta zorlandı.,easy,A2,adjective,nature
+auto,dark,karanlık,The sky turned dark just before the heavy storm arrived in the evening.,Akşam şiddetli fırtına gelmeden hemen önce gökyüzü karardı.,easy,A2,adjective,nature
+auto,flat,düz,The flat landscape of the region makes it ideal for cycling and walking tours.,Bölgenin düz arazisi onu bisiklet ve yürüyüş turları için ideal kılmaktadır.,medium,B1,adjective,nature
+auto,regular,düzenli,Regular physical activity helps reduce the risk of chronic disease and supports mental health.,Düzenli fiziksel aktivite kronik hastalık riskini azaltmaya yardımcı olur ve zihinsel sağlığı destekler.,medium,B1,adjective,health
+auto,safe,güvenli,Always make sure the environment is safe before starting any outdoor physical activity.,Herhangi bir açık hava fiziksel aktivitesine başlamadan önce ortamın güvenli olduğundan emin olun.,medium,B1,adjective,health
+auto,medical,tıbbi,She needs to provide a medical certificate before returning to work after surgery.,Ameliyatın ardından işe dönmeden önce tıbbi bir sertifika sunması gerekmektedir.,medium,B1,adjective,health
+auto,content,memnun,He was content with his progress and decided to continue at the same pace.,İlerlemesinden memnun oldu ve aynı tempoda devam etmeye karar verdi.,medium,B1,adjective,emotions
+auto,aware,farkında,She became more aware of how her actions affected the people around her.,Eylemlerinin etrafındaki insanları nasıl etkilediğinin daha fazla farkına vardı.,medium,B2,adjective,emotions
+auto,wonderful,harika,She felt wonderful after spending the afternoon with her closest friends and family.,En yakın arkadaşları ve ailesiyle öğleden sonrayı geçirdikten sonra kendini harika hissetti.,easy,A2,adjective,emotions
+auto,complex,karmaşık,The new encryption method is too complex for most users to configure without training.,Yeni şifreleme yöntemi çoğu kullanıcının eğitim almadan yapılandıramayacağı kadar karmaşıktır.,medium,B2,adjective,technology
+auto,useful,faydalı,The app proved to be very useful for tracking daily habits and fitness goals.,Uygulama günlük alışkanlıkları ve fitness hedeflerini takip etmek için çok faydalı oldu.,medium,B1,adjective,technology
+auto,effective,etkili,Consistent practice is one of the most effective strategies for improving language fluency.,Tutarlı pratik dil akıcılığını geliştirmenin en etkili stratejilerinden biridir.,medium,B2,adjective,education
+auto,legal,yasal,The company sought legal advice before signing the new international trade agreement.,Şirket yeni uluslararası ticaret anlaşmasını imzalamadan önce yasal tavsiye aldı.,medium,B2,adjective,business

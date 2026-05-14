@@ -1,0 +1,16 @@
+id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
+auto,center,merkez,The local health center offers free checkups for all residents every Saturday morning.,Yerel sağlık merkezi her cumartesi sabahı tüm sakinlere ücretsiz kontrol sunmaktadır.,easy,A2,noun,health
+auto,matter,önemli olmak,The quality of the work will always matter more than the speed of its completion.,İşin kalitesi her zaman tamamlanma hızından çok daha önemli olacaktır.,medium,B1,verb,emotions
+auto,force,kuvvet,The force of the river current made it impossible to swim to the other side.,Nehir akıntısının kuvveti öbür tarafa yüzmeyi imkânsız kıldı.,medium,B1,noun,nature
+auto,subject,konu,Her favorite subject at school is mathematics because she enjoys solving problems.,Okuldaki en sevdiği konu problem çözmeyi sevdiği için matematiktir.,easy,A2,noun,education
+auto,class,sınıf,She is the youngest student in her class and also the best at foreign languages.,Sınıfının en genç öğrencisi ve aynı zamanda yabancı dillerde de en iyisidir.,easy,A2,noun,education
+auto,future,gelecek,The company is investing in technology to protect its future in a competitive market.,Şirket rekabetçi bir pazardaki geleceğini korumak için teknolojiye yatırım yapıyor.,medium,B1,noun,business
+auto,type,tür,Select the correct file type before uploading your document to the cloud system.,Belgenizi bulut sistemine yüklemeden önce doğru dosya türünü seçin.,medium,B1,noun,technology
+auto,sale,satış,The sale of the company's European division was announced by the board this week.,Şirketin Avrupa bölümünün satışı bu hafta yönetim kurulu tarafından açıklandı.,medium,B1,noun,business
+auto,position,pozisyon,She applied for the position of senior analyst at an international consulting firm.,Uluslararası bir danışmanlık firmasında kıdemli analist pozisyonuna başvurdu.,medium,B2,noun,business
+auto,staff,personel,All staff members are required to complete the training before the end of the month.,Tüm personelin ay sonuna kadar eğitimi tamamlaması zorunludur.,medium,B1,noun,business
+auto,action,eylem,The government took action to reduce plastic waste in the country's rivers and seas.,Hükümet ülkenin nehirlerindeki ve denizlerindeki plastik atığı azaltmak için harekete geçti.,medium,B1,noun,nature
+auto,charge,şarj etmek,Remember to charge your phone before the long flight so the battery does not die.,Pil bitmemesi için uzun uçuştan önce telefonunu şarj etmeyi unutma.,easy,A2,verb,technology
+auto,organization,kurum,The non-profit organization provides clean water to remote communities in developing countries.,Kâr amacı gütmeyen kurum gelişmekte olan ülkelerdeki uzak topluluklara temiz su sağlıyor.,medium,B1,noun,social
+auto,material,materyal,Download the course material from the university website before the first lecture begins.,İlk ders başlamadan önce üniversitenin web sitesinden ders materyalini indirin.,medium,B1,noun,education
+auto,figure,rakam,The latest figure shows a two percent drop in the unemployment rate this year.,En son rakam bu yıl işsizlik oranında yüzde iki düşüş olduğunu gösteriyor.,medium,B2,noun,business
