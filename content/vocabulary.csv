@@ -99,56 +99,56 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 98,problem,sorun,She stayed late at the office to solve the problem before the deadline.,Son tarihten önce sorunu çözmek için ofiste geç kaldı.,easy,A1,noun,daily
 99,gift,hediye,He brought a small gift for his friend on her birthday.,Arkadaşının doğum günü için küçük bir hediye getirdi.,easy,A1,noun,social
 100,home,ev / yuva,She always feels happy when she arrives home after a long trip.,Uzun bir yolculuktan sonra eve geldiğinde her zaman mutlu hisseder.,easy,A1,noun,daily
-101,decision,karar,She made the right decision.,Doğru kararı verdi.,medium,B1,noun,daily
-102,improve,geliştirmek,I want to improve my English.,İngilizcemi geliştirmek istiyorum.,medium,B1,verb,education
-103,increase,artırmak,We need to increase our sales.,Satışlarımızı artırmamız gerekiyor.,medium,B1,verb,business
-104,support,desteklemek,Friends support each other.,Arkadaşlar birbirini destekler.,medium,B1,verb,social
-105,develop,geliştirmek,We must develop new skills.,Yeni beceriler geliştirmeliyiz.,medium,B2,verb,education
-106,achieve,başarmak,Hard work helps you achieve your goals.,Sıkı çalışmak hedeflerine ulaşmana yardımcı olur.,medium,B1,verb,education
-107,consider,göz önünde bulundurmak,Consider all your options carefully.,Tüm seçeneklerini dikkatlice düşün.,medium,B2,verb,daily
-108,suggest,önermek,I suggest you study harder.,Daha çok çalışmanı öneririm.,medium,B1,verb,daily
-109,require,gerektirmek,This job requires experience.,Bu iş deneyim gerektiriyor.,medium,B2,verb,business
-110,provide,sağlamak,We provide good service.,İyi hizmet sunuyoruz.,medium,B1,verb,business
-111,manage,yönetmek,She manages the whole team.,Tüm ekibi o yönetiyor.,medium,B2,verb,business
-112,express,ifade etmek,Express your feelings clearly.,Duygularını açıkça ifade et.,medium,B1,verb,emotions
-113,involve,dahil etmek,Involve everyone in the plan.,Herkesi plana dahil et.,medium,B2,verb,business
-114,reduce,azaltmak,We must reduce waste.,İsrafı azaltmalıyız.,medium,B1,verb,nature
-115,affect,etkilemek,Stress affects your health.,Stres sağlığınızı etkiler.,medium,B1,verb,health
-116,expect,beklemek,I expect a quick response.,Hızlı bir yanıt bekliyorum.,medium,B1,verb,daily
-117,accept,kabul etmek,I accept the offer.,Teklifi kabul ediyorum.,medium,B1,verb,daily
-118,protect,korumak,We must protect nature.,Doğayı korumamız gerekiyor.,medium,B1,verb,nature
-119,connect,bağlamak,Connect the cable to the device.,Kabloyu cihaza bağla.,medium,B1,verb,technology
-120,discover,keşfetmek,Scientists discover new things every day.,Bilim insanları her gün yeni şeyler keşfediyor.,medium,B1,verb,education
-121,prepare,hazırlamak,Prepare for the exam.,Sınava hazırlan.,medium,B1,verb,education
-122,explain,açıklamak,Please explain the rules.,Lütfen kuralları açıkla.,medium,B1,verb,education
-123,describe,tanımlamak,Describe what you saw.,Gördüklerini anlat.,medium,B2,verb,education
-124,compare,karşılaştırmak,Compare the two prices.,İki fiyatı karşılaştır.,medium,B2,verb,daily
-125,include,dahil etmek,Include all the details in your report.,Raporuna tüm ayrıntıları ekle.,medium,B1,verb,business
-126,importance,önem,The importance of health cannot be ignored.,Sağlığın önemi göz ardı edilemez.,medium,B2,noun,daily
-127,opportunity,fırsat,This is a great opportunity.,Bu harika bir fırsat.,medium,B2,noun,daily
-128,challenge,zorluk,Every challenge makes you stronger.,Her zorluk seni daha güçlü yapar.,medium,B2,noun,daily
-129,experience,deneyim,Experience is the best teacher.,Deneyim en iyi öğretmendir.,medium,B1,noun,education
-130,knowledge,bilgi,Knowledge is power.,Bilgi güçtür.,medium,B2,noun,education
-131,relationship,ilişki,Communication is key in a relationship.,İletişim bir ilişkide anahtardır.,medium,B2,noun,social
-132,community,topluluk,We are a strong community.,Biz güçlü bir topluluğuz.,medium,B2,noun,social
-133,society,toplum,Education benefits society.,Eğitim topluma fayda sağlar.,medium,B2,noun,social
-134,culture,kültür,Every country has its own culture.,Her ülkenin kendine özgü kültürü vardır.,medium,B2,noun,social
-135,tradition,gelenek,This is an old tradition.,Bu eski bir gelenektir.,medium,B1,noun,social
-136,environment,çevre,We must protect the environment.,Çevreyi korumamız gerekiyor.,medium,B2,noun,nature
-137,technology,teknoloji,Technology changes our lives.,Teknoloji hayatlarımızı değiştiriyor.,medium,B1,noun,technology
-138,economy,ekonomi,The economy is growing.,Ekonomi büyüyor.,medium,B2,noun,business
-139,education,eğitim,Education is very important.,Eğitim çok önemlidir.,medium,B1,noun,education
-140,research,araştırma,Research takes a long time.,Araştırma uzun zaman alır.,medium,B2,noun,academic
-141,solution,çözüm,We need a quick solution.,Hızlı bir çözüme ihtiyacımız var.,medium,B1,noun,daily
-142,strategy,strateji,A good strategy leads to success.,İyi bir strateji başarıya götürür.,medium,B2,noun,business
-143,process,süreç,The process takes time.,Süreç zaman alır.,medium,B1,noun,business
-144,purpose,amaç,What is the purpose of this meeting?,Bu toplantının amacı nedir?,medium,B2,noun,daily
-145,benefit,fayda,Exercise has many benefits.,Egzersizin birçok faydası vardır.,medium,B1,noun,health
-146,risk,risk,There is a risk in every decision.,Her kararın bir riski vardır.,medium,B1,noun,business
-147,influence,etki,Parents influence their children.,Ebeveynler çocuklarını etkiler.,medium,B2,noun,social
-148,available,mevcut / müsait,Are you available tomorrow?,Yarın müsait misin?,medium,B1,adjective,daily
-149,responsible,sorumlu,Be responsible for your actions.,Eylemlerinizden sorumlu olun.,medium,B2,adjective,daily
-150,confident,kendinden emin,She is very confident.,O çok kendinden emin.,medium,B2,adjective,emotions
+101,decision,karar,She made the difficult decision to change careers after ten years in finance.,Finansta on yılın ardından kariyer değiştirme konusunda zor bir karar verdi.,medium,B1,noun,daily
+102,improve,geliştirmek,She took extra classes to improve her writing skills before the exam.,Sınav öncesinde yazma becerilerini geliştirmek için ek dersler aldı.,medium,B1,verb,education
+103,increase,artırmak,The company worked hard to increase its profits by fifteen percent this year.,Şirket bu yıl karını yüzde on beş artırmak için sıkı çalıştı.,medium,B1,verb,business
+104,support,desteklemek,It is important to support your friends when they are going through hard times.,Arkadaşlarınız zor zamanlar geçirirken onları desteklemek önemlidir.,medium,B1,verb,social
+105,develop,geliştirmek,She worked with a mentor to develop her leadership skills at the company.,Şirketteki liderlik becerilerini geliştirmek için bir mentörle çalıştı.,medium,B2,verb,education
+106,achieve,başarmak,She studied for months to achieve the high score she needed for university.,Üniversite için ihtiyaç duyduğu yüksek puanı elde etmek için aylarca çalıştı.,medium,B1,verb,education
+107,consider,göz önünde bulundurmak,Before making a decision take time to consider all the options carefully.,Bir karar vermeden önce tüm seçenekleri dikkatlice değerlendirmek için zaman ayırın.,medium,B2,verb,daily
+108,suggest,önermek,I suggest that you read the instructions carefully before starting the test.,Teste başlamadan önce talimatları dikkatlice okumanızı öneririm.,medium,B1,verb,daily
+109,require,gerektirmek,The course does not require any previous knowledge of the subject.,Kurs konuyla ilgili herhangi bir ön bilgi gerektirmiyor.,medium,B2,verb,business
+110,provide,sağlamak,The school will provide students with all the materials they need for the course.,Okul öğrencilere ders için ihtiyaç duydukları tüm materyalleri sağlayacak.,medium,B1,verb,business
+111,manage,yönetmek,It is hard to manage your time well when you have many tasks.,Çok fazla işiniz olduğunda zamanınızı iyi yönetmek zor olabilir.,medium,B2,verb,business
+112,express,ifade etmek,She found it difficult to express her feelings in words after the incident.,Olayın ardından duygularını kelimelerle ifade etmeyi zor buldu.,medium,B1,verb,emotions
+113,involve,dahil etmek,The project will involve students from five different schools across the region.,Proje bölgedeki beş farklı okuldan öğrencileri kapsayacak.,medium,B2,verb,business
+114,reduce,azaltmak,The city introduced new policies to reduce the amount of plastic waste each year.,Şehir her yıl plastik atık miktarını azaltmak için yeni politikalar uygulamaya koydu.,medium,B1,verb,nature
+115,affect,etkilemek,Lack of sleep can seriously affect your ability to concentrate at work.,Uyku eksikliği işte konsantre olma yeteneğinizi ciddi şekilde etkileyebilir.,medium,B1,verb,health
+116,expect,beklemek,She did not expect the exam to be so difficult after all her preparation.,Tüm hazırlığının ardından sınavın bu kadar zor olacağını beklemiyordu.,medium,B1,verb,daily
+117,accept,kabul etmek,After some thought she decided to accept the job offer from the new company.,Bir süre düşündükten sonra yeni şirketin iş teklifini kabul etmeye karar verdi.,medium,B1,verb,daily
+118,protect,korumak,The new law was designed to protect wildlife habitats from industrial development.,Yeni yasa yaban hayatı habitatlarını endüstriyel gelişmeden korumak için tasarlandı.,medium,B1,verb,nature
+119,connect,bağlamak,The app makes it easy to connect with friends and share photos instantly.,Uygulama arkadaşlarla bağlantı kurmayı ve anında fotoğraf paylaşmayı kolaylaştırıyor.,medium,B1,verb,technology
+120,discover,keşfetmek,She was thrilled to discover that the library had the book she wanted.,Kütüphanenin aradığı kitabı bulduğunu keşfetmek onu heyecanlandırdı.,medium,B1,verb,education
+121,prepare,hazırlamak,He needed three weeks to prepare for the important job interview.,Önemli iş görüşmesine hazırlanmak için üç haftaya ihtiyacı vardı.,medium,B1,verb,education
+122,explain,açıklamak,The teacher used simple diagrams to explain the concept to the class.,Öğretmen sınıfa kavramı açıklamak için basit diyagramlar kullandı.,medium,B1,verb,education
+123,describe,tanımlamak,Can you describe what the person was wearing when you last saw them?,Onları en son gördüğünüzde kişinin ne giydiğini tarif edebilir misiniz?,medium,B2,verb,education
+124,compare,karşılaştırmak,It is useful to compare different products before deciding which one to buy.,Hangisini alacağınıza karar vermeden önce farklı ürünleri karşılaştırmak faydalıdır.,medium,B2,verb,daily
+125,include,dahil etmek,The price of the hotel room does not include breakfast or parking.,Otel odasının fiyatına kahvaltı veya otopark dahil değildir.,medium,B1,verb,business
+126,importance,önem,The teacher explained the importance of regular practice in learning a language.,Öğretmen bir dil öğrenmede düzenli pratiğin önemini açıkladı.,medium,B2,noun,daily
+127,opportunity,fırsat,Working abroad gave her the opportunity to improve her language skills significantly.,Yurt dışında çalışmak ona dil becerilerini önemli ölçüde geliştirme fırsatı verdi.,medium,B2,noun,daily
+128,challenge,zorluk,Learning a new language is a big challenge but it becomes easier with practice.,Yeni bir dil öğrenmek büyük bir zorluktur ama pratikle daha kolay hale gelir.,medium,B2,noun,daily
+129,experience,deneyim,She gained valuable experience working at a hospital during her summer holiday.,Yaz tatilinde bir hastanede çalışarak değerli deneyimler edindi.,medium,B1,noun,education
+130,knowledge,bilgi,Her knowledge of different cultures helped her work well in international teams.,Farklı kültürler hakkındaki bilgisi uluslararası ekiplerde iyi çalışmasına yardımcı oldu.,medium,B2,noun,education
+131,relationship,ilişki,She and her coworkers built a strong working relationship over many years.,O ve iş arkadaşları yıllar içinde güçlü bir çalışma ilişkisi kurdu.,medium,B2,noun,social
+132,community,topluluk,The local community came together to clean up the park after the storm.,Fırtınanın ardından yerel topluluk parkı temizlemek için bir araya geldi.,medium,B2,noun,social
+133,society,toplum,A good education system is one of the most important foundations of a healthy society.,İyi bir eğitim sistemi sağlıklı bir toplumun en önemli temellerinden biridir.,medium,B2,noun,social
+134,culture,kültür,Studying abroad helped her understand the culture and daily life of the local people.,Yurt dışında okumak yerel halkın kültürünü ve günlük yaşamını anlamasına yardımcı oldu.,medium,B2,noun,social
+135,tradition,gelenek,Making homemade bread on Sunday mornings is a tradition in their family.,Pazar sabahları ev yapımı ekmek yapmak ailelerinde bir gelenektir.,medium,B1,noun,social
+136,environment,çevre,Using less plastic and recycling more helps to protect the environment for future generations.,Daha az plastik kullanmak ve geri dönüşüm yapmak çevreyi gelecek nesiller için korumaya yardımcı olur.,medium,B2,noun,nature
+137,technology,teknoloji,Modern technology makes it possible to work from home and stay connected with colleagues.,Modern teknoloji evden çalışmayı ve meslektaşlarla bağlantıda kalmayı mümkün kılıyor.,medium,B1,noun,technology
+138,economy,ekonomi,The government introduced new policies to support the economy during the financial crisis.,Hükümet finansal kriz sırasında ekonomiyi desteklemek için yeni politikalar tanıttı.,medium,B2,noun,business
+139,education,eğitim,Access to quality education gives young people better opportunities for their future.,Kaliteli eğitime erişim gençlere gelecekleri için daha iyi fırsatlar sunar.,medium,B1,noun,education
+140,research,araştırma,The team spent two years conducting research on the effects of diet on health.,Ekip diyetin sağlık üzerindeki etkilerini araştırmak için iki yıl harcadı.,medium,B2,noun,academic
+141,solution,çözüm,The team met all morning to find a solution to the technical problem.,Ekip teknik soruna çözüm bulmak için tüm sabah boyunca toplandı.,medium,B1,noun,daily
+142,strategy,strateji,The company developed a new marketing strategy to attract younger customers.,Şirket daha genç müşterileri çekmek için yeni bir pazarlama stratejisi geliştirdi.,medium,B2,noun,business
+143,process,süreç,The application process for the university requires several documents and two reference letters.,Üniversiteye başvuru süreci birkaç belge ve iki referans mektubu gerektiriyor.,medium,B1,noun,business
+144,purpose,amaç,The purpose of the workshop was to teach students new study techniques.,Atölyenin amacı öğrencilere yeni çalışma teknikleri öğretmekti.,medium,B2,noun,daily
+145,benefit,fayda,One major benefit of cycling to work is that it saves money and time.,İşe bisikletle gitmenin en büyük faydalarından biri para ve zaman tasarrufu sağlamasıdır.,medium,B1,noun,health
+146,risk,risk,Starting a new business always involves some risk but can bring great rewards.,Yeni bir iş kurmak her zaman biraz risk içerir ama büyük ödüller getirebilir.,medium,B1,noun,business
+147,influence,etki,Good teachers have a lasting influence on the way their students think and learn.,İyi öğretmenler öğrencilerinin düşünme ve öğrenme biçimleri üzerinde kalıcı bir etki bırakır.,medium,B2,noun,social
+148,available,mevcut / müsait,Please check whether the doctor is available for an appointment next Monday.,Lütfen doktorun önümüzdeki Pazartesi randevu için müsait olup olmadığını kontrol edin.,medium,B1,adjective,daily
+149,responsible,sorumlu,Every employee is responsible for keeping the workplace clean and organized.,Her çalışan iş yerini temiz ve düzenli tutmaktan sorumludur.,medium,B2,adjective,daily
+150,confident,kendinden emin,She felt much more confident after practising her speech several times.,Konuşmasını birkaç kez pratiğinin ardından kendini çok daha emin hissetti.,medium,B2,adjective,emotions
 151,creative,yaratıcı,She is a very creative person.,O çok yaratıcı bir insan.,medium,B2,adjective,daily
 152,flexible,esnek,Be flexible in your thinking.,Düşüncende esnek ol.,medium,B2,adjective,daily
 153,efficient,verimli,We need to be more efficient.,Daha verimli olmamız gerekiyor.,medium,B2,adjective,business
