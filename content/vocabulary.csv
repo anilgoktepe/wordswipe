@@ -49,56 +49,56 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 48,word,kelime,Try to use each new word in a sentence so you remember it better.,Her yeni kelimeyi daha iyi hatırlamak için bir cümlede kullanmaya çalış.,easy,A1,noun,education
 49,music,müzik,She listens to music on her way to school every morning.,Her sabah okula giderken müzik dinliyor.,easy,A1,noun,social
 50,sport,spor,Playing sport regularly helps you stay healthy and feel more energetic.,Düzenli spor yapmak sağlıklı kalmanıza ve daha enerjik hissetmenize yardımcı olur.,easy,A1,noun,health
-51,game,oyun,We play a game together.,Birlikte bir oyun oynuyoruz.,easy,A1,noun,social
-52,time,zaman,Time goes by very fast.,Zaman çok hızlı geçiyor.,easy,A1,noun,daily
-53,year,yıl,Happy New Year!,Mutlu Yıllar!,easy,A1,noun,daily
-54,month,ay,There are twelve months in a year.,Bir yılda on iki ay vardır.,easy,A1,noun,daily
-55,week,hafta,There are seven days in a week.,Bir haftada yedi gün vardır.,easy,A1,noun,daily
-56,money,para,I need more money.,Daha fazla paraya ihtiyacım var.,easy,A1,noun,daily
-57,shop,dükkan,Let us go to the shop.,Hadi dükkana gidelim.,easy,A1,noun,daily
-58,market,pazar,We buy vegetables from the market.,Marketten sebze alırız.,easy,A1,noun,daily
-59,hospital,hastane,The hospital is near here.,Hastane buraya yakın.,easy,A1,noun,health
-60,doctor,doktor,The doctor helps sick people.,Doktor hasta insanlara yardım eder.,easy,A1,noun,health
-61,work,iş,I work every day.,Her gün çalışırım.,easy,A2,noun,business
-62,eat,yemek yemek,I eat lunch at noon.,Öğle yemeğini öğleyin yerim.,easy,A1,verb,daily
-63,drink,içmek,Drink more water.,Daha fazla su iç.,easy,A1,verb,daily
-64,sleep,uyumak,I sleep eight hours a night.,Geceleri sekiz saat uyurum.,easy,A1,verb,health
-65,walk,yürümek,I walk to school every day.,Her gün okula yürüyerek giderim.,easy,A1,verb,health
-66,run,koşmak,She runs in the park.,Parkta koşuyor.,easy,A1,verb,health
-67,speak,konuşmak,I speak Turkish and English.,Türkçe ve İngilizce konuşuyorum.,easy,A1,verb,social
-68,read,okumak,I read books every night.,Her gece kitap okurum.,easy,A1,verb,education
-69,write,yazmak,Write your name here.,Adını buraya yaz.,easy,A1,verb,education
-70,listen,dinlemek,Listen to the music.,Müziği dinle.,easy,A1,verb,daily
-71,watch,izlemek,I watch TV in the evening.,Akşamları televizyon izlerim.,easy,A1,verb,daily
-72,happy,mutlu,She is very happy today.,O bugün çok mutlu.,easy,A1,adjective,emotions
-73,sad,üzgün,He looks sad today.,Bugün üzgün görünüyor.,easy,A1,adjective,emotions
-74,good,iyi,That is a good idea.,Bu iyi bir fikir.,easy,A1,adjective,daily
-75,bad,kötü,That is a bad habit.,Bu kötü bir alışkanlık.,easy,A1,adjective,daily
-76,big,büyük,The elephant is very big.,Fil çok büyük.,easy,A1,adjective,daily
-77,small,küçük,My room is small but cozy.,Odam küçük ama rahat.,easy,A1,adjective,daily
-78,hot,sıcak,The weather is hot today.,Bugün hava sıcak.,easy,A1,adjective,nature
-79,cold,soğuk,It is cold outside.,Dışarısı soğuk.,easy,A1,adjective,nature
-80,new,yeni,I bought a new phone.,Yeni bir telefon aldım.,easy,A1,adjective,daily
-81,old,eski / yaşlı,This is an old building.,Bu eski bir bina.,easy,A1,adjective,daily
-82,fast,hızlı,The car is very fast.,Araba çok hızlı.,easy,A1,adjective,daily
-83,slow,yavaş,The turtle is slow.,Kaplumbağa yavaştır.,easy,A1,adjective,daily
-84,open,açmak,Open the box.,Kutuyu aç.,easy,A1,verb,daily
-85,close,kapatmak / kapalı,Please close the window.,Lütfen pencereyi kapat.,easy,A1,verb,daily
-86,start,başlamak,The class starts at nine.,Ders dokuzda başlıyor.,easy,A1,verb,daily
-87,stop,durmak,Stop the car here.,Arabayı burada durdur.,easy,A1,verb,daily
-88,help,yardım,Can you help me?,Bana yardım edebilir misin?,easy,A1,noun,social
-89,love,sevmek,I love my family.,Ailemi seviyorum.,easy,A1,verb,emotions
-90,name,isim,What is your name?,Adın ne?,easy,A1,noun,daily
-91,age,yaş,How old are you?,Kaç yaşındasın?,easy,A1,noun,daily
-92,place,yer,This is a nice place.,Burası güzel bir yer.,easy,A1,noun,daily
-93,thing,şey,What is that thing?,O şey nedir?,easy,A1,noun,daily
-94,person,kişi,She is a kind person.,O kibar bir insan.,easy,A1,noun,social
-95,idea,fikir,That is a great idea!,Bu harika bir fikir!,easy,A1,noun,daily
-96,question,soru,Do you have a question?,Bir sorunuz var mı?,easy,A1,noun,education
-97,answer,cevap,Please give me an answer.,Lütfen bana bir cevap verin.,easy,A1,noun,education
-98,problem,sorun,We have a big problem.,Büyük bir sorunumuz var.,easy,A1,noun,daily
-99,gift,hediye,She gave me a gift.,Bana bir hediye verdi.,easy,A1,noun,social
-100,home,ev / yuva,There is no place like home.,Hiçbir yer ev gibi değildir.,easy,A1,noun,daily
+51,game,oyun,We usually play a board game together on Friday evenings.,Cuma akşamları genellikle birlikte masa oyunu oynarız.,easy,A1,noun,social
+52,time,zaman,Time passes quickly when you are having fun with good friends.,İyi arkadaşlarla eğlenirken zaman çok hızlı geçer.,easy,A1,noun,daily
+53,year,yıl,She plans to travel to Europe next year after she finishes school.,Okulu bitirdikten sonra gelecek yıl Avrupa'ya gitmeyi planlıyor.,easy,A1,noun,daily
+54,month,ay,She visits her grandparents at least once a month in summer.,Yazın en az ayda bir kez büyükanne ve büyükbabasını ziyaret eder.,easy,A1,noun,daily
+55,week,hafta,She exercises at least three times a week to stay fit.,Formda kalmak için haftada en az üç kez egzersiz yapıyor.,easy,A1,noun,daily
+56,money,para,She saved enough money to buy a new laptop for her studies.,Dersleri için yeni bir dizüstü bilgisayar almak için yeterli para biriktirdi.,easy,A1,noun,daily
+57,shop,dükkan,She stopped at the shop on her way home to buy bread.,Eve dönerken ekmek almak için dükkanda durdu.,easy,A1,noun,daily
+58,market,pazar,Every Saturday morning she goes to the market to buy fresh vegetables.,Her Cumartesi sabahı taze sebze almak için pazara gidiyor.,easy,A1,noun,daily
+59,hospital,hastane,He was taken to the hospital after the accident and stayed for two days.,Kazanın ardından hastaneye götürüldü ve iki gün kaldı.,easy,A1,noun,health
+60,doctor,doktor,The doctor asked her to rest at home and drink plenty of water.,Doktor evde dinlenmesini ve bol su içmesini söyledi.,easy,A1,noun,health
+61,work,iş,She goes to work every day and enjoys her job at the studio.,Her gün işe gidiyor ve stüdyodaki işinden keyif alıyor.,easy,A2,noun,business
+62,eat,yemek yemek,We usually eat lunch together in the cafeteria at noon.,Genellikle öğle saatinde kafeteryada birlikte yemek yeriz.,easy,A1,verb,daily
+63,drink,içmek,Doctors recommend that you drink at least eight glasses of water a day.,Doktorlar günde en az sekiz bardak su içmenizi öneriyor.,easy,A1,verb,daily
+64,sleep,uyumak,She tries to sleep at least eight hours a night to stay healthy.,Sağlıklı kalmak için geceleri en az sekiz saat uyumaya çalışıyor.,easy,A1,verb,health
+65,walk,yürümek,She enjoys going for a long walk in the park on weekends.,Hafta sonları parkta uzun bir yürüyüşe çıkmaktan hoşlanıyor.,easy,A1,verb,health
+66,run,koşmak,He goes for a short run every morning before having breakfast.,Her sabah kahvaltı yapmadan önce kısa bir koşuya çıkıyor.,easy,A1,verb,health
+67,speak,konuşmak,It takes years of practice to speak a foreign language fluently.,Yabancı bir dili akıcı konuşmak için yıllarca pratik yapmak gerekir.,easy,A1,verb,social
+68,read,okumak,He likes to read a chapter of his book before going to sleep.,Uyumadan önce kitabının bir bölümünü okumayı seviyor.,easy,A1,verb,education
+69,write,yazmak,She likes to write short stories and share them with her class.,Kısa hikayeler yazmayı ve onları sınıfıyla paylaşmayı seviyor.,easy,A1,verb,education
+70,listen,dinlemek,It is important to listen carefully when someone is speaking to you.,Biri size konuşurken dikkatlice dinlemek önemlidir.,easy,A1,verb,daily
+71,watch,izlemek,They watch a film together every Friday night as a family.,Aile olarak her Cuma gecesi birlikte bir film izlerler.,easy,A1,verb,daily
+72,happy,mutlu,She was happy to hear that all her friends passed the exam.,Tüm arkadaşlarının sınavı geçtiğini duyunca mutlu oldu.,easy,A1,adjective,emotions
+73,sad,üzgün,She felt sad when she heard that her favorite cafe had closed.,En sevdiği kafenin kapandığını duyunca üzüldü.,easy,A1,adjective,emotions
+74,good,iyi,Getting enough sleep is a good way to improve your concentration.,Yeterince uyumak konsantrasyonunuzu geliştirmenin iyi bir yoludur.,easy,A1,adjective,daily
+75,bad,kötü,Eating too much sugar late at night is a bad habit.,Geceleri çok fazla şeker yemek kötü bir alışkanlıktır.,easy,A1,adjective,daily
+76,big,büyük,The library has a very big collection of books from around the world.,Kütüphane dünyanın dört bir yanından çok büyük bir kitap koleksiyonuna sahip.,easy,A1,adjective,daily
+77,small,küçük,They live in a small apartment but it has a beautiful view.,Küçük bir dairede yaşıyorlar ama güzel bir manzarası var.,easy,A1,adjective,daily
+78,hot,sıcak,It was so hot outside that they decided to stay indoors.,Dışarısı o kadar sıcaktı ki içeride kalmaya karar verdiler.,easy,A1,adjective,nature
+79,cold,soğuk,It was very cold outside so she put on her warm coat.,Dışarısı çok soğuktu bu yüzden sıcak montunu giydi.,easy,A1,adjective,nature
+80,new,yeni,She was excited to start her new job at the technology company.,Teknoloji şirketindeki yeni işine başlamaktan heyecanlıydı.,easy,A1,adjective,daily
+81,old,eski / yaşlı,The old bridge in the city center was built three hundred years ago.,Şehir merkezindeki eski köprü üç yüz yıl önce inşa edildi.,easy,A1,adjective,daily
+82,fast,hızlı,She is a fast reader and can finish a book in two days.,Hızlı bir okuyucu ve iki günde bir kitabı bitirebiliyor.,easy,A1,adjective,daily
+83,slow,yavaş,The internet was very slow so she could not upload the video.,İnternet çok yavaştı bu yüzden videoyu yükleyemedi.,easy,A1,adjective,daily
+84,open,açmak,Please open the door for the guests when they arrive.,Misafirler geldiğinde lütfen kapıyı açın.,easy,A1,verb,daily
+85,close,kapatmak / kapalı,She asked him to close the door because the noise outside was too loud.,Dışarıdaki gürültü çok fazla olduğu için kapıyı kapatmasını istedi.,easy,A1,verb,daily
+86,start,başlamak,She always feels nervous when she has to start a new project.,Yeni bir projeye başlamak zorunda kaldığında her zaman gergin hisseder.,easy,A1,verb,daily
+87,stop,durmak,The bus will stop at every station along the route to the city.,Otobüs şehre giden güzergah boyunca her istasyonda duracak.,easy,A1,verb,daily
+88,help,yardım,She asked her classmate for help with the difficult homework assignment.,Zor ev ödevi için sınıf arkadaşından yardım istedi.,easy,A1,noun,social
+89,love,sevmek,She and her family love spending time together at the beach in summer.,O ve ailesi yazın sahilde birlikte vakit geçirmeyi çok sever.,easy,A1,verb,emotions
+90,name,isim,She wrote her full name and email address on the application form.,Başvuru formuna tam adını ve e-posta adresini yazdı.,easy,A1,noun,daily
+91,age,yaş,You must be over eighteen years of age to enter the club.,Kulübe girebilmek için on sekiz yaşından büyük olmanız gerekiyor.,easy,A1,noun,daily
+92,place,yer,The park near the river is a great place to have a picnic.,Nehir kenarındaki park piknik yapmak için harika bir yer.,easy,A1,noun,daily
+93,thing,şey,The most important thing is to be honest and kind to others.,En önemli şey başkalarına karşı dürüst ve nazik olmaktır.,easy,A1,noun,daily
+94,person,kişi,He is the kind of person who always helps others without asking.,O sormadan her zaman başkalarına yardım eden türden bir insan.,easy,A1,noun,social
+95,idea,fikir,She had a brilliant idea for the new school project that everyone loved.,Herkesin çok beğendiği yeni okul projesi için parlak bir fikri vardı.,easy,A1,noun,daily
+96,question,soru,The teacher asked the class if anyone had a question about the topic.,Öğretmen sınıfa konuyla ilgili herhangi bir sorusu olup olmadığını sordu.,easy,A1,noun,education
+97,answer,cevap,He thought carefully before giving his answer to the difficult question.,Zor soruya cevabını vermeden önce dikkatlice düşündü.,easy,A1,noun,education
+98,problem,sorun,She stayed late at the office to solve the problem before the deadline.,Son tarihten önce sorunu çözmek için ofiste geç kaldı.,easy,A1,noun,daily
+99,gift,hediye,He brought a small gift for his friend on her birthday.,Arkadaşının doğum günü için küçük bir hediye getirdi.,easy,A1,noun,social
+100,home,ev / yuva,She always feels happy when she arrives home after a long trip.,Uzun bir yolculuktan sonra eve geldiğinde her zaman mutlu hisseder.,easy,A1,noun,daily
 101,decision,karar,She made the right decision.,Doğru kararı verdi.,medium,B1,noun,daily
 102,improve,geliştirmek,I want to improve my English.,İngilizcemi geliştirmek istiyorum.,medium,B1,verb,education
 103,increase,artırmak,We need to increase our sales.,Satışlarımızı artırmamız gerekiyor.,medium,B1,verb,business
