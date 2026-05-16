@@ -149,55 +149,55 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 148,available,mevcut / müsait,Please check whether the doctor is available for an appointment next Monday.,Lütfen doktorun önümüzdeki Pazartesi randevu için müsait olup olmadığını kontrol edin.,medium,B1,adjective,daily
 149,responsible,sorumlu,Every employee is responsible for keeping the workplace clean and organized.,Her çalışan iş yerini temiz ve düzenli tutmaktan sorumludur.,medium,B2,adjective,daily
 150,confident,kendinden emin,She felt much more confident after practising her speech several times.,Konuşmasını birkaç kez pratiğinin ardından kendini çok daha emin hissetti.,medium,B2,adjective,emotions
-151,creative,yaratıcı,She is a very creative person.,O çok yaratıcı bir insan.,medium,B2,adjective,daily
-152,flexible,esnek,Be flexible in your thinking.,Düşüncende esnek ol.,medium,B2,adjective,daily
-153,efficient,verimli,We need to be more efficient.,Daha verimli olmamız gerekiyor.,medium,B2,adjective,business
-154,successful,başarılı,He is a successful businessman.,O başarılı bir iş insanı.,medium,B1,adjective,business
-155,professional,profesyonel,Always act in a professional way.,Her zaman profesyonel bir şekilde davran.,medium,B2,adjective,business
-156,communication,iletişim,Good communication is essential.,İyi iletişim şarttır.,medium,B1,noun,social
-157,information,bilgi / enformasyon,I need more information.,Daha fazla bilgiye ihtiyacım var.,medium,B1,noun,education
-158,situation,durum,The situation is difficult.,Durum zor.,medium,B1,noun,daily
-159,condition,koşul / durum,The conditions are perfect.,Koşullar mükemmel.,medium,B1,noun,daily
-160,attitude,tutum / tavır,Your attitude determines your future.,Tutumun geleceğini belirler.,medium,B2,noun,daily
-161,behavior,davranış,Good behavior is important.,İyi davranış önemlidir.,medium,B1,noun,social
-162,schedule,program / takvim,My schedule is very busy.,Programım çok yoğun.,medium,B1,noun,business
-163,effort,çaba / gayret,Put more effort into your work.,İşine daha fazla çaba göster.,medium,B1,noun,daily
-165,partner,ortak / partner,She is my business partner.,O benim iş ortağım.,medium,B2,noun,business
-166,project,proje,We are working on a big project.,Büyük bir proje üzerinde çalışıyoruz.,medium,B1,noun,business
-167,demand,talep,The demand for this product is high.,Bu ürüne olan talep yüksek.,medium,B2,noun,business
-168,supply,arz / tedarik,Supply and demand balance the market.,Arz ve talep piyasayı dengeler.,medium,B2,noun,business
-169,organize,düzenlemek,Organize your workspace.,Çalışma alanını düzenle.,medium,B1,verb,business
-170,communicate,iletişim kurmak,Communicate your ideas clearly.,Fikirlerini açıkça ilet.,medium,B2,verb,social
-171,progress,ilerleme,I am making good progress.,İyi ilerleme kaydediyorum.,medium,B1,noun,education
-172,announce,duyurmak,The company announced new plans.,Şirket yeni planlarını duyurdu.,medium,B1,verb,business
-173,encourage,teşvik etmek,Teachers encourage students.,Öğretmenler öğrencileri teşvik eder.,medium,B1,verb,education
-174,promote,tanıtmak / terfi ettirmek,She was promoted to manager.,O müdürlüğe terfi etti.,medium,B2,verb,business
-175,continue,devam etmek,Continue working on the project.,Proje üzerinde çalışmaya devam et.,medium,B1,verb,daily
-176,balance,denge,Work-life balance is important.,İş-yaşam dengesi önemlidir.,medium,B1,noun,daily
-177,positive,olumlu / pozitif,Stay positive even in hard times.,Zor zamanlarda bile pozitif kal.,medium,B1,adjective,emotions
-178,negative,olumsuz / negatif,Avoid negative thoughts.,Olumsuz düşüncelerden uzak dur.,medium,B1,adjective,emotions
-179,difference,fark,What is the difference between them?,Aralarındaki fark nedir?,medium,B1,noun,daily
-180,similar,benzer,They look similar to each other.,Birbirlerine çok benziyorlar.,medium,B1,adjective,daily
-181,important,önemli,Health is the most important thing.,Sağlık en önemli şeydir.,medium,B1,adjective,daily
-182,necessary,gerekli,Is it necessary to go?,Gitmek gerekiyor mu?,medium,B1,adjective,daily
-183,possible,mümkün,Everything is possible with effort.,Çaba ile her şey mümkündür.,medium,B1,adjective,daily
-184,difficult,zor,This problem is very difficult.,Bu problem çok zor.,medium,B1,adjective,daily
-185,different,farklı,Everyone is different.,Herkes farklıdır.,medium,B1,adjective,daily
-186,common,yaygın / ortak,This is a very common mistake.,Bu çok yaygın bir hata.,medium,B1,adjective,daily
-187,general,genel,In general people are kind.,Genelde insanlar iyidir.,medium,B1,adjective,daily
-188,specific,spesifik / belirli,Give me a specific example.,Bana somut bir örnek ver.,medium,B1,adjective,daily
-189,popular,popüler,This song is very popular.,Bu şarkı çok popüler.,medium,B1,adjective,social
-190,natural,doğal,Natural food is healthier.,Doğal yiyecekler daha sağlıklıdır.,medium,B1,adjective,nature
-191,physical,fiziksel,Physical exercise is important.,Fiziksel egzersiz önemlidir.,medium,B2,adjective,health
-192,mental,zihinsel,Mental health is just as important.,Ruh sağlığı da bir o kadar önemlidir.,medium,B2,adjective,health
-193,social,sosyal,I have an active social life.,Aktif bir sosyal hayatım var.,medium,B1,adjective,social
-194,personal,kişisel,This is my personal opinion.,Bu benim kişisel görüşüm.,medium,B1,adjective,daily
-195,global,küresel,Climate change is a global problem.,İklim değişikliği küresel bir sorundur.,medium,B2,adjective,nature
-196,local,yerel,Support local businesses.,Yerel işletmeleri destekle.,medium,B1,adjective,daily
-197,modern,modern,This is a modern building.,Bu modern bir bina.,medium,B1,adjective,daily
-198,original,özgün / orijinal,Always be original.,Her zaman özgün ol.,medium,B2,adjective,daily
-199,curious,meraklı,Children are naturally curious.,Çocuklar doğaları gereği meraklıdır.,medium,B1,adjective,emotions
-200,patient,sabırlı,Be patient good things take time.,"Sabırlı ol, güzel şeyler zaman alır.",medium,B1,adjective,emotions
+151,creative,yaratıcı,She found a creative way to decorate her small apartment on a tight budget.,Küçük dairesini sıkı bir bütçeyle dekore etmek için yaratıcı bir yol buldu.,medium,B2,adjective,daily
+152,flexible,esnek,The company offers flexible working hours so employees can balance work and family life.,Şirket çalışanların iş ve aile yaşamını dengeleyebilmesi için esnek çalışma saatleri sunuyor.,medium,B2,adjective,daily
+153,efficient,verimli,The new software made the team far more efficient at handling customer requests.,Yeni yazılım ekibin müşteri taleplerini işlemede çok daha verimli olmasını sağladı.,medium,B2,adjective,business
+154,successful,başarılı,The startup became successful after launching its product in three new markets.,Girişim ürününü üç yeni pazarda piyasaya sürdükten sonra başarılı oldu.,medium,B1,adjective,business
+155,professional,profesyonel,She always responds to clients in a calm and professional manner.,Müşterilere her zaman sakin ve profesyonel bir tutumla yanıt verir.,medium,B2,adjective,business
+156,communication,iletişim,Clear communication between team members helps prevent mistakes and misunderstandings.,Ekip üyeleri arasındaki açık iletişim hataları ve yanlış anlamaları önlemeye yardımcı olur.,medium,B1,noun,social
+157,information,bilgi / enformasyon,The brochure contains all the information you need about the course and registration.,Broşür kurs ve kayıt hakkında ihtiyacınız olan tüm bilgileri içermektedir.,medium,B1,noun,education
+158,situation,durum,She handled a very stressful situation at work with remarkable calm and patience.,İşteki çok stresli bir durumu dikkat çekici bir sakinlik ve sabırla yönetti.,medium,B1,noun,daily
+159,condition,koşul / durum,The doctor explained that his condition was serious but could be treated with medication.,Doktor durumunun ciddi olduğunu ama ilaçla tedavi edilebileceğini açıkladı.,medium,B1,noun,daily
+160,attitude,tutum / tavır,His attitude toward failure changed after his mentor encouraged him to keep trying.,Mentoru onu denemeye devam etmesi için cesaretlendirdikten sonra başarısızlığa karşı tutumu değişti.,medium,B2,noun,daily
+161,behavior,davranış,The teacher praised the student for his polite behavior during the school trip.,Öğretmen öğrenciyi okul gezisi sırasındaki nazik davranışı için övdü.,medium,B1,noun,social
+162,schedule,program / takvim,The project is running behind schedule because of unexpected technical problems.,Proje beklenmedik teknik sorunlar nedeniyle takvimin gerisinde kalıyor.,medium,B1,noun,business
+163,effort,çaba / gayret,It takes a lot of effort to learn a new skill but the results are worth it.,Yeni bir beceri öğrenmek çok çaba gerektirir ama sonuçlar buna değer.,medium,B1,noun,daily
+165,partner,ortak / partner,The two companies agreed to work together as equal partners on the new project.,İki şirket yeni projede eşit ortaklar olarak birlikte çalışmayı kabul etti.,medium,B2,noun,business
+166,project,proje,The team finished the project two weeks ahead of schedule and under budget.,Ekip projeyi takvimin iki hafta önünde ve bütçe dahilinde tamamladı.,medium,B1,noun,business
+167,demand,talep,Strong consumer demand led the company to double its production capacity.,Güçlü tüketici talebi şirketi üretim kapasitesini ikiye katlamaya yöneltti.,medium,B2,noun,business
+168,supply,arz / tedarik,The company had difficulty maintaining an adequate supply of parts during the shortage.,Şirket kıtlık sırasında yeterli yedek parça arzını sürdürmekte güçlük çekti.,medium,B2,noun,business
+169,organize,düzenlemek,She volunteered to organize the company's annual staff event this year.,Bu yıl şirketin yıllık personel etkinliğini organize etmek için gönüllü oldu.,medium,B1,verb,business
+170,communicate,iletişim kurmak,It is important to communicate openly with your manager when you face a problem.,Bir sorunla karşılaştığınızda yöneticinizle açıkça iletişim kurmanız önemlidir.,medium,B2,verb,social
+171,progress,ilerleme,Her teacher was pleased with the rapid progress she had made in just one term.,Öğretmeni sadece bir dönemde kaydettiği hızlı ilerlemeye çok sevindi.,medium,B1,noun,education
+172,announce,duyurmak,The director announced that the office would be moving to a new location in spring.,Müdür ofisin ilkbaharda yeni bir konuma taşınacağını açıkladı.,medium,B1,verb,business
+173,encourage,teşvik etmek,Her parents always encouraged her to follow her passion for science and discovery.,Ailesi her zaman onu bilim ve keşfe olan tutkusunu takip etmesi için cesaretlendirdi.,medium,B1,verb,education
+174,promote,tanıtmak / terfi ettirmek,He was promoted to senior engineer after five years of outstanding performance.,Beş yıllık olağanüstü performansının ardından kıdemli mühendisliğe terfi etti.,medium,B2,verb,business
+175,continue,devam etmek,Despite the setback she decided to continue with her studies and finish her degree.,Aksaklığa rağmen öğrenimine devam etmeye ve diplomasını almaya karar verdi.,medium,B1,verb,daily
+176,balance,denge,Finding the right balance between study and rest helps students perform better.,Çalışma ve dinlenme arasında doğru dengeyi bulmak öğrencilerin daha iyi performans göstermesine yardımcı olur.,medium,B1,noun,daily
+177,positive,olumlu / pozitif,She tried to stay positive about the job search even after several rejections.,Birkaç redden sonra bile iş arayışı konusunda olumlu kalmaya çalıştı.,medium,B1,adjective,emotions
+178,negative,olumsuz / negatif,Spending too much time on social media can have a negative effect on your mood.,Sosyal medyada çok fazla zaman geçirmek ruh haliniz üzerinde olumsuz bir etki yaratabilir.,medium,B1,adjective,emotions
+179,difference,fark,Small daily habits can make a huge difference to your health in the long term.,Küçük günlük alışkanlıklar uzun vadede sağlığınızda büyük bir fark yaratabilir.,medium,B1,noun,daily
+180,similar,benzer,The two sisters have similar interests but very different personalities and tastes.,İki kardeşin ilgi alanları benzer ama kişilikleri ve zevkleri çok farklı.,medium,B1,adjective,daily
+181,important,önemli,It is important to read the instructions carefully before starting the exercise.,Egzersize başlamadan önce talimatları dikkatlice okumanız önemlidir.,medium,B1,adjective,daily
+182,necessary,gerekli,It is necessary to bring your passport when applying for a visa at the embassy.,Büyükelçilikte vize başvurusunda bulunurken pasaportunuzu getirmeniz gerekmektedir.,medium,B1,adjective,daily
+183,possible,mümkün,Is it possible to reschedule the appointment to a later time this week?,Randevuyu bu hafta daha geç bir saate almak mümkün mü?,medium,B1,adjective,daily
+184,difficult,zor,It was difficult to concentrate in the noisy cafe so she moved to the library.,Gürültülü kafede konsantre olmak güçtü bu yüzden kütüphaneye taşındı.,medium,B1,adjective,daily
+185,different,farklı,Living in a big city is very different from growing up in a small rural town.,Büyük bir şehirde yaşamak küçük bir kırsal kasabada büyümekten çok farklıdır.,medium,B1,adjective,daily
+186,common,yaygın / ortak,Forgetting to save your work before closing a document is a very common mistake.,Belgeyi kapatmadan önce çalışmanızı kaydetmeyi unutmak çok yaygın bir hatadır.,medium,B1,adjective,daily
+187,general,genel,The general rule is to arrive at the airport at least two hours before departure.,Genel kural kalkıştan en az iki saat önce havalimanına varmaktır.,medium,B1,adjective,daily
+188,specific,spesifik / belirli,The doctor asked her to describe the specific location and intensity of the pain.,Doktor ağrının spesifik yerini ve yoğunluğunu tarif etmesini istedi.,medium,B1,adjective,daily
+189,popular,popüler,The restaurant became very popular after being featured in a well-known food magazine.,Restoran tanınmış bir yemek dergisinde yer aldıktan sonra çok popüler hale geldi.,medium,B1,adjective,social
+190,natural,doğal,The region is known for its natural beauty with forests mountains and clear rivers.,Bölge ormanları dağları ve berrak nehirleriyle doğal güzelliğiyle tanınmaktadır.,medium,B1,adjective,nature
+191,physical,fiziksel,Regular physical activity reduces the risk of heart disease and improves overall well-being.,Düzenli fiziksel aktivite kalp hastalığı riskini azaltır ve genel sağlığı iyileştirir.,medium,B2,adjective,health
+192,mental,zihinsel,Talking to a therapist can greatly improve your mental health and emotional well-being.,Bir terapistle konuşmak zihinsel sağlığınızı ve duygusal refahınızı büyük ölçüde iyileştirebilir.,medium,B2,adjective,health
+193,social,sosyal,She joined several clubs to build her social skills and meet new people.,Sosyal becerilerini geliştirmek ve yeni insanlarla tanışmak için çeşitli kulüplere katıldı.,medium,B1,adjective,social
+194,personal,kişisel,She kept a personal journal to record her thoughts and feelings each evening.,Her akşam düşüncelerini ve hislerini kaydetmek için kişisel bir günlük tuttu.,medium,B1,adjective,daily
+195,global,küresel,The global temperature has risen significantly over the past hundred years.,Küresel sıcaklık son yüz yılda önemli ölçüde yükseldi.,medium,B2,adjective,nature
+196,local,yerel,She always shops at the local market to support the farmers in her community.,Topluluğundaki çiftçileri desteklemek için her zaman yerel pazardan alışveriş yapar.,medium,B1,adjective,daily
+197,modern,modern,Modern smartphones allow people to access information from anywhere in the world.,Modern akıllı telefonlar insanların dünyanın herhangi bir yerinden bilgiye erişmesine olanak tanır.,medium,B1,adjective,daily
+198,original,özgün / orijinal,The designer came up with an original concept that impressed all the clients.,Tasarımcı tüm müşterileri etkileyen özgün bir konsept ortaya çıkardı.,medium,B2,adjective,daily
+199,curious,meraklı,She was curious about the new culture and asked many questions during her visit.,Yeni kültür hakkında meraklıydı ve ziyareti sırasında pek çok soru sordu.,medium,B1,adjective,emotions
+200,patient,sabırlı,You need to be very patient when learning to play a musical instrument.,Bir müzik aleti çalmayı öğrenirken çok sabırlı olmanız gerekir.,medium,B1,adjective,emotions
 301,adapt,uyum sağlamak,You must adapt to new situations.,Yeni durumlara uyum sağlamalısın.,medium,B2,verb,daily
 201,inevitable,kaçınılmaz,Change is inevitable in life.,Değişim hayatın kaçınılmaz bir parçasıdır.,hard,C1,adjective,academic
 202,comprehensive,kapsamlı,We need a comprehensive plan.,Kapsamlı bir plana ihtiyacımız var.,hard,C1,adjective,academic
