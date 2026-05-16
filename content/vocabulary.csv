@@ -1,54 +1,54 @@
 id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
-1,pencil,kalem,I write with a pencil.,Kalemle yazıyorum.,easy,A1,noun,daily
-2,book,kitap,She reads a book every day.,Her gün bir kitap okur.,easy,A1,noun,education
-3,water,su,I drink water every morning.,Her sabah su içerim.,easy,A1,noun,daily
-4,phone,telefon,My phone is on the table.,Telefonum masanın üzerinde.,easy,A1,noun,technology
-5,friend,arkadaş,He is my best friend.,O benim en iyi arkadaşım.,easy,A1,noun,social
-6,house,ev,We live in a big house.,Büyük bir evde yaşıyoruz.,easy,A1,noun,daily
-7,car,araba,The car is red.,Araba kırmızı.,easy,A1,noun,travel
-8,dog,köpek,The dog is very cute.,Köpek çok sevimli.,easy,A1,noun,nature
-9,cat,kedi,The cat sleeps on the sofa.,Kedi kanepede uyuyor.,easy,A1,noun,nature
-10,apple,elma,I eat an apple every day.,Her gün bir elma yerim.,easy,A1,noun,health
-11,door,kapı,Please close the door.,Lütfen kapıyı kapat.,easy,A1,noun,daily
-12,window,pencere,Open the window please.,Lütfen pencereyi aç.,easy,A1,noun,daily
-13,chair,sandalye,Sit on the chair.,Sandalyeye otur.,easy,A1,noun,daily
-14,table,masa,The book is on the table.,Kitap masanın üzerinde.,easy,A1,noun,daily
-15,school,okul,I go to school every day.,Her gün okula gidiyorum.,easy,A1,noun,education
-16,teacher,öğretmen,My teacher is very kind.,Öğretmenim çok kibar.,easy,A1,noun,education
-17,student,öğrenci,She is a good student.,O iyi bir öğrenci.,easy,A1,noun,education
-18,food,yemek,The food is delicious.,Yemek çok lezzetli.,easy,A1,noun,daily
-19,bread,ekmek,We buy fresh bread every morning.,Her sabah taze ekmek alıyoruz.,easy,A1,noun,daily
-20,milk,süt,Children should drink milk.,Çocuklar süt içmeli.,easy,A1,noun,health
-21,tea,çay,I drink tea in the morning.,Sabahları çay içerim.,easy,A1,noun,daily
-22,coffee,kahve,He drinks coffee every morning.,Her sabah kahve içer.,easy,A1,noun,daily
-23,sun,güneş,The sun rises in the east.,Güneş doğudan doğar.,easy,A1,noun,nature
-24,moon,ay,The moon is bright tonight.,Bu gece ay çok parlak.,easy,A1,noun,nature
-25,tree,ağaç,The tree is very tall.,Ağaç çok uzun.,easy,A1,noun,nature
-26,flower,çiçek,She grows beautiful flowers.,Güzel çiçekler yetiştiriyor.,easy,A1,noun,nature
-27,road,yol,The road is very long.,Yol çok uzun.,easy,A1,noun,travel
-28,city,şehir,Istanbul is a big city.,İstanbul büyük bir şehir.,easy,A1,noun,daily
-29,country,ülke,Turkey is a beautiful country.,Türkiye güzel bir ülke.,easy,A1,noun,daily
-30,family,aile,My family is very important to me.,Ailem benim için çok önemli.,easy,A1,noun,social
-31,mother,anne,My mother cooks very well.,Annem çok güzel yemek pişirir.,easy,A1,noun,social
-32,father,baba,My father works hard.,Babam çok çalışkandır.,easy,A1,noun,social
-33,baby,bebek,The baby is sleeping.,Bebek uyuyor.,easy,A1,noun,social
-34,boy,erkek çocuk,The boy runs fast.,Çocuk hızlı koşuyor.,easy,A1,noun,social
-35,girl,kız çocuk,The girl sings beautifully.,Kız güzel şarkı söylüyor.,easy,A1,noun,social
-36,man,adam,The man is tall.,Adam uzun boylu.,easy,A1,noun,social
-37,woman,kadın,The woman is very smart.,Kadın çok zeki.,easy,A1,noun,social
-38,day,gün,Every day is a new beginning.,Her gün yeni bir başlangıçtır.,easy,A1,noun,daily
-39,night,gece,I sleep at night.,Geceleri uyurum.,easy,A1,noun,daily
-40,morning,sabah,Good morning!,Günaydın!,easy,A1,noun,daily
-41,evening,akşam,We have dinner in the evening.,Akşamları yemek yeriz.,easy,A1,noun,daily
-42,color,renk,What is your favorite color?,En sevdiğin renk nedir?,easy,A1,noun,daily
-43,red,kırmızı,The rose is red.,Gül kırmızıdır.,easy,A1,adjective,daily
-44,blue,mavi,The sky is blue.,Gökyüzü mavidir.,easy,A1,adjective,daily
-45,green,yeşil,The grass is green.,Çimen yeşildir.,easy,A1,adjective,nature
-46,number,sayı,What is your phone number?,Telefon numaran nedir?,easy,A1,noun,daily
-47,letter,mektup / harf,She wrote a letter to her friend.,Arkadaşına bir mektup yazdı.,easy,A1,noun,daily
-48,word,kelime,Learn a new word every day.,Her gün yeni bir kelime öğren.,easy,A1,noun,education
-49,music,müzik,I love listening to music.,Müzik dinlemeyi severim.,easy,A1,noun,social
-50,sport,spor,Do you play any sport?,Herhangi bir spor yapıyor musun?,easy,A1,noun,health
+1,pencil,kalem,I use a pencil to write notes in my English class.,İngilizce dersimde not yazmak için kalem kullanırım.,easy,A1,noun,daily
+2,book,kitap,She reads a book every evening before she goes to sleep.,Her akşam uyumadan önce bir kitap okur.,easy,A1,noun,education
+3,water,su,I always carry a bottle of water when I go for a walk.,Yürüyüşe çıktığımda yanımda her zaman bir şişe su taşırım.,easy,A1,noun,daily
+4,phone,telefon,I left my phone on the table and forgot to charge it.,Telefonumu masada bıraktım ve şarj etmeyi unuttum.,easy,A1,noun,technology
+5,friend,arkadaş,She called her best friend to talk about the good news.,En iyi arkadaşını iyi haberi paylaşmak için aradı.,easy,A1,noun,social
+6,house,ev,They moved into a new house in a quiet part of the city.,Şehrin sakin bir bölgesindeki yeni bir eve taşındılar.,easy,A1,noun,daily
+7,car,araba,The red car is parked in front of our house.,Kırmızı araba evimizin önünde park edilmiş.,easy,A1,noun,travel
+8,dog,köpek,My dog loves to run and play in the park every afternoon.,Köpeğim her öğleden sonra parkta koşmayı ve oynamayı çok sever.,easy,A1,noun,nature
+9,cat,kedi,The cat likes to sleep on the warm sofa near the window.,Kedi pencerenin yanındaki sıcak kanepede uyumayı sever.,easy,A1,noun,nature
+10,apple,elma,She puts an apple in her bag to eat as a healthy snack.,Sağlıklı bir atıştırmalık olarak yemek için çantasına bir elma koyuyor.,easy,A1,noun,health
+11,door,kapı,Please close the door when you leave the room.,Odadan çıkarken lütfen kapıyı kapat.,easy,A1,noun,daily
+12,window,pencere,She opened the window to let some fresh air into the room.,Odaya biraz taze hava girmesi için pencereyi açtı.,easy,A1,noun,daily
+13,chair,sandalye,She pulled up a chair and sat next to her friend.,Bir sandalye çekti ve arkadaşının yanına oturdu.,easy,A1,noun,daily
+14,table,masa,She put her keys and bag on the table when she came home.,Eve geldiğinde anahtarlarını ve çantasını masanın üzerine bıraktı.,easy,A1,noun,daily
+15,school,okul,She walks to school every morning and arrives at eight o'clock.,Her sabah okula yürüyerek gider ve saat sekizde varır.,easy,A1,noun,education
+16,teacher,öğretmen,My English teacher explains everything clearly and makes the class fun.,İngilizce öğretmenim her şeyi net bir şekilde açıklıyor ve dersi eğlenceli yapıyor.,easy,A1,noun,education
+17,student,öğrenci,The student studies hard every night to prepare for her exams.,Öğrenci sınavlarına hazırlanmak için her gece sıkı çalışıyor.,easy,A1,noun,education
+18,food,yemek,The food at that restaurant was so delicious that we ordered extra.,O restoranda yemek o kadar lezzetliydi ki fazladan sipariş verdik.,easy,A1,noun,daily
+19,bread,ekmek,She buys fresh bread from the bakery every morning for breakfast.,Her sabah kahvaltı için fırından taze ekmek alıyor.,easy,A1,noun,daily
+20,milk,süt,My mother always adds milk to her coffee before drinking it.,Annem her zaman kahvesini içmeden önce içine süt ekler.,easy,A1,noun,health
+21,tea,çay,She makes a cup of tea every morning and drinks it slowly.,Her sabah bir fincan çay hazırlar ve onu yavaş yavaş içer.,easy,A1,noun,daily
+22,coffee,kahve,He buys a cup of coffee on his way to work each morning.,Her sabah işe giderken bir fincan kahve alır.,easy,A1,noun,daily
+23,sun,güneş,The sun was shining brightly when we arrived at the beach.,Plaja vardığımızda güneş parlak bir şekilde parlıyordu.,easy,A1,noun,nature
+24,moon,ay,We sat outside and looked at the full moon on a clear night.,Açık bir gecede dışarıda oturup dolunaya baktık.,easy,A1,noun,nature
+25,tree,ağaç,There is a tall tree in the garden where the birds like to sing.,Bahçede kuşların şarkı söylemeyi sevdiği uzun bir ağaç var.,easy,A1,noun,nature
+26,flower,çiçek,She planted a flower in the garden and watered it every day.,Bahçeye bir çiçek dikti ve her gün suladı.,easy,A1,noun,nature
+27,road,yol,The road through the mountains was long but the view was wonderful.,Dağlardan geçen yol uzundu ama manzara harikaydı.,easy,A1,noun,travel
+28,city,şehir,She moved to a big city to find better job opportunities after graduation.,Mezun olduktan sonra daha iyi iş fırsatları bulmak için büyük bir şehre taşındı.,easy,A1,noun,daily
+29,country,ülke,He traveled to a different country every summer to experience new cultures.,Her yaz farklı bir ülkeye giderek yeni kültürler keşfetti.,easy,A1,noun,daily
+30,family,aile,She visits her family every weekend and they always have dinner together.,Her hafta sonu ailesini ziyaret eder ve her zaman birlikte yemek yerler.,easy,A1,noun,social
+31,mother,anne,She called her mother every Sunday to chat about her week.,Her Pazar annesiyle haftasını konuşmak için onu arardı.,easy,A1,noun,social
+32,father,baba,Her father drove her to school every morning before going to work.,Babası her sabah işe gitmeden önce onu okula götürürdü.,easy,A1,noun,social
+33,baby,bebek,The baby started crying loudly in the middle of the night.,Bebek gece yarısı yüksek sesle ağlamaya başladı.,easy,A1,noun,social
+34,boy,erkek çocuk,The boy played football with his friends in the park after school.,Erkek çocuk okul sonrasında parkta arkadaşlarıyla futbol oynadı.,easy,A1,noun,social
+35,girl,kız çocuk,The girl learned to paint and made a picture of the sunset.,Kız çocuğu resim yapmayı öğrendi ve günbatımının resmini yaptı.,easy,A1,noun,social
+36,man,adam,The man at the front desk gave us the key to our room.,Resepsiyondaki adam bize odamızın anahtarını verdi.,easy,A1,noun,social
+37,woman,kadın,The woman at the library helped us find the books we needed.,Kütüphanedeki kadın ihtiyacımız olan kitapları bulmamıza yardım etti.,easy,A1,noun,social
+38,day,gün,We spent the whole day at the beach and came back very tired.,Tüm günü sahilde geçirdik ve çok yorgun döndük.,easy,A1,noun,daily
+39,night,gece,He stayed up all night to finish his homework before class.,Dersten önce ödevini bitirmek için bütün gece uyumadı.,easy,A1,noun,daily
+40,morning,sabah,She wakes up early in the morning and goes for a walk.,Sabah erken kalkar ve yürüyüşe çıkar.,easy,A1,noun,daily
+41,evening,akşam,In the evening the family sat together and watched a film.,Akşamüzeri aile birlikte oturdu ve bir film izledi.,easy,A1,noun,daily
+42,color,renk,She chose a bright color for the walls of her new bedroom.,Yeni yatak odasının duvarları için parlak bir renk seçti.,easy,A1,noun,daily
+43,red,kırmızı,She wore a red dress to the party and looked very elegant.,Partiye kırmızı bir elbise giydi ve çok zarif görünüyordu.,easy,A1,adjective,daily
+44,blue,mavi,He painted his bedroom walls blue because it is his favorite color.,En sevdiği renk olduğu için yatak odasının duvarlarını maviye boyadı.,easy,A1,adjective,daily
+45,green,yeşil,The hills looked very green after the heavy rain last week.,Geçen haftaki yoğun yağmurun ardından tepeler çok yeşil görünüyordu.,easy,A1,adjective,nature
+46,number,sayı,Can you write your phone number here so I can call you later?,Daha sonra arayabilmem için telefon numaranı buraya yazar mısın?,easy,A1,noun,daily
+47,letter,mektup / harf,She wrote a long letter to her grandmother who lives far away.,Uzakta yaşayan büyükannesine uzun bir mektup yazdı.,easy,A1,noun,daily
+48,word,kelime,Try to use each new word in a sentence so you remember it better.,Her yeni kelimeyi daha iyi hatırlamak için bir cümlede kullanmaya çalış.,easy,A1,noun,education
+49,music,müzik,She listens to music on her way to school every morning.,Her sabah okula giderken müzik dinliyor.,easy,A1,noun,social
+50,sport,spor,Playing sport regularly helps you stay healthy and feel more energetic.,Düzenli spor yapmak sağlıklı kalmanıza ve daha enerjik hissetmenize yardımcı olur.,easy,A1,noun,health
 51,game,oyun,We play a game together.,Birlikte bir oyun oynuyoruz.,easy,A1,noun,social
 52,time,zaman,Time goes by very fast.,Zaman çok hızlı geçiyor.,easy,A1,noun,daily
 53,year,yıl,Happy New Year!,Mutlu Yıllar!,easy,A1,noun,daily
