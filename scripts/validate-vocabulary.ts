@@ -8,22 +8,34 @@
  *
  *   Errors (block release):
  *     • duplicate words (normalizeWordKey)
- *     • missing or too-short examples (< 8 chars)
+ *     • missing or too-short examples (< 30 chars)
  *     • missing translations
+ *     • CEFR/level mismatch (A1/A2→easy, B1/B2→medium, C1/C2→hard)
  *
  *   Warnings (informational):
  *     • unknown partOfSpeech values
  *     • unknown topic values
+ *     • target word not found in example (base or common inflected form)
  *
  *   Reports (always printed):
  *     • total word count + level distribution
  *     • partOfSpeech coverage + breakdown
  *     • topic coverage + breakdown
+ *
+ *   Quality summary (always printed):
+ *     • total words, examples < 40 chars, slash translations,
+ *       CEFR mismatches, target-word warnings
  */
 
 import { vocabulary, PartOfSpeech, WordTopic } from '../src/data/vocabulary';
 
-const MIN_EXAMPLE_LENGTH = 8;
+const MIN_EXAMPLE_LENGTH = 30;
+
+const CEFR_LEVEL_MAP: Record<string, string> = {
+  A1: 'easy', A2: 'easy',
+  B1: 'medium', B2: 'medium',
+  C1: 'hard', C2: 'hard',
+};
 
 const VALID_POS: Set<string> = new Set<PartOfSpeech>([
   'noun', 'verb', 'adjective', 'adverb', 'phrase', 'other',
@@ -39,13 +51,36 @@ const VALID_TOPICS: Set<string> = new Set<WordTopic>([
 const distribution: Record<string, number> = { easy: 0, medium: 0, hard: 0 };
 const seenKeys = new Map<string, number>(); // normalizedKey → id
 
-const duplicates:    { id: number; word: string; conflictsWithId: number }[] = [];
-const shortExample:  { id: number; word: string; example: string }[]         = [];
-const noTranslation: { id: number; word: string }[]                          = [];
-const badPOS:        { id: number; word: string; value: string }[]           = [];
-const badTopic:      { id: number; word: string; value: string }[]           = [];
+const duplicates:    { id: number; word: string; conflictsWithId: number }[]                    = [];
+const shortExample:  { id: number; word: string; example: string }[]                            = [];
+const noTranslation: { id: number; word: string }[]                                             = [];
+const cefrMismatch:  { id: number; word: string; cefrLevel: string; level: string; expected: string }[] = [];
+const badPOS:        { id: number; word: string; value: string }[]                              = [];
+const badTopic:      { id: number; word: string; value: string }[]                              = [];
 // Slash in translation may indicate POS-type mixing — editorial review trigger.
 const slashTranslation: { id: number; word: string; translation: string }[]  = [];
+
+// Target word not found in example — soft warning only.
+const wordMissing: { id: number; word: string; example: string }[] = [];
+
+// Returns true when the example contains the base word or a common inflected form.
+function wordInExample(word: string, example: string): boolean {
+  const w = word.toLowerCase();
+  const ex = example.toLowerCase();
+  const candidates = [
+    w,                                    // exact base
+    w + 's', w + 'es',                    // plural / 3rd-person
+    w + 'd', w + 'ed',                    // past simple (love→loved, walk→walked)
+    w.replace(/e$/, 'ed'),                // close→closed, move→moved
+    w.replace(/e$/, 'ing'),               // close→closing, make→making
+    w + 'ing',                            // walk→walking, go→going
+    w.replace(/([^aeiou])$/, '$1$1ing'),  // run→running, sit→sitting
+    w.replace(/([^aeiou])$/, '$1$1ed'),   // stop→stopped
+    w.replace(/y$/, 'ies'),               // carry→carries
+    w.replace(/y$/, 'ied'),               // carry→carried
+  ];
+  return candidates.some(c => new RegExp(`\\b${c}\\b`).test(ex));
+}
 
 const posCounts:   Record<string, number> = {};
 const topicCounts: Record<string, number> = {};
@@ -75,6 +110,11 @@ for (const w of vocabulary) {
     shortExample.push({ id: w.id, word: w.word, example: w.example ?? '' });
   }
 
+  // Target word presence check (warning only)
+  if (w.example && !wordInExample(w.word, w.example)) {
+    wordMissing.push({ id: w.id, word: w.word, example: w.example });
+  }
+
   // exampleTr check — optional; count when present, warn if too short
   if (w.exampleTr) {
     if (w.exampleTr.trim().length >= 5) {
@@ -87,6 +127,14 @@ for (const w of vocabulary) {
   // Translation check
   if (!w.translation || w.translation.trim().length === 0) {
     noTranslation.push({ id: w.id, word: w.word });
+  }
+
+  // CEFR/level consistency
+  if (w.cefrLevel && w.level) {
+    const expected = CEFR_LEVEL_MAP[w.cefrLevel];
+    if (expected && w.level !== expected) {
+      cefrMismatch.push({ id: w.id, word: w.word, cefrLevel: w.cefrLevel, level: w.level, expected });
+    }
   }
 
   // Slash in translation — soft warning for editorial review.
@@ -194,6 +242,16 @@ if (noTranslation.length === 0) {
 }
 
 console.log(`\n${hr}`);
+if (cefrMismatch.length === 0) {
+  console.log('✅ All CEFR/level mappings are consistent.');
+} else {
+  console.log(`❌ CEFR/level mismatches (${cefrMismatch.length}):`);
+  for (const m of cefrMismatch) {
+    console.log(`   id:${m.id} "${m.word}" → cefrLevel=${m.cefrLevel} but level=${m.level} (expected: ${m.expected})`);
+  }
+}
+
+console.log(`\n${hr}`);
 if (shortExampleTr.length === 0) {
   console.log('✅ All present exampleTr values are valid (or none set yet).');
 } else {
@@ -203,9 +261,20 @@ if (shortExampleTr.length === 0) {
   }
 }
 
+// ── Warning: target word not in example ─────────────────────────────────────
+console.log(`\n${hr}`);
+if (wordMissing.length === 0) {
+  console.log('✅ All examples contain the target word.');
+} else {
+  console.log(`⚠️  Target word not found in example (${wordMissing.length}) — review for derived forms:`);
+  for (const m of wordMissing) {
+    console.log(`   id:${m.id} "${m.word}" → "${m.example}"`);
+  }
+}
+
 // ── Warnings (metadata) ─────────────────────────────────────────────────────
 console.log(`\n${hr}`);
-const totalWarnings = badPOS.length + badTopic.length;
+const totalWarnings = badPOS.length + badTopic.length + wordMissing.length;
 if (totalWarnings === 0) {
   console.log('✅ All metadata values are valid.');
 } else {
@@ -239,13 +308,23 @@ if (slashTranslation.length > 0) {
   }
 }
 
-// ── Summary ─────────────────────────────────────────────────────────────────
-const totalErrors = duplicates.length + shortExample.length + noTranslation.length;
+// ── Quality summary ──────────────────────────────────────────────────────────
+const under40 = vocabulary.filter(w => (w.example ?? '').length < 40).length;
+console.log(`\n${hr}`);
+console.log('📋 Quality summary');
+console.log(`   Total words             : ${vocabulary.length}`);
+console.log(`   Examples < 40 chars     : ${under40}`);
+console.log(`   Slash translations      : ${slashTranslation.length}`);
+console.log(`   CEFR/level mismatches   : ${cefrMismatch.length}`);
+console.log(`   Target-word warnings    : ${wordMissing.length}`);
+
+// ── Pass / fail ──────────────────────────────────────────────────────────────
+const totalErrors = duplicates.length + shortExample.length + noTranslation.length + cefrMismatch.length;
 console.log(`\n${hr}`);
 if (totalErrors === 0 && totalWarnings === 0) {
   console.log('🎉 All checks passed. Dataset is clean.');
 } else if (totalErrors === 0) {
-  console.log(`⚠️  ${totalWarnings} metadata warning(s). No blocking errors.`);
+  console.log(`⚠️  ${totalWarnings} warning(s). No blocking errors.`);
 } else {
   console.log(`❌ ${totalErrors} blocking error(s) found. Fix before release.`);
   if (totalWarnings > 0) console.log(`⚠️  ${totalWarnings} additional warning(s).`);

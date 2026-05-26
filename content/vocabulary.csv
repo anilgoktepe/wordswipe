@@ -45,7 +45,7 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 44,blue,mavi,He painted his bedroom walls blue because it is his favorite color.,En sevdiği renk olduğu için yatak odasının duvarlarını maviye boyadı.,easy,A1,adjective,daily
 45,green,yeşil,The hills looked very green after the heavy rain last week.,Geçen haftaki yoğun yağmurun ardından tepeler çok yeşil görünüyordu.,easy,A1,adjective,nature
 46,number,sayı,Can you write your phone number here so I can call you later?,Daha sonra arayabilmem için telefon numaranı buraya yazar mısın?,easy,A1,noun,daily
-47,letter,mektup / harf,She wrote a long letter to her grandmother who lives far away.,Uzakta yaşayan büyükannesine uzun bir mektup yazdı.,easy,A1,noun,daily
+47,letter,mektup,She wrote a long letter to her grandmother who lives far away.,Uzakta yaşayan büyükannesine uzun bir mektup yazdı.,easy,A1,noun,daily
 48,word,kelime,Try to use each new word in a sentence so you remember it better.,Her yeni kelimeyi daha iyi hatırlamak için bir cümlede kullanmaya çalış.,easy,A1,noun,education
 49,music,müzik,She listens to music on her way to school every morning.,Her sabah okula giderken müzik dinliyor.,easy,A1,noun,social
 50,sport,spor,Playing sport regularly helps you stay healthy and feel more energetic.,Düzenli spor yapmak sağlıklı kalmanıza ve daha enerjik hissetmenize yardımcı olur.,easy,A1,noun,health
@@ -79,11 +79,11 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 78,hot,sıcak,It was so hot outside that they decided to stay indoors.,Dışarısı o kadar sıcaktı ki içeride kalmaya karar verdiler.,easy,A1,adjective,nature
 79,cold,soğuk,It was very cold outside so she put on her warm coat.,Dışarısı çok soğuktu bu yüzden sıcak montunu giydi.,easy,A1,adjective,nature
 80,new,yeni,She was excited to start her new job at the technology company.,Teknoloji şirketindeki yeni işine başlamaktan heyecanlıydı.,easy,A1,adjective,daily
-81,old,eski / yaşlı,The old bridge in the city center was built three hundred years ago.,Şehir merkezindeki eski köprü üç yüz yıl önce inşa edildi.,easy,A1,adjective,daily
+81,old,eski,The old bridge in the city center was built three hundred years ago.,Şehir merkezindeki eski köprü üç yüz yıl önce inşa edildi.,easy,A1,adjective,daily
 82,fast,hızlı,She is a fast reader and can finish a book in two days.,Hızlı bir okuyucu ve iki günde bir kitabı bitirebiliyor.,easy,A1,adjective,daily
 83,slow,yavaş,The internet was very slow so she could not upload the video.,İnternet çok yavaştı bu yüzden videoyu yükleyemedi.,easy,A1,adjective,daily
 84,open,açmak,Please open the door for the guests when they arrive.,Misafirler geldiğinde lütfen kapıyı açın.,easy,A1,verb,daily
-85,close,kapatmak / kapalı,She asked him to close the door because the noise outside was too loud.,Dışarıdaki gürültü çok fazla olduğu için kapıyı kapatmasını istedi.,easy,A1,verb,daily
+85,close,kapatmak,She asked him to close the door because the noise outside was too loud.,Dışarıdaki gürültü çok fazla olduğu için kapıyı kapatmasını istedi.,easy,A1,verb,daily
 86,start,başlamak,She always feels nervous when she has to start a new project.,Yeni bir projeye başlamak zorunda kaldığında her zaman gergin hisseder.,easy,A1,verb,daily
 87,stop,durmak,The bus will stop at every station along the route to the city.,Otobüs şehre giden güzergah boyunca her istasyonda duracak.,easy,A1,verb,daily
 88,help,yardım,She asked her classmate for help with the difficult homework assignment.,Zor ev ödevi için sınıf arkadaşından yardım istedi.,easy,A1,noun,social
@@ -98,7 +98,7 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 97,answer,cevap,He thought carefully before giving his answer to the difficult question.,Zor soruya cevabını vermeden önce dikkatlice düşündü.,easy,A1,noun,education
 98,problem,sorun,She stayed late at the office to solve the problem before the deadline.,Son tarihten önce sorunu çözmek için ofiste geç kaldı.,easy,A1,noun,daily
 99,gift,hediye,He brought a small gift for his friend on her birthday.,Arkadaşının doğum günü için küçük bir hediye getirdi.,easy,A1,noun,social
-100,home,ev / yuva,She always feels happy when she arrives home after a long trip.,Uzun bir yolculuktan sonra eve geldiğinde her zaman mutlu hisseder.,easy,A1,noun,daily
+100,home,ev,She always feels happy when she arrives home after a long trip.,Uzun bir yolculuktan sonra eve geldiğinde her zaman mutlu hisseder.,easy,A1,noun,daily
 101,decision,karar,She made the difficult decision to change careers after ten years in finance.,Finansta on yılın ardından kariyer değiştirme konusunda zor bir karar verdi.,medium,B1,noun,daily
 102,improve,geliştirmek,She took extra classes to improve her writing skills before the exam.,Sınav öncesinde yazma becerilerini geliştirmek için ek dersler aldı.,medium,B1,verb,education
 103,increase,artırmak,The company worked hard to increase its profits by fifteen percent this year.,Şirket bu yıl karını yüzde on beş artırmak için sıkı çalıştı.,medium,B1,verb,business
@@ -146,7 +146,7 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 145,benefit,fayda,One major benefit of cycling to work is that it saves money and time.,İşe bisikletle gitmenin en büyük faydalarından biri para ve zaman tasarrufu sağlamasıdır.,medium,B1,noun,health
 146,risk,risk,Starting a new business always involves some risk but can bring great rewards.,Yeni bir iş kurmak her zaman biraz risk içerir ama büyük ödüller getirebilir.,medium,B1,noun,business
 147,influence,etki,Good teachers have a lasting influence on the way their students think and learn.,İyi öğretmenler öğrencilerinin düşünme ve öğrenme biçimleri üzerinde kalıcı bir etki bırakır.,medium,B2,noun,social
-148,available,mevcut / müsait,Please check whether the doctor is available for an appointment next Monday.,Lütfen doktorun önümüzdeki Pazartesi randevu için müsait olup olmadığını kontrol edin.,medium,B1,adjective,daily
+148,available,müsait,Please check whether the doctor is available for an appointment next Monday.,Lütfen doktorun önümüzdeki Pazartesi randevu için müsait olup olmadığını kontrol edin.,medium,B1,adjective,daily
 149,responsible,sorumlu,Every employee is responsible for keeping the workplace clean and organized.,Her çalışan iş yerini temiz ve düzenli tutmaktan sorumludur.,medium,B2,adjective,daily
 150,confident,kendinden emin,She felt much more confident after practising her speech several times.,Konuşmasını birkaç kez pratiğinin ardından kendini çok daha emin hissetti.,medium,B2,adjective,emotions
 151,creative,yaratıcı,She found a creative way to decorate her small apartment on a tight budget.,Küçük dairesini sıkı bir bütçeyle dekore etmek için yaratıcı bir yol buldu.,medium,B2,adjective,daily
@@ -155,27 +155,27 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 154,successful,başarılı,The startup became successful after launching its product in three new markets.,Girişim ürününü üç yeni pazarda piyasaya sürdükten sonra başarılı oldu.,medium,B1,adjective,business
 155,professional,profesyonel,She always responds to clients in a calm and professional manner.,Müşterilere her zaman sakin ve profesyonel bir tutumla yanıt verir.,medium,B2,adjective,business
 156,communication,iletişim,Clear communication between team members helps prevent mistakes and misunderstandings.,Ekip üyeleri arasındaki açık iletişim hataları ve yanlış anlamaları önlemeye yardımcı olur.,medium,B1,noun,social
-157,information,bilgi / enformasyon,The brochure contains all the information you need about the course and registration.,Broşür kurs ve kayıt hakkında ihtiyacınız olan tüm bilgileri içermektedir.,medium,B1,noun,education
+157,information,bilgi,The brochure contains all the information you need about the course and registration.,Broşür kurs ve kayıt hakkında ihtiyacınız olan tüm bilgileri içermektedir.,medium,B1,noun,education
 158,situation,durum,She handled a very stressful situation at work with remarkable calm and patience.,İşteki çok stresli bir durumu dikkat çekici bir sakinlik ve sabırla yönetti.,medium,B1,noun,daily
-159,condition,koşul / durum,The doctor explained that his condition was serious but could be treated with medication.,Doktor durumunun ciddi olduğunu ama ilaçla tedavi edilebileceğini açıkladı.,medium,B1,noun,daily
-160,attitude,tutum / tavır,His attitude toward failure changed after his mentor encouraged him to keep trying.,Mentoru onu denemeye devam etmesi için cesaretlendirdikten sonra başarısızlığa karşı tutumu değişti.,medium,B2,noun,daily
+159,condition,durum,The doctor explained that his condition was serious but could be treated with medication.,Doktor durumunun ciddi olduğunu ama ilaçla tedavi edilebileceğini açıkladı.,medium,B1,noun,daily
+160,attitude,tutum,His attitude toward failure changed after his mentor encouraged him to keep trying.,Mentoru onu denemeye devam etmesi için cesaretlendirdikten sonra başarısızlığa karşı tutumu değişti.,medium,B2,noun,daily
 161,behavior,davranış,The teacher praised the student for his polite behavior during the school trip.,Öğretmen öğrenciyi okul gezisi sırasındaki nazik davranışı için övdü.,medium,B1,noun,social
-162,schedule,program / takvim,The project is running behind schedule because of unexpected technical problems.,Proje beklenmedik teknik sorunlar nedeniyle takvimin gerisinde kalıyor.,medium,B1,noun,business
-163,effort,çaba / gayret,It takes a lot of effort to learn a new skill but the results are worth it.,Yeni bir beceri öğrenmek çok çaba gerektirir ama sonuçlar buna değer.,medium,B1,noun,daily
-165,partner,ortak / partner,The two companies agreed to work together as equal partners on the new project.,İki şirket yeni projede eşit ortaklar olarak birlikte çalışmayı kabul etti.,medium,B2,noun,business
+162,schedule,takvim,The project is running behind schedule because of unexpected technical problems.,Proje beklenmedik teknik sorunlar nedeniyle takvimin gerisinde kalıyor.,medium,B1,noun,business
+163,effort,çaba,It takes a lot of effort to learn a new skill but the results are worth it.,Yeni bir beceri öğrenmek çok çaba gerektirir ama sonuçlar buna değer.,medium,B1,noun,daily
+165,partner,ortak,The two companies agreed to work together as equal partners on the new project.,İki şirket yeni projede eşit ortaklar olarak birlikte çalışmayı kabul etti.,medium,B2,noun,business
 166,project,proje,The team finished the project two weeks ahead of schedule and under budget.,Ekip projeyi takvimin iki hafta önünde ve bütçe dahilinde tamamladı.,medium,B1,noun,business
 167,demand,talep,Strong consumer demand led the company to double its production capacity.,Güçlü tüketici talebi şirketi üretim kapasitesini ikiye katlamaya yöneltti.,medium,B2,noun,business
-168,supply,arz / tedarik,The company had difficulty maintaining an adequate supply of parts during the shortage.,Şirket kıtlık sırasında yeterli yedek parça arzını sürdürmekte güçlük çekti.,medium,B2,noun,business
+168,supply,tedarik,The company had difficulty maintaining an adequate supply of parts during the shortage.,Şirket kıtlık sırasında yeterli yedek parça arzını sürdürmekte güçlük çekti.,medium,B2,noun,business
 169,organize,düzenlemek,She volunteered to organize the company's annual staff event this year.,Bu yıl şirketin yıllık personel etkinliğini organize etmek için gönüllü oldu.,medium,B1,verb,business
 170,communicate,iletişim kurmak,It is important to communicate openly with your manager when you face a problem.,Bir sorunla karşılaştığınızda yöneticinizle açıkça iletişim kurmanız önemlidir.,medium,B2,verb,social
 171,progress,ilerleme,Her teacher was pleased with the rapid progress she had made in just one term.,Öğretmeni sadece bir dönemde kaydettiği hızlı ilerlemeye çok sevindi.,medium,B1,noun,education
 172,announce,duyurmak,The director announced that the office would be moving to a new location in spring.,Müdür ofisin ilkbaharda yeni bir konuma taşınacağını açıkladı.,medium,B1,verb,business
 173,encourage,teşvik etmek,Her parents always encouraged her to follow her passion for science and discovery.,Ailesi her zaman onu bilim ve keşfe olan tutkusunu takip etmesi için cesaretlendirdi.,medium,B1,verb,education
-174,promote,tanıtmak / terfi ettirmek,He was promoted to senior engineer after five years of outstanding performance.,Beş yıllık olağanüstü performansının ardından kıdemli mühendisliğe terfi etti.,medium,B2,verb,business
+174,promote,terfi ettirmek,He was promoted to senior engineer after five years of outstanding performance.,Beş yıllık olağanüstü performansının ardından kıdemli mühendisliğe terfi etti.,medium,B2,verb,business
 175,continue,devam etmek,Despite the setback she decided to continue with her studies and finish her degree.,Aksaklığa rağmen öğrenimine devam etmeye ve diplomasını almaya karar verdi.,medium,B1,verb,daily
 176,balance,denge,Finding the right balance between study and rest helps students perform better.,Çalışma ve dinlenme arasında doğru dengeyi bulmak öğrencilerin daha iyi performans göstermesine yardımcı olur.,medium,B1,noun,daily
-177,positive,olumlu / pozitif,She tried to stay positive about the job search even after several rejections.,Birkaç redden sonra bile iş arayışı konusunda olumlu kalmaya çalıştı.,medium,B1,adjective,emotions
-178,negative,olumsuz / negatif,Spending too much time on social media can have a negative effect on your mood.,Sosyal medyada çok fazla zaman geçirmek ruh haliniz üzerinde olumsuz bir etki yaratabilir.,medium,B1,adjective,emotions
+177,positive,olumlu,She tried to stay positive about the job search even after several rejections.,Birkaç redden sonra bile iş arayışı konusunda olumlu kalmaya çalıştı.,medium,B1,adjective,emotions
+178,negative,olumsuz,Spending too much time on social media can have a negative effect on your mood.,Sosyal medyada çok fazla zaman geçirmek ruh haliniz üzerinde olumsuz bir etki yaratabilir.,medium,B1,adjective,emotions
 179,difference,fark,Small daily habits can make a huge difference to your health in the long term.,Küçük günlük alışkanlıklar uzun vadede sağlığınızda büyük bir fark yaratabilir.,medium,B1,noun,daily
 180,similar,benzer,The two sisters have similar interests but very different personalities and tastes.,İki kardeşin ilgi alanları benzer ama kişilikleri ve zevkleri çok farklı.,medium,B1,adjective,daily
 181,important,önemli,It is important to read the instructions carefully before starting the exercise.,Egzersize başlamadan önce talimatları dikkatlice okumanız önemlidir.,medium,B1,adjective,daily
@@ -183,9 +183,9 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 183,possible,mümkün,Is it possible to reschedule the appointment to a later time this week?,Randevuyu bu hafta daha geç bir saate almak mümkün mü?,medium,B1,adjective,daily
 184,difficult,zor,It was difficult to concentrate in the noisy cafe so she moved to the library.,Gürültülü kafede konsantre olmak güçtü bu yüzden kütüphaneye taşındı.,medium,B1,adjective,daily
 185,different,farklı,Living in a big city is very different from growing up in a small rural town.,Büyük bir şehirde yaşamak küçük bir kırsal kasabada büyümekten çok farklıdır.,medium,B1,adjective,daily
-186,common,yaygın / ortak,Forgetting to save your work before closing a document is a very common mistake.,Belgeyi kapatmadan önce çalışmanızı kaydetmeyi unutmak çok yaygın bir hatadır.,medium,B1,adjective,daily
+186,common,yaygın,Forgetting to save your work before closing a document is a very common mistake.,Belgeyi kapatmadan önce çalışmanızı kaydetmeyi unutmak çok yaygın bir hatadır.,medium,B1,adjective,daily
 187,general,genel,The general rule is to arrive at the airport at least two hours before departure.,Genel kural kalkıştan en az iki saat önce havalimanına varmaktır.,medium,B1,adjective,daily
-188,specific,spesifik / belirli,The doctor asked her to describe the specific location and intensity of the pain.,Doktor ağrının spesifik yerini ve yoğunluğunu tarif etmesini istedi.,medium,B1,adjective,daily
+188,specific,belirli,The doctor asked her to describe the specific location and intensity of the pain.,Doktor ağrının spesifik yerini ve yoğunluğunu tarif etmesini istedi.,medium,B1,adjective,daily
 189,popular,popüler,The restaurant became very popular after being featured in a well-known food magazine.,Restoran tanınmış bir yemek dergisinde yer aldıktan sonra çok popüler hale geldi.,medium,B1,adjective,social
 190,natural,doğal,The region is known for its natural beauty with forests mountains and clear rivers.,Bölge ormanları dağları ve berrak nehirleriyle doğal güzelliğiyle tanınmaktadır.,medium,B1,adjective,nature
 191,physical,fiziksel,Regular physical activity reduces the risk of heart disease and improves overall well-being.,Düzenli fiziksel aktivite kalp hastalığı riskini azaltır ve genel sağlığı iyileştirir.,medium,B2,adjective,health
@@ -195,209 +195,209 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 195,global,küresel,The global temperature has risen significantly over the past hundred years.,Küresel sıcaklık son yüz yılda önemli ölçüde yükseldi.,medium,B2,adjective,nature
 196,local,yerel,She always shops at the local market to support the farmers in her community.,Topluluğundaki çiftçileri desteklemek için her zaman yerel pazardan alışveriş yapar.,medium,B1,adjective,daily
 197,modern,modern,Modern smartphones allow people to access information from anywhere in the world.,Modern akıllı telefonlar insanların dünyanın herhangi bir yerinden bilgiye erişmesine olanak tanır.,medium,B1,adjective,daily
-198,original,özgün / orijinal,The designer came up with an original concept that impressed all the clients.,Tasarımcı tüm müşterileri etkileyen özgün bir konsept ortaya çıkardı.,medium,B2,adjective,daily
+198,original,özgün,The designer came up with an original concept that impressed all the clients.,Tasarımcı tüm müşterileri etkileyen özgün bir konsept ortaya çıkardı.,medium,B2,adjective,daily
 199,curious,meraklı,She was curious about the new culture and asked many questions during her visit.,Yeni kültür hakkında meraklıydı ve ziyareti sırasında pek çok soru sordu.,medium,B1,adjective,emotions
 200,patient,sabırlı,You need to be very patient when learning to play a musical instrument.,Bir müzik aleti çalmayı öğrenirken çok sabırlı olmanız gerekir.,medium,B1,adjective,emotions
-301,adapt,uyum sağlamak,You must adapt to new situations.,Yeni durumlara uyum sağlamalısın.,medium,B2,verb,daily
-201,inevitable,kaçınılmaz,Change is inevitable in life.,Değişim hayatın kaçınılmaz bir parçasıdır.,hard,C1,adjective,academic
-202,comprehensive,kapsamlı,We need a comprehensive plan.,Kapsamlı bir plana ihtiyacımız var.,hard,C1,adjective,academic
-203,ambiguous,belirsiz,The instructions are ambiguous.,Talimatlar muğlak.,hard,C1,adjective,academic
-204,meticulous,titiz,She is meticulous in her work.,İşinde çok titiz.,hard,C1,adjective,daily
-205,deteriorate,kötüleşmek,His health began to deteriorate.,Sağlığı bozulmaya başladı.,hard,C1,verb,health
-206,eloquent,belagatlı,The president gave an eloquent speech.,Cumhurbaşkanı etkileyici bir konuşma yaptı.,hard,C1,adjective,social
-207,ambivalent,kararsız,I feel ambivalent about the decision.,Bu karar hakkında kararsız hissediyorum.,hard,C1,adjective,emotions
-208,pragmatic,pragmatik,We need a pragmatic solution.,Pratik bir çözüme ihtiyacımız var.,hard,C1,adjective,academic
-209,cynical,alaycı,He has a cynical view of politics.,Siyasete karşı alaycı bir bakış açısına sahip.,hard,C1,adjective,emotions
-210,alleviate,hafifletmek,This medicine will alleviate the pain.,Bu ilaç ağrıyı hafifletecek.,hard,C1,verb,health
-211,exacerbate,kötüleştirmek,Stress can exacerbate health problems.,Stres sağlık sorunlarını ağırlaştırabilir.,hard,C1,verb,health
-212,phenomenon,olgu,This is a natural phenomenon.,Bu doğal bir olgudur.,hard,C1,noun,academic
-213,paradox,paradoks,It is a strange paradox.,Bu garip bir paradoks.,hard,C1,noun,academic
-214,fundamental,temel,This is a fundamental right.,Bu temel bir haktır.,hard,C1,adjective,academic
-215,contemporary,çağdaş,He is a contemporary artist.,O çağdaş bir sanatçı.,hard,C1,adjective,social
-216,elaborate,ayrıntılı,She gave an elaborate explanation.,Ayrıntılı bir açıklama yaptı.,hard,C1,adjective,academic
-217,scrutinize,incelemek,We must scrutinize the data carefully.,Verileri dikkatle incelememiz gerekiyor.,hard,C1,verb,academic
-218,indigenous,yerli,The indigenous people have rich traditions.,Yerli halkın zengin gelenekleri vardır.,hard,C1,adjective,social
-219,perpetual,sürekli,They are in perpetual conflict.,Sürekli çatışma içindeler.,hard,C1,adjective,academic
-220,resilient,dayanıklı,Children are very resilient.,Çocuklar çok dirençlidir.,hard,C1,adjective,emotions
-221,profound,derin,The experience had a profound impact.,Bu deneyim derin bir etki bıraktı.,hard,C1,adjective,academic
-222,ambition,hırs,Her ambition drives her success.,Hırsı onu başarıya taşıyor.,hard,C1,noun,emotions
-223,coherent,tutarlı,Please give a coherent explanation.,Lütfen tutarlı bir açıklama yapın.,hard,C1,adjective,academic
-224,dilemma,ikilem,I face a difficult dilemma.,Zor bir ikilemle karşı karşıyayım.,hard,C1,noun,daily
-225,concise,özlü,Keep your report concise.,Raporunu özlü tut.,hard,C1,adjective,academic
-226,ambiguity,belirsizlik,The ambiguity of the law causes problems.,Yasanın belirsizliği sorunlara yol açıyor.,hard,C1,noun,academic
-227,implication,sonuç,What are the implications of this decision?,Bu kararın sonuçları nelerdir?,hard,C1,noun,academic
-228,hypothesis,hipotez,The scientist tested the hypothesis.,Bilim insanı hipotezi test etti.,hard,C1,noun,academic
-229,empirical,ampirik,We need empirical evidence.,Ampirik kanıta ihtiyacımız var.,hard,C1,adjective,academic
-230,abstract,soyut,Mathematics can be very abstract.,Matematik çok soyut olabilir.,hard,C1,adjective,academic
-231,rationale,gerekçe,What is the rationale behind this decision?,Bu kararın gerekçesi nedir?,hard,C1,noun,academic
-232,substantial,önemli miktarda,There has been a substantial improvement.,Önemli bir gelişme kaydedildi.,hard,C1,adjective,academic
-233,diminish,azalmak,Do not let fear diminish your courage.,Korkunun cesaretini azaltmasına izin verme.,hard,C1,verb,emotions
-234,sustain,sürdürmek,We must sustain our efforts.,Çabalarımızı sürdürmeliyiz.,hard,C1,verb,daily
-235,acknowledge,kabul etmek,Please acknowledge receipt of this message.,Lütfen bu mesajı aldığınızı onaylayın.,hard,C1,verb,daily
-236,attribute,atfetmek,His success is attributed to hard work.,Başarısı sıkı çalışmasına bağlanıyor.,hard,C1,verb,academic
-237,contradict,çelişmek,These facts contradict each other.,Bu gerçekler birbirleriyle çelişiyor.,hard,C1,verb,academic
-238,illustrate,örneklemek,Let me illustrate this with an example.,Bunu bir örnekle açıklayayım.,hard,C1,verb,education
-239,implement,uygulamak,We will implement the new policy.,Yeni politikayı uygulayacağız.,hard,C1,verb,business
-240,interpret,yorumlamak,How do you interpret this data?,Bu veriyi nasıl yorumluyorsunuz?,hard,C1,verb,academic
-241,manipulate,manipüle etmek,Do not let others manipulate you.,Başkalarının seni manipüle etmesine izin verme.,hard,C1,verb,social
-242,constitute,oluşturmak,This constitutes a serious problem.,Bu ciddi bir sorun oluşturuyor.,hard,C1,verb,academic
-243,controversial,tartışmalı,The decision was very controversial.,Karar çok tartışmalıydı.,hard,C1,adjective,social
-244,obsolete,modası geçmiş,This technology is now obsolete.,Bu teknoloji artık eskimiş.,hard,C1,adjective,technology
-245,lucid,anlaşılır,Her explanation was very lucid.,Açıklaması çok anlaşılırdı.,hard,C1,adjective,academic
-246,daunting,yıldırıcı,The task ahead is daunting.,Önümüzdeki görev göz korkutucu.,hard,C1,adjective,emotions
-247,intricate,karmaşık,The design is very intricate.,Tasarım çok karmaşık.,hard,C2,adjective,daily
-248,eloquence,belagat,She spoke with great eloquence.,Büyük bir güzel konuşma becerisiyle konuştu.,hard,C1,noun,social
-249,leverage,kaldıraç etkisi,Use your skills as leverage.,Becerilerini avantaj olarak kullan.,hard,C1,noun,business
-250,mitigate,hafifletmek,We must mitigate the risk.,Riski azaltmalıyız.,hard,C1,verb,business
-251,plausible,makul,That sounds plausible to me.,Bu bana makul geliyor.,hard,C1,adjective,academic
-252,prevail,galip gelmek,Good always prevails over evil.,İyilik her zaman kötülüğe karşı zafer kazanır.,hard,C1,verb,daily
-253,proximity,yakınlık,The proximity of the hospital is convenient.,Hastanenin yakınlığı çok kullanışlı.,hard,C1,noun,daily
-254,rigorous,titiz,The research was very rigorous.,Araştırma çok titizdi.,hard,C1,adjective,academic
-255,spontaneous,kendiliğinden,Her laughter was spontaneous.,Kahkahası kendiliğinden geldi.,hard,C1,adjective,emotions
-256,tenacious,azimli,A tenacious person never gives up.,Azimli bir insan asla pes etmez.,hard,C1,adjective,emotions
-257,ubiquitous,her yerde bulunan,Smartphones are now ubiquitous.,Akıllı telefonlar artık her yerde.,hard,C1,adjective,technology
-258,verbose,gereksiz ayrıntılı,His writing style is too verbose.,Yazı stili çok sözcük yüklü.,hard,C2,adjective,academic
-259,volatile,değişken,The market is very volatile.,Piyasa çok dalgalı.,hard,C1,adjective,business
-260,zealous,gayretli,She is a zealous supporter of the cause.,O davayı tutkuyla destekliyor.,hard,C2,adjective,emotions
-261,benevolent,hayırsever,He is a benevolent leader.,O merhametli bir lider.,hard,C1,adjective,social
-262,candid,açık sözlü,Be candid with your feedback.,Geri bildiriminde samimi ol.,hard,C1,adjective,social
-263,clemency,merhamet,The judge showed clemency.,Yargıç merhamet gösterdi.,hard,C2,noun,social
-264,deference,saygı,Show deference to your elders.,Büyüklerine saygı göster.,hard,C2,noun,social
-265,eminent,seçkin,She is an eminent scientist.,O önde gelen bir bilim insanı.,hard,C1,adjective,academic
-266,fathom,kavramak,I cannot fathom his reasoning.,Mantığını kavrayamıyorum.,hard,C1,verb,daily
-267,gregarious,sosyal,She is a gregarious person.,O çok sosyal bir insan.,hard,C2,adjective,social
-268,hasten,acele etmek,We must hasten the process.,Süreci hızlandırmalıyız.,hard,C1,verb,daily
-269,impeccable,kusursuz,Her taste in fashion is impeccable.,Moda zevki kusursuz.,hard,C1,adjective,daily
-270,judicious,basiretli,Make judicious use of your resources.,Kaynaklarınızı yerinde kullanın.,hard,C2,adjective,academic
-271,laudable,övgüye değer,Your effort is truly laudable.,Çaban gerçekten takdire değer.,hard,C2,adjective,emotions
-272,lucrative,kârlı,It is a very lucrative business.,Bu çok kazançlı bir iş.,hard,C1,adjective,business
-273,magnanimous,cömert ruhlu,He was magnanimous in victory.,Zaferinde alçakgönüllü davrandı.,hard,C2,adjective,social
-274,nonchalant,umursamaz,She seemed nonchalant about the result.,Sonuç hakkında umursamaz görünüyordu.,hard,C2,adjective,emotions
-275,ostentatious,gösteriş meraklısı,His lifestyle is very ostentatious.,Yaşam tarzı çok gösterişli.,hard,C2,adjective,social
-276,pervasive,her yere yayılan,Fear was pervasive in the community.,Toplumda yaygın bir korku vardı.,hard,C1,adjective,social
-277,quintessential,en tipik,This is the quintessential example.,Bu en tipik örnektir.,hard,C2,adjective,academic
-278,rhetoric,retorik,His speech was full of rhetoric.,Konuşması retorikle doluydu.,hard,C1,noun,academic
-279,sagacious,bilge,A sagacious leader makes wise choices.,Basiretli bir lider akıllıca seçimler yapar.,hard,C2,adjective,academic
-280,taciturn,suskun,He is a very taciturn man.,O çok az konuşan biri.,hard,C2,adjective,social
-281,unequivocal,kesin,Give an unequivocal answer.,Net bir cevap ver.,hard,C1,adjective,academic
-282,venerate,saygı göstermek,They venerate their ancestors.,Atalarına derin saygı duyuyorlar.,hard,C2,verb,social
-283,wary,ihtiyatlı,Be wary of strangers.,Yabancılara karşı dikkatli ol.,hard,C1,adjective,daily
-284,xenophobia,yabancı düşmanlığı,Xenophobia is a serious social problem.,Yabancı düşmanlığı ciddi bir toplumsal sorundur.,hard,C1,noun,social
-285,yearning,özlem,She felt a yearning for home.,Evine karşı derin bir özlem duydu.,hard,C1,noun,emotions
-286,zeal,gayret,He works with great zeal.,Büyük bir hevesle çalışıyor.,hard,C1,noun,emotions
-287,auspicious,uğurlu,This is an auspicious beginning.,Bu uğurlu bir başlangıç.,hard,C1,adjective,daily
-288,brevity,kısalık,Brevity is the soul of wit.,Kısalık zekanın özüdür.,hard,C1,noun,academic
-289,corroborate,doğrulamak,Can you corroborate this claim?,Bu iddiayı doğrulayabilir misin?,hard,C1,verb,academic
-290,decorum,terbiye,Please maintain decorum in meetings.,Lütfen toplantılarda uygun davranışı koruyun.,hard,C2,noun,social
-291,effervescent,neşeli,She has an effervescent personality.,Çok neşeli ve canlı bir kişiliği var.,hard,C2,adjective,emotions
-292,fortuitous,tesadüfi,Their meeting was fortuitous.,Buluşmaları tesadüf eseri gerçekleşti.,hard,C2,adjective,daily
-293,grandiose,abartılı,He had grandiose plans.,Görkemli planları vardı.,hard,C2,adjective,emotions
-294,hubris,kibir,His hubris led to his downfall.,Kibrinin büyüklüğü çöküşüne yol açtı.,hard,C2,noun,social
-295,immutable,değişmez,Some laws of physics are immutable.,Bazı fizik yasaları değişmezdir.,hard,C1,adjective,academic
-296,juxtapose,yan yana koymak,The artist juxtaposes light and shadow.,Sanatçı ışık ve gölgeyi yan yana getiriyor.,hard,C2,verb,academic
-297,laconic,kısa ve öz,His response was laconic but meaningful.,Yanıtı kısa ama anlamlıydı.,hard,C2,adjective,academic
-298,mendacious,yalancı,Beware of mendacious claims.,Yanıltıcı iddialara dikkat edin.,hard,C2,adjective,social
-299,nuance,nüans,There are many nuances in language.,Dilde pek çok nüans vardır.,hard,C1,noun,academic
-300,obfuscate,karmaşıklaştırmak,Do not obfuscate the truth.,Gerçeği gizleme.,hard,C2,verb,academic
-302,rain,yağmur,It is raining heavily outside.,Dışarıda yoğun yağmur yağıyor.,easy,A1,noun,nature
-303,snow,kar,The snow is beautiful in winter.,Kışın kar çok güzel.,easy,A1,noun,nature
-304,wind,rüzgar,The wind is very strong today.,Bugün rüzgar çok kuvvetli.,easy,A1,noun,nature
-305,bus,otobüs,I take the bus to school every day.,Her gün okula otobüsle gidiyorum.,easy,A1,noun,travel
-306,train,tren,The train arrives at noon.,Tren öğleyin geliyor.,easy,A1,noun,travel
-307,plane,uçak,The plane landed safely.,Uçak güvenle indi.,easy,A1,noun,travel
-308,hotel,otel,We stayed in a nice hotel.,Güzel bir otelde kaldık.,easy,A1,noun,travel
-309,ticket,bilet,I bought a ticket for the concert.,Konsere bilet aldım.,easy,A1,noun,travel
-310,nurse,hemşire,The nurse took care of the patient.,Hemşire hastaya baktı.,easy,A1,noun,health
-311,exercise,egzersiz,Exercise keeps your body healthy.,Egzersiz vücudunu sağlıklı tutar.,easy,A2,noun,health
-312,shirt,gömlek,She is wearing a blue shirt.,Mavi bir gömlek giyiyor.,easy,A1,noun,daily
-313,bag,çanta,My bag is very heavy today.,Bugün çantam çok ağır.,easy,A1,noun,daily
-314,shoe,ayakkabı,Put on your shoes before going out.,Çıkmadan önce ayakkabılarını giy.,easy,A1,noun,daily
-315,clean,temiz,Please keep your room clean.,Lütfen odanı temiz tut.,easy,A1,adjective,daily
-316,tired,yorgun,I am very tired after work.,İşten sonra çok yorgunum.,easy,A1,adjective,emotions
-317,analyze,analiz etmek,We need to analyze the results carefully.,Sonuçları dikkatle analiz etmemiz gerekiyor.,medium,B1,verb,academic
-318,theory,teori,This is just a theory for now.,Bu şimdilik sadece bir teori.,medium,B2,noun,academic
-319,evaluate,değerlendirmek,Please evaluate all the options.,Lütfen tüm seçenekleri değerlendirin.,medium,B2,verb,academic
-320,conclude,sonuca varmak,We can conclude that the plan works.,Planın işe yaradığı sonucuna varabiliriz.,medium,B2,verb,academic
-321,digital,dijital,We live in a digital world.,Dijital bir dünyada yaşıyoruz.,medium,B1,adjective,technology
-322,network,ağ,Build a strong professional network.,Güçlü bir profesyonel ağ oluştur.,medium,B1,noun,technology
-323,device,cihaz,This device is very useful.,Bu cihaz çok kullanışlı.,medium,B1,noun,technology
-324,stress,stres,Too much stress is harmful to health.,Aşırı stres sağlığa zararlıdır.,medium,B1,noun,health
-325,symptom,belirti,Fever is a common symptom of illness.,Ateş hastalığın yaygın bir belirtisidir.,medium,B2,noun,health
-326,recover,iyileşmek,It takes time to recover from illness.,Hastalıktan iyileşmek zaman alır.,medium,B1,verb,health
-327,grateful,minnettar,I am grateful for your support.,Desteğin için minnettarım.,medium,B1,adjective,emotions
-328,anxious,endişeli,She felt anxious before the exam.,Sınavdan önce kaygılı hissetti.,medium,B1,adjective,emotions
-329,deadline,son teslim tarihi,We must meet the project deadline.,Proje son teslim tarihine yetişmeliyiz.,medium,B1,noun,business
-330,budget,bütçe,We need to stick to the budget.,Bütçeye sadık kalmamız gerekiyor.,medium,B1,noun,business
-331,negotiate,müzakere etmek,They negotiated a fair deal.,Adil bir anlaşma müzakere ettiler.,medium,B2,verb,business
-332,algorithm,algoritma,The algorithm processes the data efficiently.,Algoritma veriyi verimli şekilde işliyor.,hard,C1,noun,technology
-333,disrupt,sekteye uğratmak,New technology can disrupt entire industries.,Yeni teknoloji tüm endüstrileri dönüştürebilir.,hard,C1,verb,technology
-334,prototype,prototip,They built a prototype before the final product.,Son ürünü üretmeden önce bir prototip yaptılar.,hard,C1,noun,technology
-335,encrypt,şifrelemek,Always encrypt your sensitive personal data.,Hassas kişisel verilerinizi her zaman şifreleyin.,hard,C1,verb,technology
-336,itinerary,seyahat planı,She prepared a detailed itinerary for the trip.,Seyahat için ayrıntılı bir program hazırladı.,hard,C1,noun,travel
-337,navigate,yol bulmak,It is difficult to navigate in an unfamiliar city.,Tanıdık olmayan bir şehirde yön bulmak zor.,hard,C1,verb,travel
-338,embark,yola çıkmak,We are about to embark on a new adventure.,Yeni bir maceraya atılmak üzereyiz.,hard,C1,verb,travel
-339,entrepreneur,girişimci,She is a successful entrepreneur in the tech industry.,Teknoloji sektöründe başarılı bir girişimci.,hard,C1,noun,business
-340,revenue,gelir,The company's annual revenue has doubled.,Şirketin yıllık geliri iki katına çıktı.,hard,C1,noun,business
-341,feasible,uygulanabilir,Is this plan feasible within our budget?,Bu plan bütçemiz dahilinde uygulanabilir mi?,hard,C1,adjective,business
-342,benchmark,kıyaslama noktası,Set a benchmark to measure your progress.,İlerlemenizi ölçmek için bir ölçüt belirleyin.,hard,C1,noun,business
-343,collaborate,iş birliği yapmak,We collaborated on the research project.,Araştırma projesinde iş birliği yaptık.,hard,C1,verb,business
-344,discrepancy,uyuşmazlık,There is a discrepancy in the financial data.,Mali verilerde bir tutarsızlık var.,hard,C1,noun,academic
-345,validate,doğrulamak,We need to validate these findings before publishing.,Bu bulguları yayınlamadan önce doğrulamamız gerekiyor.,hard,C1,verb,academic
-346,perception,algı,Public perception of the issue has changed significantly.,Konuya ilişkin kamuoyu algısı önemli ölçüde değişti.,hard,C1,noun,academic
-347,destination,varış noktası,Our final destination is Paris.,Son durağımız Paris.,medium,B1,noun,travel
-348,departure,kalkış,The departure is at eight in the morning.,Kalkış sabah sekizde.,medium,B1,noun,travel
-349,luggage,bagaj,Please check your luggage before boarding.,Uçağa binmeden önce bagajınızı kontrol edin.,medium,B1,noun,travel
-350,reservation,rezervasyon,I made a hotel reservation for next week.,Gelecek hafta için otel rezervasyonu yaptım.,medium,B1,noun,travel
-351,accommodation,konaklama,We found comfortable accommodation near the city.,Şehre yakın rahat bir konaklama bulduk.,medium,B2,noun,travel
-352,customs,gümrük,We waited at customs for almost an hour.,Gümrükte neredeyse bir saat bekledik.,medium,B1,noun,travel
-353,route,güzergah,We chose the scenic route through the mountains.,Dağlar üzerinden manzaralı güzergahı seçtik.,medium,B1,noun,travel
-354,journey,yolculuk,The journey took three hours by train.,Yolculuk trenle üç saat sürdü.,medium,B1,noun,travel
-355,landscape,manzara,The mountain landscape was breathtaking.,Dağ manzarası nefes kesiciydi.,medium,B1,noun,nature
-356,wildlife,yaban hayatı,We must protect local wildlife and their habitats.,Yerel yaban hayatını ve yaşam alanlarını korumalıyız.,medium,B1,noun,nature
-357,harvest,hasat,The farmers celebrated a successful harvest.,Çiftçiler başarılı bir hasadı kutladı.,medium,B1,noun,nature
-358,drought,kuraklık,The severe drought damaged the crops badly.,Şiddetli kuraklık ekinlere büyük zarar verdi.,medium,B2,noun,nature
-359,ecosystem,ekosistem,We must preserve the ocean ecosystem.,Okyanus ekosistemini korumalıyız.,medium,B2,noun,nature
-360,habitat,yaşam alanı,Deforestation destroys the natural habitat of animals.,Ormansızlaşma hayvanların doğal yaşam alanını yok ediyor.,medium,B2,noun,nature
-361,climate,iklim,The climate in this region is very mild.,Bu bölgenin iklimi çok ılımandır.,medium,B1,noun,nature
-362,excited,heyecanlı,She is very excited about the trip.,Seyahat için çok heyecanlı.,easy,A1,adjective,emotions
-363,angry,kızgın,He is angry because he lost the game.,Oyunu kaybettiği için kızgın.,easy,A1,adjective,emotions
-364,worried,endişeli,She looks worried about the exam.,Sınav konusunda endişeli görünüyor.,easy,A1,adjective,emotions
-365,surprised,şaşkın,I was surprised by the good news.,İyi haber karşısında şaşırdım.,easy,A1,adjective,emotions
-366,computer,bilgisayar,I use a computer every day.,Her gün bilgisayar kullanıyorum.,easy,A1,noun,technology
-367,internet,internet,The internet connects people around the world.,İnternet dünya genelinde insanları birbirine bağlıyor.,easy,A1,noun,technology
-368,message,mesaj,She sent me a message this morning.,Bu sabah bana bir mesaj gönderdi.,easy,A1,noun,technology
-369,trip,gezi,We planned a trip to the beach.,Plaja bir gezi planladık.,easy,A1,noun,travel
-370,station,istasyon,The bus station is very crowded.,Otobüs terminali çok kalabalık.,easy,A1,noun,travel
-371,passport,pasaport,Do not forget your passport at home.,Pasaportunuzu evde unutmayın.,easy,A1,noun,travel
-372,sick,hasta,She stayed home because she was sick.,Hasta olduğu için evde kaldı.,easy,A1,adjective,health
-373,medicine,ilaç,Take your medicine every day.,İlacını her gün al.,easy,A1,noun,health
-374,pain,ağrı,I have pain in my back.,Sırtımda ağrı var.,easy,A1,noun,health
-375,cloud,bulut,The sky is full of dark clouds.,Gökyüzü karanlık bulutlarla dolu.,easy,A1,noun,nature
-376,river,nehir,The river flows through the city.,Nehir şehrin içinden akıyor.,easy,A1,noun,nature
-377,erosion,erozyon,Soil erosion is caused by heavy rainfall.,Toprak erozyonu şiddetli yağışlardan kaynaklanır.,hard,C1,noun,nature
-378,fertile,verimli,The fertile soil produces excellent crops.,Verimli toprak mükemmel ürün verir.,hard,C1,adjective,nature
-379,barren,çorak,The land was barren after years of drought.,Yıllarca süren kuraklığın ardından toprak çorak kaldı.,hard,C1,adjective,nature
-380,temperate,ılıman,The region has a temperate climate all year.,Bu bölge yıl boyu ılıman bir iklime sahip.,hard,C1,adjective,nature
-381,cascade,çağlayan,Water cascaded down the rocky hillside.,Su kayalık yamaçtan aşağı aktı.,hard,C1,noun,nature
-382,serene,huzurlu,The lake looked serene in the early morning.,Göl sabahın erken saatlerinde sakin görünüyordu.,hard,C1,adjective,nature
-383,integrity,dürüstlük,She is known for her integrity.,Dürüstlüğüyle tanınıyor.,hard,C1,noun,social
-384,empathy,empati,Empathy is essential in any leadership role.,Empati her liderlik rolünde gereklidir.,hard,C1,noun,social
-385,solidarity,dayanışma,The workers showed great solidarity.,İşçiler büyük bir dayanışma sergiledi.,hard,C1,noun,social
-386,reconcile,uzlaşmak,They tried to reconcile their differences.,Farklılıklarını uzlaştırmaya çalıştılar.,hard,C1,verb,social
-387,chronic,kronik,He suffers from a chronic back condition.,Kronik bir sırt rahatsızlığından muzdarip.,hard,C1,adjective,health
-388,diagnosis,teşhis,The diagnosis was confirmed by the specialist.,Tanı uzman tarafından onaylandı.,hard,C1,noun,health
-389,immune,bağışık,The body's immune system fights off infection.,Vücudun bağışıklık sistemi enfeksiyonla savaşır.,hard,C1,adjective,health
-390,melancholy,melankoli,There was a deep sense of melancholy in his voice.,Sesinde derin bir hüzün vardı.,hard,C1,noun,emotions
-391,composure,soğukkanlılık,She maintained her composure under pressure.,Baskı altında soğukkanlılığını korudu.,hard,C1,noun,emotions
-392,visa,vize,She applied for a tourist visa to visit France.,Fransa'ya gitmek için turistik vize başvurusu yaptı.,medium,B1,noun,travel
-393,border,sınır,We crossed the border early in the morning.,Sabahın erken saatlerinde sınırı geçtik.,medium,B1,noun,travel
-394,currency,para birimi,What currency do they use in Japan?,Japonya'da hangi para birimi kullanılıyor?,medium,B1,noun,travel
-395,souvenir,hâtıra eşyası,She bought a small souvenir at the market.,Çarşıdan küçük bir hatıra eşyası aldı.,medium,B1,noun,travel
-396,delay,gecikme,The flight delay caused us to miss our connection.,Uçuş gecikmesi aktarma uçuşumuzu kaçırmamıza neden oldu.,medium,B1,noun,travel
-397,transit,aktarma,We had a three-hour transit in Dubai.,Dubai'de üç saatlik transit bekleyişimiz oldu.,medium,B1,noun,travel
-398,landmark,simge yapı,The Eiffel Tower is a famous landmark in Paris.,Eyfel Kulesi Paris'te ünlü bir simge.,medium,B2,noun,travel
-399,excursion,gezi,We went on a day excursion to the nearby islands.,Yakındaki adalara günübirlik bir gezi yaptık.,medium,B2,noun,travel
-400,fare,bilet ücreti,The train fare is cheaper if you book in advance.,Önceden rezervasyon yaparsanız tren ücreti daha ucuz.,medium,B1,noun,travel
+301,adapt,uyum sağlamak,It took her a few weeks to adapt to the new work environment and daily routine.,Yeni çalışma ortamına ve günlük rutine alışmak birkaç hafta aldı.,medium,B2,verb,daily
+201,inevitable,kaçınılmaz,Some degree of conflict is inevitable when two people work closely together for years.,İki insan yıllarca birlikte yakın çalıştığında belirli düzeyde çatışma kaçınılmazdır.,hard,C1,adjective,academic
+202,comprehensive,kapsamlı,The government released a comprehensive report on the causes of youth unemployment.,Hükümet genç işsizliğinin nedenleri hakkında kapsamlı bir rapor yayımladı.,hard,C1,adjective,academic
+203,ambiguous,belirsiz,The contract was ambiguous about who was responsible for covering the repair costs.,Sözleşme onarım masraflarını kimin karşılayacağı konusunda muğlaktı.,hard,C1,adjective,academic
+204,meticulous,titiz,He was meticulous about checking every detail before submitting the final report.,Son raporu göndermeden önce her ayrıntıyı kontrol etme konusunda titizdi.,hard,C1,adjective,daily
+205,deteriorate,kötüleşmek,Her condition began to deteriorate rapidly and the doctors decided to operate immediately.,Durumu hızla kötüleşmeye başladı ve doktorlar hemen ameliyat etmeye karar verdi.,hard,C1,verb,health
+206,eloquent,belagatlı,She gave an eloquent speech that moved many people in the audience to tears.,Seyircilerin pek çoğunu gözyaşlarına boğan etkileyici bir konuşma yaptı.,hard,C1,adjective,social
+207,ambivalent,kararsız,She felt ambivalent about the job offer because it meant leaving her family behind.,İş teklifine karşı ikircikli hissetti çünkü bu ailesini geride bırakmak anlamına geliyordu.,hard,C1,adjective,emotions
+208,pragmatic,pragmatik,Rather than focusing on ideals they took a pragmatic approach to solving the problem.,İdeallere odaklanmak yerine sorunu çözmede pragmatik bir yaklaşım benimsediler.,hard,C1,adjective,academic
+209,cynical,alaycı,After years of broken promises he became deeply cynical about the political process.,Yıllarca süren boş vaatlerden sonra siyasi süreç hakkında derin bir şüphecilik geliştirdi.,hard,C1,adjective,emotions
+210,alleviate,hafifletmek,The medication helped to alleviate the symptoms and the patient began to feel much better.,İlaç semptomları hafifletmeye yardımcı oldu ve hasta kendini çok daha iyi hissetmeye başladı.,hard,C1,verb,health
+211,exacerbate,kötüleştirmek,Skipping meals and sleeping poorly can exacerbate anxiety and make recovery harder.,Öğün atlamak ve kötü uyumak kaygıyı kötüleştirebilir ve iyileşmeyi zorlaştırabilir.,hard,C1,verb,health
+212,phenomenon,olgu,The Northern Lights are a natural phenomenon caused by particles from the sun.,Kuzey Işıkları güneşten gelen partiküllerin neden olduğu doğal bir olgudur.,hard,C1,noun,academic
+213,paradox,paradoks,It is a paradox that the more choices people have the less satisfied they tend to feel.,İnsanların ne kadar çok seçeneği olursa o kadar az tatmin hissettikleri bir paradokstur.,hard,C1,noun,academic
+214,fundamental,temel,Access to clean water is a fundamental human right that millions still lack.,Temiz suya erişim milyonlarca insanın hâlâ yoksun olduğu temel bir insan hakkıdır.,hard,C1,adjective,academic
+215,contemporary,çağdaş,Contemporary art often challenges traditional ideas about beauty and representation.,Çağdaş sanat çoğunlukla güzellik ve temsil hakkındaki geleneksel fikirlere meydan okur.,hard,C1,adjective,social
+216,elaborate,ayrıntılı,The architect presented an elaborate design with multiple levels and unusual materials.,Mimar birden fazla kat ve alışılmadık malzemeleri içeren ayrıntılı bir tasarım sundu.,hard,C1,adjective,academic
+217,scrutinize,incelemek,Journalists scrutinized every detail of the financial report looking for inconsistencies.,Gazeteciler tutarsızlıkları arayarak finansal raporun her ayrıntısını inceledi.,hard,C1,verb,academic
+218,indigenous,yerli,The project worked with indigenous communities to protect their land and cultural heritage.,Proje yerli topluluklarla birlikte topraklarını ve kültürel miraslarını korumak için çalıştı.,hard,C1,adjective,social
+219,perpetual,sürekli,Living under perpetual pressure at work eventually led to serious burnout.,İşte sürekli baskı altında yaşamak sonunda ciddi bir tükenmişliğe yol açtı.,hard,C1,adjective,academic
+220,resilient,dayanıklı,She proved remarkably resilient after losing her job and rebuilding her career from scratch.,İşini kaybettikten ve kariyerini sıfırdan yeniden inşa ettikten sonra son derece dayanıklı olduğunu kanıtladı.,hard,C1,adjective,emotions
+221,profound,derin,Studying abroad had a profound effect on her understanding of different cultures.,Yurt dışında okumak farklı kültürleri anlayışı üzerinde derin bir etki bıraktı.,hard,C1,adjective,academic
+222,ambition,hırs,His ambition to become a surgeon kept him focused through six years of medical school.,Cerrah olma hırsı onu altı yıllık tıp eğitimi boyunca odaklı tuttu.,hard,C1,noun,emotions
+223,coherent,tutarlı,The proposal was well-structured and coherent making it easy for the board to evaluate.,Teklif iyi yapılandırılmış ve tutarlıydı bu da yönetim kurulunun değerlendirmesini kolaylaştırdı.,hard,C1,adjective,academic
+224,dilemma,ikilem,She faced a real dilemma when her two best friends both asked her to take sides.,İki en iyi arkadaşı da ondan taraf tutmasını isteyince gerçek bir ikileme düştü.,hard,C1,noun,daily
+225,concise,özlü,The editor asked the writer to make the article more concise without losing key details.,Editör yazardan önemli ayrıntıları kaybetmeden makaleyi daha özlü hale getirmesini istedi.,hard,C1,adjective,academic
+226,ambiguity,belirsizlik,The ambiguity in the contract led to a lengthy dispute between the two companies.,Sözleşmedeki muğlaklık iki şirket arasında uzun bir anlaşmazlığa yol açtı.,hard,C1,noun,academic
+227,implication,sonuç,The researchers discussed the implications of their findings for public health policy.,Araştırmacılar bulgularının halk sağlığı politikası açısından sonuçlarını tartıştı.,hard,C1,noun,academic
+228,hypothesis,hipotez,The experiment was designed to test the hypothesis that sleep deprivation affects memory.,Deney uyku yoksunluğunun hafızayı etkilediği hipotezini test etmek için tasarlandı.,hard,C1,noun,academic
+229,empirical,ampirik,The theory has strong empirical support from over a hundred independent studies.,Teorinin yüzü aşkın bağımsız çalışmadan güçlü ampirik desteği bulunmaktadır.,hard,C1,adjective,academic
+230,abstract,soyut,The concept of infinity is too abstract for young children to fully grasp.,Sonsuzluk kavramı küçük çocukların tam olarak kavraması için çok soyuttur.,hard,C1,adjective,academic
+231,rationale,gerekçe,The manager explained the rationale behind the new overtime policy at the team meeting.,Müdür takım toplantısında yeni fazla mesai politikasının gerekçesini açıkladı.,hard,C1,noun,academic
+232,substantial,önemli miktarda,The charity raised a substantial amount of money during the annual fundraising event.,Yardım kuruluşu yıllık bağış toplama etkinliğinde önemli miktarda para topladı.,hard,C1,adjective,academic
+233,diminish,azalmak,His confidence began to diminish after receiving several negative reviews of his work.,Çalışması hakkında birkaç olumsuz eleştiri aldıktan sonra özgüveni azalmaya başladı.,hard,C1,verb,emotions
+234,sustain,sürdürmek,It is hard to sustain motivation when you do not see immediate results from your work.,Çalışmalarınızdan hemen sonuç göremediğinizde motivasyonu sürdürmek zordur.,hard,C1,verb,daily
+235,acknowledge,kabul etmek,He was quick to acknowledge his mistake and apologize to the whole team.,Hatasını hemen kabul etti ve tüm ekipten özür diledi.,hard,C1,verb,daily
+236,attribute,atfetmek,Researchers attribute the rise in obesity to changes in diet and reduced physical activity.,Araştırmacılar obezitedeki artışı beslenme alışkanlıklarındaki değişikliklere ve azalan fiziksel aktiviteye bağlıyor.,hard,C1,verb,academic
+237,contradict,çelişmek,Her statement in the interview seemed to contradict what she had said the previous week.,Röportajdaki ifadesi bir önceki hafta söyledikleriyle çelişir görünüyordu.,hard,C1,verb,academic
+238,illustrate,örneklemek,The teacher used a diagram to illustrate how the human digestive system works.,Öğretmen insan sindirim sisteminin nasıl çalıştığını göstermek için bir diyagram kullandı.,hard,C1,verb,education
+239,implement,uygulamak,The company plans to implement the new safety regulations by the end of the quarter.,Şirket yeni güvenlik düzenlemelerini çeyreğin sonuna kadar uygulamayı planlıyor.,hard,C1,verb,business
+240,interpret,yorumlamak,It can be difficult to interpret the results without knowing more about the study design.,Çalışma tasarımı hakkında daha fazla bilgi olmadan sonuçları yorumlamak güç olabilir.,hard,C1,verb,academic
+241,manipulate,manipüle etmek,She realized her colleague was trying to manipulate the situation to take credit for her work.,Meslektaşının çalışmasının takdirini almak için durumu manipüle etmeye çalıştığını fark etti.,hard,C1,verb,social
+242,constitute,oluşturmak,Sharing a patient's personal data without consent constitutes a serious breach of privacy.,Bir hastanın kişisel verilerini izinsiz paylaşmak ciddi bir gizlilik ihlali oluşturur.,hard,C1,verb,academic
+243,controversial,tartışmalı,The new data privacy law was highly controversial and sparked intense public debate.,Yeni veri gizliliği yasası son derece tartışmalıydı ve yoğun bir kamuoyu tartışması başlattı.,hard,C1,adjective,social
+244,obsolete,modası geçmiş,The old filing system became obsolete once the company switched to digital records.,Şirket dijital kayıtlara geçince eski dosyalama sistemi kullanılmaz hale geldi.,hard,C1,adjective,technology
+245,lucid,anlaşılır,Her lucid explanation of the complex theory made it easy for everyone to understand.,Karmaşık teorinin anlaşılır açıklaması herkesin kolayca kavramasını sağladı.,hard,C1,adjective,academic
+246,daunting,yıldırıcı,Moving to a foreign country alone for the first time can feel extremely daunting.,İlk kez yabancı bir ülkeye tek başına taşınmak son derece yıldırıcı hissedilebilir.,hard,C1,adjective,emotions
+247,intricate,karmaşık,The jeweller crafted an intricate necklace with dozens of tiny hand-set gemstones.,Kuyumcu elle yerleştirilmiş düzinelerce küçük değerli taşla karmaşık bir kolye yaptı.,hard,C2,adjective,daily
+248,eloquence,belagat,The lawyer's eloquence in court helped convince the jury of her client's innocence.,Avukatın mahkemedeki güçlü söylem becerisi jüriyi müvekkilinin masumiyetine ikna etmeye yardımcı oldu.,hard,C1,noun,social
+249,leverage,kaldıraç etkisi,The startup used its patented technology as leverage during the investment negotiations.,Girişim patentli teknolojisini yatırım müzakerelerinde pazarlık aracı olarak kullandı.,hard,C1,noun,business
+250,mitigate,hafifletmek,The company introduced new safety measures to mitigate the risk of data breaches.,Şirket veri ihlali riskini azaltmak için yeni güvenlik önlemleri getirdi.,hard,C1,verb,business
+251,plausible,makul,The investigators found her alibi plausible and decided not to pursue the case further.,Soruşturmacılar mazeretini makul buldu ve davayı daha ileri götürmemeye karar verdi.,hard,C1,adjective,academic
+252,prevail,galip gelmek,Despite strong opposition the proposal eventually prevailed with a narrow majority.,Güçlü muhalefete rağmen teklif sonunda küçük bir çoğunlukla kabul edildi.,hard,C1,verb,daily
+253,proximity,yakınlık,The proximity of the school to the park makes it a popular choice for local families.,Okulun parka yakınlığı onu yerel aileler için popüler bir seçenek yapıyor.,hard,C1,noun,daily
+254,rigorous,titiz,The candidates underwent a rigorous selection process before any of them were hired.,Adaylar işe alınmadan önce titiz bir seçim sürecinden geçti.,hard,C1,adjective,academic
+255,spontaneous,kendiliğinden,They made a spontaneous decision to drive to the coast and watch the sunrise.,Sahile sürüp gün doğumunu izlemek için anlık bir karar verdiler.,hard,C1,adjective,emotions
+256,tenacious,azimli,She was tenacious in pursuing her goals even when the progress was painfully slow.,İlerleme acı verecek kadar yavaş olduğunda bile hedeflerini kararlılıkla sürdürdü.,hard,C1,adjective,emotions
+257,ubiquitous,her yerde bulunan,Wireless internet access has become ubiquitous in most cities around the world.,Kablosuz internet erişimi dünyanın birçok şehrinde artık her yerde bulunur hale geldi.,hard,C1,adjective,technology
+258,verbose,gereksiz ayrıntılı,The report was so verbose that readers struggled to find the key conclusions.,Rapor o kadar gereksiz ayrıntılıydı ki okuyucular temel sonuçları bulmakta güçlük çekti.,hard,C2,adjective,academic
+259,volatile,değişken,Investors became nervous as the stock market grew increasingly volatile that week.,Hisse senedi piyasası o hafta giderek daha oynak hale gelince yatırımcılar tedirgin oldu.,hard,C1,adjective,business
+260,zealous,gayretli,He was a zealous advocate for environmental reform and rarely missed a protest.,Çevre reformunun hevesli bir savunucusuydu ve nadiren bir protestoyu kaçırırdı.,hard,C2,adjective,emotions
+261,benevolent,hayırsever,The benevolent donor funded scholarships for fifty students from low-income families.,Hayırsever bağışçı düşük gelirli ailelerden elli öğrenci için bursları finanse etti.,hard,C1,adjective,social
+262,candid,açık sözlü,She appreciated his candid assessment of her work even though some comments were hard to hear.,Bazı yorumları duymak zor olsa da çalışmasını dürüstçe değerlendirmesini takdirle karşıladı.,hard,C1,adjective,social
+263,clemency,merhamet,The judge showed clemency and gave the young offender a suspended sentence instead of prison.,Yargıç merhamet gösterdi ve genç suçluya hapishane yerine ertelenmiş ceza verdi.,hard,C2,noun,social
+264,deference,saygı,Out of deference to her mentor she waited for his opinion before sharing her own.,Mentorunа saygısından dolayı kendi görüşünü paylaşmadan önce onun fikrini bekledi.,hard,C2,noun,social
+265,eminent,seçkin,The university invited an eminent historian to deliver the opening lecture of the term.,Üniversite dönemin açılış dersini vermesi için tanınmış bir tarihçiyi davet etti.,hard,C1,adjective,academic
+266,fathom,kavramak,She could not fathom why anyone would leave such a well-paid and stable job.,Kimsenin neden bu kadar iyi ücretli ve istikrarlı bir işi bırakacağını anlayamadı.,hard,C1,verb,daily
+267,gregarious,sosyal,He was naturally gregarious and always made new friends within minutes of arriving.,Doğası gereği sosyaldi ve her yere varınca dakikalar içinde yeni arkadaşlar edinirdi.,hard,C2,adjective,social
+268,hasten,acele etmek,She hastened to reply before the deadline to secure her place on the course.,Kursta yerini garantilemek için son tarihten önce hızla yanıt verdi.,hard,C1,verb,daily
+269,impeccable,kusursuz,The hotel provided impeccable service and every detail of the stay was perfectly arranged.,Otel kusursuz hizmet sundu ve konaklamanın her ayrıntısı mükemmel şekilde düzenlenmişti.,hard,C1,adjective,daily
+270,judicious,basiretli,A judicious manager listens carefully before making any major decisions about the team.,Basiretli bir yönetici ekiple ilgili önemli kararlar vermeden önce dikkatlice dinler.,hard,C2,adjective,academic
+271,laudable,övgüye değer,Her commitment to volunteering every weekend despite a full-time job was truly laudable.,Tam zamanlı bir işe rağmen her hafta sonu gönüllülük yapma kararlılığı gerçekten takdire değerdi.,hard,C2,adjective,emotions
+272,lucrative,kârlı,Renting out property in the city centre proved to be a very lucrative investment.,Şehir merkezinde mülk kiralamak çok kazançlı bir yatırım olduğunu kanıtladı.,hard,C1,adjective,business
+273,magnanimous,cömert ruhlu,She was magnanimous in victory and publicly thanked her rival for the strong competition.,Galibiyette cömert davrandı ve rakibine güçlü rekabet için alenen teşekkür etti.,hard,C2,adjective,social
+274,nonchalant,umursamaz,He seemed completely nonchalant about the interview even though the stakes were very high.,Riskler çok yüksek olmasına rağmen mülakatta tamamen umursamaz görünüyordu.,hard,C2,adjective,emotions
+275,ostentatious,gösteriş meraklısı,The ostentatious display of wealth made many guests at the party feel uncomfortable.,Gösterişli servet gösterisi partideki pek çok konuğu rahatsız hissettirdi.,hard,C2,adjective,social
+276,pervasive,her yere yayılan,The use of social media has become so pervasive that many people check it every hour.,Sosyal medya kullanımı o kadar yaygın hale geldi ki pek çok insan onu her saat kontrol ediyor.,hard,C1,adjective,social
+277,quintessential,en tipik,The small cafe with its mismatched chairs and jazz music was the quintessential Parisian experience.,Uyumsuz sandalyeleri ve caz müziğiyle küçük kafe en tipik Paris deneyimiydi.,hard,C2,adjective,academic
+278,rhetoric,retorik,The politician relied on emotional rhetoric rather than presenting any concrete policies.,Politikacı somut politikalar sunmak yerine duygusal söyleme güvendi.,hard,C1,noun,academic
+279,sagacious,bilge,Her sagacious decision to diversify early saved the company during the economic downturn.,Erken çeşitlendirme konusundaki basiretli kararı ekonomik gerileme döneminde şirketi kurtardı.,hard,C2,adjective,academic
+280,taciturn,suskun,He was so taciturn at dinner that his guests could barely get a word out of him.,Akşam yemeğinde o kadar sessizdi ki misafirleri ondan neredeyse tek kelime alamadı.,hard,C2,adjective,social
+281,unequivocal,kesin,The report gave an unequivocal warning that action on climate change must begin immediately.,Rapor iklim değişikliği konusundaki eylemin hemen başlaması gerektiğine dair açık bir uyarı yaptı.,hard,C1,adjective,academic
+282,venerate,saygı göstermek,In many cultures people venerate their ancestors and hold special ceremonies in their memory.,Pek çok kültürde insanlar atalarına saygı duyar ve onların anısına özel törenler düzenler.,hard,C2,verb,social
+283,wary,ihtiyatlı,She was wary of signing any contract without reading every clause carefully first.,Önce her maddeyi dikkatlice okumadan herhangi bir sözleşme imzalamaktan çekinirdi.,hard,C1,adjective,daily
+284,xenophobia,yabancı düşmanlığı,The campaign aimed to raise awareness about the dangers of xenophobia and discrimination.,Kampanya yabancı düşmanlığı ve ayrımcılığın tehlikeleri hakkında farkındalık yaratmayı hedefledi.,hard,C1,noun,social
+285,yearning,özlem,After two years abroad she felt a deep yearning to return home and see her family.,Yurt dışında iki yılın ardından eve dönüp ailesini görmek için derin bir özlem hissetti.,hard,C1,noun,emotions
+286,zeal,gayret,She approached the new project with such zeal that the whole team was inspired by her energy.,Yeni projeye o kadar büyük bir hevesle yaklaştı ki tüm ekip enerjisinden ilham aldı.,hard,C1,noun,emotions
+287,auspicious,uğurlu,Winning their first match away from home was an auspicious start to the season.,İlk maçı deplasmanda kazanmak sezon için uğurlu bir başlangıçtı.,hard,C1,adjective,daily
+288,brevity,kısalık,The editor praised the journalist for the brevity and clarity of her writing style.,Editör gazetecinin yazı tarzının kısalığı ve netliği için onu övdü.,hard,C1,noun,academic
+289,corroborate,doğrulamak,A second witness came forward to corroborate the account of what had happened that night.,O gece yaşananların anlatımını doğrulamak için ikinci bir tanık öne çıktı.,hard,C1,verb,academic
+290,decorum,terbiye,The guests were expected to observe proper decorum at the formal dinner ceremony.,Konukların resmi akşam yemeği töreninde uygun görgü kurallarına uyması bekleniyordu.,hard,C2,noun,social
+291,effervescent,neşeli,Her effervescent personality lit up every room she walked into and made everyone smile.,Coşkulu kişiliği girdiği her odayı aydınlatır ve herkesi güldürürdü.,hard,C2,adjective,emotions
+292,fortuitous,tesadüfi,It was fortuitous that she happened to be in the right place at the right time.,Doğru zamanda doğru yerde olması şans eseri gerçekleşti.,hard,C2,adjective,daily
+293,grandiose,abartılı,His grandiose plans for redesigning the city were dismissed as unrealistic and too expensive.,Şehri yeniden tasarlama konusundaki abartılı planları gerçekçi olmayan ve çok pahalı diye reddedildi.,hard,C2,adjective,emotions
+294,hubris,kibir,The CEO's hubris blinded him to the warning signs until it was too late to save the company.,CEO'nun kibri uyarı işaretlerini görmesini şirketi kurtarmak için çok geç olana kadar engelledi.,hard,C2,noun,social
+295,immutable,değişmez,The rules of mathematics are immutable and hold true regardless of where you are in the universe.,Matematiğin kuralları değişmezdir ve evrenin herhangi bir yerinde olursanız olun geçerliliğini korur.,hard,C1,adjective,academic
+296,juxtapose,yan yana koymak,The documentary juxtaposes images of extreme wealth and deep poverty in the same city.,Belgesel aynı şehirdeki aşırı zenginlik ve derin yoksulluk görüntülerini yan yana koyuyor.,hard,C2,verb,academic
+297,laconic,kısa ve öz,His laconic reply of just two words left everyone wondering what he really meant.,Sadece iki kelimeden oluşan kısa cevabı herkesin gerçekte ne demek istediğini merak etmesine yol açtı.,hard,C2,adjective,academic
+298,mendacious,yalancı,The report exposed the mendacious claims the company had made about its environmental record.,Rapor şirketin çevresel sicili hakkında yaptığı yalan iddiaları gün yüzüne çıkardı.,hard,C2,adjective,social
+299,nuance,nüans,A good translator must understand the nuances of both languages to avoid misinterpretation.,İyi bir çevirmen yanlış yorumlamaları önlemek için her iki dilin nüanslarını da anlamalıdır.,hard,C1,noun,academic
+300,obfuscate,karmaşıklaştırmak,The lengthy legal document seemed designed to obfuscate rather than clarify the terms.,Uzun hukuki belge şartları açıklamak yerine gizlemek için tasarlanmış gibi görünüyordu.,hard,C2,verb,academic
+302,rain,yağmur,We got caught in the rain on our way home and arrived completely soaked.,Eve dönerken yağmura yakalandık ve tamamen ıslanarak geldik.,easy,A1,noun,nature
+303,snow,kar,The children ran outside to play in the snow as soon as they woke up that morning.,Çocuklar o sabah uyandıkları anda dışarı çıkıp karda oynamaya koştular.,easy,A1,noun,nature
+304,wind,rüzgar,A cold wind blew in from the sea and made the afternoon walk quite unpleasant.,Denizden soğuk bir rüzgar esmeye başladı ve öğleden sonraki yürüyüşü oldukça tatsız kıldı.,easy,A1,noun,nature
+305,bus,otobüs,She missed the last bus home and had to call a taxi to get back.,Eve gidecek son otobüsü kaçırdı ve geri dönmek için taksi çağırmak zorunda kaldı.,easy,A1,noun,travel
+306,train,tren,She took the early morning train to the city to attend a job interview.,Bir iş görüşmesine katılmak için şehre erkenden giden trene bindi.,easy,A1,noun,travel
+307,plane,uçak,The plane was delayed by two hours because of bad weather at the destination.,Uçak varış noktasındaki kötü hava koşulları nedeniyle iki saat gecikti.,easy,A1,noun,travel
+308,hotel,otel,They booked a hotel close to the city centre to save time on sightseeing.,Gezilecek yerlere zaman kazanmak için şehir merkezine yakın bir otel ayırttılar.,easy,A1,noun,travel
+309,ticket,bilet,She bought a return ticket to Paris and planned to stay for a whole week.,Paris'e gidiş-dönüş bilet aldı ve tam bir hafta kalmayı planladı.,easy,A1,noun,travel
+310,nurse,hemşire,The nurse checked the patient's blood pressure every hour throughout the night.,Hemşire gece boyunca her saat hastanın tansiyon ölçümünü yaptı.,easy,A1,noun,health
+311,exercise,egzersiz,She goes for a thirty-minute walk every morning as her daily exercise.,Her sabah günlük egzersizi olarak otuz dakikalık yürüyüşe çıkıyor.,easy,A2,noun,health
+312,shirt,gömlek,He ironed his favourite shirt carefully before the important job interview.,Önemli iş görüşmesinden önce en sevdiği gömleği dikkatlice ütüledi.,easy,A1,noun,daily
+313,bag,çanta,She packed a small bag for the weekend trip and left her heavy suitcase at home.,Hafta sonu gezisi için küçük bir çanta hazırladı ve ağır valizini evde bıraktı.,easy,A1,noun,daily
+314,shoe,ayakkabı,He bought a new pair of shoes for the wedding because his old ones were worn out.,Eskileri eskimiş olduğu için düğün için yeni bir çift ayakkabı aldı.,easy,A1,noun,daily
+315,clean,temiz,The kitchen must be clean and tidy before the guests arrive this evening.,Misafirler bu akşam gelmeden önce mutfak temiz ve düzenli olmalı.,easy,A1,adjective,daily
+316,tired,yorgun,She was so tired after the long flight that she fell asleep immediately.,Uzun uçuşun ardından o kadar yorgundu ki hemen uyuyakalıdı.,easy,A1,adjective,emotions
+317,analyze,analiz etmek,The team was asked to analyze the survey results and present their findings next week.,Ekipten anket sonuçlarını analiz etmeleri ve gelecek hafta bulgularını sunmaları istendi.,medium,B1,verb,academic
+318,theory,teori,Darwin's theory of evolution changed the way scientists understand life on Earth.,Darwin'in evrim teorisi bilim insanlarının Dünya'daki yaşamı anlama biçimini değiştirdi.,medium,B2,noun,academic
+319,evaluate,değerlendirmek,The committee was formed to evaluate the proposals and select the best candidate.,Komite teklifleri değerlendirmek ve en iyi adayı seçmek için oluşturuldu.,medium,B2,verb,academic
+320,conclude,sonuca varmak,After reviewing all the evidence the investigators concluded that it was not an accident.,Tüm kanıtları inceledikten sonra soruşturmacılar bunun bir kaza olmadığı sonucuna vardı.,medium,B2,verb,academic
+321,digital,dijital,The school replaced all its textbooks with digital versions to save paper and money.,Okul kağıt ve para tasarrufu için tüm ders kitaplarını dijital sürümlerle değiştirdi.,medium,B1,adjective,technology
+322,network,ağ,The conference was a great opportunity to expand her professional network in the industry.,Konferans sektördeki profesyonel ağını genişletmek için harika bir fırsattı.,medium,B1,noun,technology
+323,device,cihaz,The new device monitors your heart rate and sleep quality throughout the night.,Yeni cihaz gece boyunca kalp atış hızınızı ve uyku kalitenizi izliyor.,medium,B1,noun,technology
+324,stress,stres,She noticed that her stress levels were much lower after she started meditating daily.,Günlük meditasyon yapmaya başladıktan sonra stres seviyelerinin çok daha düştüğünü fark etti.,medium,B1,noun,health
+325,symptom,belirti,A persistent cough can be an early symptom of several different respiratory conditions.,Süregelen öksürük birçok farklı solunum yolu hastalığının erken belirtisi olabilir.,medium,B2,noun,health
+326,recover,iyileşmek,It took her six weeks to fully recover from the operation and return to work.,Ameliyattan tamamen iyileşmesi ve işe geri dönmesi altı hafta aldı.,medium,B1,verb,health
+327,grateful,minnettar,She was genuinely grateful for all the help her neighbours gave her after the accident.,Kazadan sonra komşularının yaptığı tüm yardımlar için gerçekten minnettardı.,medium,B1,adjective,emotions
+328,anxious,endişeli,He felt anxious about the presentation and practised it several times the night before.,Sunum konusunda endişeliydi ve bir gece önce birkaç kez alıştırma yaptı.,medium,B1,adjective,emotions
+329,deadline,son teslim tarihi,She worked overtime for a week to make sure she would not miss the project deadline.,Proje son tarihini kaçırmamak için bir hafta fazla mesai yaptı.,medium,B1,noun,business
+330,budget,bütçe,The renovation went over budget so they had to cancel the plans for the new kitchen.,Tadilat bütçeyi aştığı için yeni mutfak planlarını iptal etmek zorunda kaldılar.,medium,B1,noun,business
+331,negotiate,müzakere etmek,She successfully negotiated a higher salary before accepting the job offer.,İş teklifini kabul etmeden önce daha yüksek bir maaş konusunda başarıyla müzakere yaptı.,medium,B2,verb,business
+332,algorithm,algoritma,The search engine uses a complex algorithm to rank websites based on relevance.,Arama motoru web sitelerini alaka düzeyine göre sıralamak için karmaşık bir algoritma kullanıyor.,hard,C1,noun,technology
+333,disrupt,sekteye uğratmak,Ride-sharing apps began to disrupt the traditional taxi industry around the world.,Araç paylaşım uygulamaları tüm dünyada geleneksel taksi sektörünü dönüştürmeye başladı.,hard,C1,verb,technology
+334,prototype,prototip,Engineers built a prototype of the device and tested it thoroughly before mass production.,Mühendisler cihazın bir prototipini üretti ve seri üretimden önce kapsamlı biçimde test etti.,hard,C1,noun,technology
+335,encrypt,şifrelemek,It is essential to encrypt any sensitive files before sending them over an unsecured network.,Güvenli olmayan bir ağ üzerinden göndermeden önce hassas dosyaları şifrelemek çok önemlidir.,hard,C1,verb,technology
+336,itinerary,seyahat planı,He shared the full itinerary with the group so everyone knew where to be and when.,Herkesin nerede ve ne zaman olması gerektiğini bilmesi için tam güzergahı grupla paylaştı.,hard,C1,noun,travel
+337,navigate,yol bulmak,She used her phone to navigate through the narrow streets of the old town.,Eski şehrin dar sokaklarında yol bulmak için telefonunu kullandı.,hard,C1,verb,travel
+338,embark,yola çıkmak,After finishing university she decided to embark on a year of solo travel.,Üniversiteyi bitirdikten sonra bir yıllık solo seyahate çıkmaya karar verdi.,hard,C1,verb,travel
+339,entrepreneur,girişimci,As a young entrepreneur he launched three different businesses before the age of thirty.,Genç bir girişimci olarak otuz yaşına gelmeden üç farklı işletme kurdu.,hard,C1,noun,business
+340,revenue,gelir,The company increased its revenue by thirty percent after expanding to overseas markets.,Şirket yurt dışı pazarlara açıldıktan sonra gelirini yüzde otuz artırdı.,hard,C1,noun,business
+341,feasible,uygulanabilir,The manager doubted the proposal was feasible given the limited time and resources available.,Mevcut sınırlı zaman ve kaynaklar göz önüne alındığında teklifin uygulanabilir olduğundan şüphe duydu.,hard,C1,adjective,business
+342,benchmark,kıyaslama noktası,The company set a benchmark for customer satisfaction and tracked it every quarter.,Şirket müşteri memnuniyeti için bir ölçüt belirledi ve her çeyrekte takip etti.,hard,C1,noun,business
+343,collaborate,iş birliği yapmak,The two universities agreed to collaborate on a joint research project lasting three years.,İki üniversite üç yıl sürecek ortak bir araştırma projesinde iş birliği yapmayı kabul etti.,hard,C1,verb,business
+344,discrepancy,uyuşmazlık,The auditors found a discrepancy between the reported figures and the actual bank records.,Denetçiler bildirilen rakamlar ile gerçek banka kayıtları arasında bir tutarsızlık buldu.,hard,C1,noun,academic
+345,validate,doğrulamak,The clinical trial was designed to validate the effectiveness of the new treatment.,Klinik deneme yeni tedavinin etkinliğini doğrulamak için tasarlandı.,hard,C1,verb,academic
+346,perception,algı,The advertising campaign was designed to change public perception of the brand.,Reklam kampanyası markanın kamuoyundaki algısını değiştirmek için tasarlandı.,hard,C1,noun,academic
+347,destination,varış noktası,She had always dreamed of visiting Japan as her first international travel destination.,Her zaman ilk uluslararası seyahat destinasyonu olarak Japonya'yı ziyaret etmeyi hayal etmişti.,medium,B1,noun,travel
+348,departure,kalkış,They arrived at the airport three hours before their scheduled departure time.,Planlanan kalkış saatinden üç saat önce havalimanına vardılar.,medium,B1,noun,travel
+349,luggage,bagaj,She packed light and carried only one piece of hand luggage for the short trip.,Hafif bavul yaptı ve kısa gezi için yalnızca bir el bagajı taşıdı.,medium,B1,noun,travel
+350,reservation,rezervasyon,He called the restaurant to make a reservation for a table for four on Saturday evening.,Cumartesi akşamı dört kişilik masa için restoranı aradı ve rezervasyon yaptırdı.,medium,B1,noun,travel
+351,accommodation,konaklama,Finding affordable accommodation in the city centre during the festival was almost impossible.,Festival sırasında şehir merkezinde uygun fiyatlı konaklama bulmak neredeyse imkânsızdı.,medium,B2,noun,travel
+352,customs,gümrük,All passengers must declare any goods worth over a certain value at customs.,Tüm yolcular belirli bir değerin üzerindeki malları gümrükte beyan etmek zorundadır.,medium,B1,noun,travel
+353,route,güzergah,The driver took a longer route to avoid the heavy traffic in the city centre.,Sürücü şehir merkezindeki yoğun trafikten kaçınmak için daha uzun bir güzergah seçti.,medium,B1,noun,travel
+354,journey,yolculuk,The long journey by road gave them plenty of time to talk and enjoy the scenery.,Uzun karayolu yolculuğu onlara konuşmak ve manzaranın tadını çıkarmak için bol zaman verdi.,medium,B1,noun,travel
+355,landscape,manzara,The photographer spent weeks capturing the dramatic landscape of the desert at sunrise.,Fotoğrafçı haftalarca çölün dramatik manzarasını gün doğumunda yakalamak için zaman harcadı.,medium,B1,noun,nature
+356,wildlife,yaban hayatı,The national park was set up to protect the region's rich and diverse wildlife.,Ulusal park bölgenin zengin ve çeşitli yaban hayatını korumak amacıyla kuruldu.,medium,B1,noun,nature
+357,harvest,hasat,After weeks of dry weather the farmers were relieved to bring in a good harvest.,Haftalarca süren kuru havadan sonra çiftçiler iyi bir hasat kaldırmanın rahatlığını yaşadı.,medium,B1,noun,nature
+358,drought,kuraklık,The prolonged drought forced farmers to use water more carefully and reduce their crops.,Uzun süren kuraklık çiftçileri suyu daha dikkatli kullanmaya ve ürünlerini azaltmaya zorladı.,medium,B2,noun,nature
+359,ecosystem,ekosistem,Pollution and overfishing are threatening the delicate ecosystem of coral reefs.,Kirlilik ve aşırı avlanma mercan resiflerinin hassas ekosistemini tehdit ediyor.,medium,B2,noun,nature
+360,habitat,yaşam alanı,Many endangered species are at risk because their natural habitat is shrinking rapidly.,Pek çok nesli tükenmekte olan tür doğal yaşam alanının hızla küçülmesi nedeniyle risk altındadır.,medium,B2,noun,nature
+361,climate,iklim,Scientists warn that the global climate is changing faster than at any point in history.,Bilim insanları küresel iklimin tarihin herhangi bir döneminden daha hızlı değiştiğini uyarıyor.,medium,B1,noun,nature
+362,excited,heyecanlı,The children were so excited about the school trip that they could not sleep the night before.,Çocuklar okul gezisi konusunda o kadar heyecanlıydı ki önceki gece uyuyamadılar.,easy,A1,adjective,emotions
+363,angry,kızgın,She was angry when she found out her essay had been submitted late without her knowledge.,Makalesinin haberi olmadan geç teslim edildiğini öğrendiğinde kızgın oldu.,easy,A1,adjective,emotions
+364,worried,endişeli,He was worried when his daughter did not come home by the time she had promised.,Kızı söz verdiği saatte eve gelmeyince endişelendi.,easy,A1,adjective,emotions
+365,surprised,şaşkın,She was completely surprised when her colleagues threw a party for her birthday.,Meslektaşları doğum günü için sürpriz parti hazırlayınca tamamen şaşırdı.,easy,A1,adjective,emotions
+366,computer,bilgisayar,She bought a new computer for university because her old one was too slow.,Eskisi çok yavaş olduğu için üniversite için yeni bir bilgisayar aldı.,easy,A1,noun,technology
+367,internet,internet,She used the hotel internet to check her emails and book tickets for the next day.,Otel internetini e-postalarını kontrol etmek ve ertesi gün için bilet almak için kullandı.,easy,A1,noun,technology
+368,message,mesaj,He left a message for his manager explaining that he would be late to the meeting.,Toplantıya geç kalacağını açıklayan yöneticisi için bir mesaj bıraktı.,easy,A1,noun,technology
+369,trip,gezi,They organised a short trip to the countryside to relax after a busy few weeks.,Yoğun birkaç haftanın ardından dinlenmek için kırsal kesime kısa bir gezi düzenlediler.,easy,A1,noun,travel
+370,station,istasyon,They met at the train station and walked to the hotel together from there.,Tren garında buluştular ve oradan otele birlikte yürüdüler.,easy,A1,noun,travel
+371,passport,pasaport,She checked that her passport was valid before booking the international flight.,Uluslararası uçuşu rezerve etmeden önce pasaportunun geçerli olduğunu kontrol etti.,easy,A1,noun,travel
+372,sick,hasta,He felt sick after lunch and decided to lie down for the rest of the afternoon.,Öğle yemeğinin ardından kendini hasta hissetti ve öğleden sonranın geri kalanında uzanmaya karar verdi.,easy,A1,adjective,health
+373,medicine,ilaç,The doctor prescribed medicine to reduce the swelling and ease the pain in her knee.,Doktor dizindeki şişliği azaltmak ve ağrıyı hafifletmek için ilaç yazdı.,easy,A1,noun,health
+374,pain,ağrı,He woke up with sharp pain in his shoulder and decided to see a doctor that morning.,Omzunda keskin bir ağrıyla uyandı ve o sabah doktora gitmeye karar verdi.,easy,A1,noun,health
+375,cloud,bulut,Dark clouds gathered on the horizon just as they were starting their outdoor picnic.,Açık hava pikniğine başladıkları sırada ufukta kara bulutlar toplandı.,easy,A1,noun,nature
+376,river,nehir,They rented a small boat and spent the afternoon drifting slowly down the river.,Küçük bir tekne kiraladılar ve öğleden sonrayı nehirde yavaşça süzülerek geçirdiler.,easy,A1,noun,nature
+377,erosion,erozyon,Heavy rainfall and strong winds accelerated the erosion of the coastal cliffs over decades.,Yoğun yağış ve güçlü rüzgarlar on yıllar içinde kıyı falezlerinin erozyonunu hızlandırdı.,hard,C1,noun,nature
+378,fertile,verimli,The river delta has fertile soil that has supported farming communities for thousands of years.,Nehir deltası binlerce yıldır tarım topluluklarını destekleyen verimli bir toprağa sahiptir.,hard,C1,adjective,nature
+379,barren,çorak,The explorers crossed a barren desert where almost nothing grew for hundreds of miles.,Kaşifler yüzlerce mil boyunca neredeyse hiçbir şeyin yetişmediği ıssız bir çölü geçti.,hard,C1,adjective,nature
+380,temperate,ılıman,The temperate climate of the region makes it ideal for growing grapes and making wine.,Bölgenin ılıman iklimi onu üzüm yetiştirmek ve şarap yapmak için ideal kılıyor.,hard,C1,adjective,nature
+381,cascade,çağlayan,A spectacular cascade of water tumbled down the cliffs after the heavy rainfall.,Yoğun yağmurun ardından uçurumlardan muhteşem bir şelale halinde su döküldü.,hard,C1,noun,nature
+382,serene,huzurlu,The garden was completely serene early in the morning before the rest of the family woke up.,Ailenin geri kalanı uyanmadan önce sabahın erken saatlerinde bahçe tamamen huzurluydu.,hard,C1,adjective,nature
+383,integrity,dürüstlük,He refused to sign the misleading report because it would have compromised his integrity.,Yanıltıcı raporu imzalamayı reddetti çünkü bu onun dürüstlüğünden ödün vermek anlamına gelirdi.,hard,C1,noun,social
+384,empathy,empati,A good doctor needs empathy to truly understand what their patients are going through.,İyi bir doktorun hastalarının neler yaşadığını gerçekten anlaması için empati kurması gerekir.,hard,C1,noun,social
+385,solidarity,dayanışma,Colleagues from across the company showed solidarity by donating to help the affected families.,Şirketin her yerinden meslektaşlar etkilenen ailelere yardım etmek için bağış yaparak dayanışma gösterdi.,hard,C1,noun,social
+386,reconcile,uzlaşmak,After months of tension the two neighbours finally agreed to reconcile their differences.,Aylarca süren gerginliğin ardından iki komşu sonunda farklılıklarını uzlaştırmayı kabul etti.,hard,C1,verb,social
+387,chronic,kronik,She has been dealing with chronic fatigue for years and finds it hard to get through the day.,Yıllardır kronik yorgunlukla mücadele ediyor ve günü geçirmekte güçlük çekiyor.,hard,C1,adjective,health
+388,diagnosis,teşhis,After several tests the doctor gave her a diagnosis and explained the treatment options.,Birkaç testin ardından doktor ona bir teşhis koydu ve tedavi seçeneklerini açıkladı.,hard,C1,noun,health
+389,immune,bağışık,Once you have had chickenpox your body becomes immune to the virus for the rest of your life.,Suçiçeği geçirdikten sonra vücudunuz ömrünüz boyunca virüse karşı bağışık hale gelir.,hard,C1,adjective,health
+390,melancholy,melankoli,She felt a wave of melancholy wash over her as she packed up the last of her belongings.,Son eşyalarını toplarken içinden bir melankoli dalgasının geçtiğini hissetti.,hard,C1,noun,emotions
+391,composure,soğukkanlılık,Despite the chaotic situation the manager kept her composure and calmly directed the team.,Kaotik duruma rağmen müdür soğukkanlılığını korudu ve ekibi sakin bir şekilde yönlendirdi.,hard,C1,noun,emotions
+392,visa,vize,He applied for a work visa six months before his planned move to Canada.,Kanada'ya planlanan taşınmasından altı ay önce çalışma vizesi için başvurdu.,medium,B1,noun,travel
+393,border,sınır,They had to show their passports and answer a few questions at the border crossing.,Sınır kapısında pasaportlarını göstermeleri ve birkaç soruyu yanıtlamaları gerekti.,medium,B1,noun,travel
+394,currency,para birimi,It is a good idea to exchange some currency before you arrive in a foreign country.,Yabancı bir ülkeye varmadan önce biraz döviz bozdurmanız iyi bir fikirdir.,medium,B1,noun,travel
+395,souvenir,hâtıra eşyası,He brought back a traditional souvenir from each country he visited during his gap year.,Boşluk yılında ziyaret ettiği her ülkeden geleneksel bir hediyelik eşya getirdi.,medium,B1,noun,travel
+396,delay,gecikme,A two-hour delay meant they missed their connecting flight and had to book a new one.,İki saatlik gecikme aktarmalı uçuşlarını kaçırmalarına ve yeni bir bilet almalarına neden oldu.,medium,B1,noun,travel
+397,transit,aktarma,During her five-hour transit at the airport she found a quiet corner and caught up on sleep.,Havalimanındaki beş saatlik aktarma süresinde sessiz bir köşe buldu ve uyku borcunu kapattı.,medium,B1,noun,travel
+398,landmark,simge yapı,The ancient cathedral in the town square is the most recognisable landmark in the region.,Kasaba meydanındaki antik katedral bölgenin en tanınmış simge yapısıdır.,medium,B2,noun,travel
+399,excursion,gezi,The hotel arranged a half-day excursion to the ancient ruins for all interested guests.,Otel ilgilenen tüm misafirler için antik harabelere yarım günlük bir gezi düzenledi.,medium,B2,noun,travel
+400,fare,bilet ücreti,The bus fare into the city centre is much cheaper than taking a taxi from the airport.,Şehir merkezine gidecek otobüs ücreti havalimanından taksi tutmaktan çok daha ucuzdur.,medium,B1,noun,travel
 401,explore,keşfe çıkmak,We decided to explore the old city on foot.,Eski şehri yaya olarak keşfetmeye karar verdik.,medium,B1,verb,travel
 402,ferry,feribot,We took the ferry across the bay.,Körfezi geçmek için feribota bindik.,medium,B1,noun,travel
 403,embassy,büyükelçilik,She registered her trip at the embassy.,Seyahatini büyükelçiliğe kaydettirdi.,medium,B2,noun,travel
@@ -423,7 +423,7 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 423,climb,tırmanmak,The children love to climb trees in the park.,Çocuklar parkta ağaçlara tırmanmayı çok seviyor.,easy,A2,verb,nature
 424,choose,seçmek,You can choose any book from the shelf.,Raftan istediğin kitabı seçebilirsin.,easy,A2,verb,daily
 425,carry,taşımak,Can you carry this bag for me?,Bu çantayı benim için taşıyabilir misin?,easy,A1,verb,daily
-426,wake,uyanmak,I wake up early every day.,Her gün erken uyanırım.,easy,A1,verb,daily
+426,wake,uyanmak,She tries to wake up at the same time every morning to keep a consistent routine.,Tutarlı bir rutin sürdürmek için her sabah aynı saatte uyanmaya çalışıyor.,easy,A1,verb,daily
 427,smile,gülümsemek,She smiled when she saw her friend.,Arkadaşını görünce güldü.,easy,A1,verb,social
 428,rest,dinlenmek,You should rest after a long day at work.,Uzun bir iş gününün ardından dinlenmelisin.,easy,A1,verb,health
 429,wash,yıkamak,Please wash your hands before eating.,Yemek yemeden önce lütfen ellerini yıka.,easy,A1,verb,daily
@@ -438,7 +438,7 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 438,fatigue,yorgunluk,Chronic fatigue can affect your daily performance.,Kronik yorgunluk günlük performansınızı etkileyebilir.,medium,B2,noun,health
 439,allergy,alerji,She has a severe allergy to peanuts.,Fıstığa karşı ciddi alerjisi var.,medium,B1,noun,health
 440,treatment,tedavi,The doctor suggested a new treatment for the condition.,Doktor bu durum için yeni bir tedavi önerdi.,medium,B1,noun,health
-441,infection,enfeksiyon,The cut became infected and needed treatment.,Yara enfekte oldu ve tedavi gerektirdi.,medium,B1,noun,health
+441,infection,enfeksiyon,The doctor cleaned the wound carefully to prevent a serious infection.,Doktor ciddi bir enfeksiyonu önlemek için yarayı dikkatlice temizledi.,medium,B1,noun,health
 442,hygiene,hijyen,Good hygiene helps prevent the spread of illness.,İyi hijyen hastalığın yayılmasını önlemeye yardımcı olur.,medium,B2,noun,health
 443,diagnose,teşhis koymak,The doctor was able to diagnose the illness quickly.,Doktor hastalığı hızla teşhis edebildi.,medium,B2,verb,health
 444,prescribe,reçete yazmak,The doctor prescribed medication for the infection.,Doktor enfeksiyon için ilaç reçete etti.,medium,B2,verb,health
@@ -449,7 +449,7 @@ id,word,translation,example,exampleTr,level,cefrLevel,partOfSpeech,topic
 449,curriculum,müfredat,The school revised its curriculum to include digital skills.,"Okul, dijital becerileri de kapsayacak şekilde müfredatını güncelledi.",hard,C1,noun,education
 450,dissertation,tez,He spent two years writing his doctoral dissertation.,Doktora tezini yazmak için iki yıl harcadı.,hard,C1,noun,education
 451,cognition,biliş,Language acquisition is closely linked to cognition.,Dil edinimi bilişsel süreçlerle yakından bağlantılıdır.,hard,C1,noun,education
-452,scholarship,burs,She received a scholarship to study abroad.,Yurt dışında eğitim görmek için burs aldı.,hard,B2,noun,education
+452,scholarship,burs,She received a scholarship to study abroad.,Yurt dışında eğitim görmek için burs aldı.,medium,B2,noun,education
 453,tenure,kadro,The professor was granted tenure after years of research.,Profesör yıllarca süren araştırmaların ardından kadroya alındı.,hard,C1,noun,education
 454,arrange,düzenlemek,She arranged all the documents on the desk.,Masadaki tüm belgeleri düzenledi.,medium,B1,verb,daily
 455,handle,üstesinden gelmek,He handled the situation calmly and professionally.,Durumu sakin ve profesyonel bir şekilde ele aldı.,medium,B1,verb,daily
