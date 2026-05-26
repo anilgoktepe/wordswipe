@@ -56,24 +56,24 @@ const BENEFITS = [
     icon: 'flash' as const,
     color: '#F59E0B',
     bg: '#FEF3C7',
-    title: 'Günlük yeni kelimeler',
-    desc: 'Seviyen için seçilmiş flash kartlarla hızlıca öğren',
+    title: 'Günlük kelimelerle öğren',
+    desc: 'Seviyene göre seçilen kartlarla hızlıca ilerle',
   },
   {
     iconLib: 'mci' as const,
     icon: 'pencil-outline' as const,
     color: '#7C3AED',
     bg: '#EDE9FE',
-    title: 'Cümle yaz, AI analiz et',
-    desc: 'Öğrendiklerini gerçek cümlelerle pekiştir, hatalarını öğren',
+    title: 'Kendi kelimeni ekle',
+    desc: 'Merak ettiğin kelimeleri listene kaydet ve çalış',
   },
   {
     iconLib: 'ion' as const,
     icon: 'trending-up' as const,
     color: '#10B981',
     bg: '#D1FAE5',
-    title: 'İlerlemeni takip et',
-    desc: 'Seri, puan ve istatistiklerle motive kal',
+    title: 'Zorlandıklarını pekiştir',
+    desc: 'Yanıldığın kelimeleri tekrar et, öğrendiklerini kalıcı hale getir',
   },
 ];
 
@@ -87,14 +87,14 @@ const HOW_IT_WORKS = [
   {
     num: '2',
     gradient: ['#6C63FF', '#9B5CF6'] as [string, string],
-    title: 'Quiz\'de kendini test et',
-    desc: 'Hemen ardından kısa bir çoktan seçmeli quiz. Ne kadarını aklında tuttuğunu göster.',
+    title: 'Quiz ve tekrar ile pekiştir',
+    desc: 'Öğrendiklerini test et, zorlandığın kelimeleri tekrar gör.',
   },
   {
     num: '3',
     gradient: ['#FF6584', '#F59E0B'] as [string, string],
     title: 'Cümle yaz, AI kontrol et',
-    desc: 'Öğrendiğin kelimeyle kendi cümleni yaz. Gramer ve doğallık hatalarını anında öğren.',
+    desc: 'Kendi cümleni kur; gramer, anlam ve doğallık hatalarını öğren.',
   },
 ];
 
