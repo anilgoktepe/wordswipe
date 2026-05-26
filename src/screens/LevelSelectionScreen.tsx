@@ -45,7 +45,7 @@ function LevelIcon({ levelKey, size = 28 }: { levelKey: Level; size?: number }) 
 const LEVELS: { key: Level; label: string; range: string; description: string; gradient: [string, string] }[] = [
   { key: 'easy',   label: 'Başlangıç', range: 'A1-A2', description: 'Temel günlük kelimeler',   gradient: ['#43D99D', '#38BDF8'] },
   { key: 'medium', label: 'Orta',      range: 'B1-B2', description: 'Daha gelişmiş kelimeler',  gradient: ['#6C63FF', '#9B5CF6'] },
-  { key: 'hard',   label: 'İleri',     range: 'C1-C2', description: 'Akademik ve zor kelimeler', gradient: ['#FF6584', '#F59E0B'] },
+  { key: 'hard',   label: 'İleri',     range: 'C1-C2', description: 'Önce C1, ardından C2 kelimeleri', gradient: ['#FF6584', '#F59E0B'] },
 ];
 
 // ─── Onboarding data ──────────────────────────────────────────────────────────

@@ -292,7 +292,14 @@ export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     // ── Simple non-progress actions ──────────────────────────────────────────
     case 'SET_LEVEL':
-      return { ...state, level: action.level };
+      if (action.level === state.level) return state;
+      return {
+        ...state,
+        level: action.level,
+        dailyBaseSessionStarted: false,
+        dailyBonusSessionStarted: false,
+        lastLessonWordIds: [],
+      };
 
     case 'ADD_XP':
       return { ...state, xp: state.xp + action.amount };
@@ -740,6 +747,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       !interactedIds.has(w.id) &&
       !lastLesson.has(w.id),
     );
+
+    // For hard level: C1 words before C2 so early learners encounter the more
+    // common C1 vocabulary first. C2 words remain available once C1 is exhausted.
+    // Original ID order is preserved within each CEFR tier.
+    if (state.level === 'hard') {
+      newWords.sort((a, b) => {
+        const aIsC2 = a.cefrLevel === 'C2' ? 1 : 0;
+        const bIsC2 = b.cefrLevel === 'C2' ? 1 : 0;
+        if (aIsC2 !== bIsC2) return aIsC2 - bIsC2;
+        return a.id - b.id;
+      });
+    }
 
     return newWords.slice(0, target);
   };
