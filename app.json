@@ -19,7 +19,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.wordswipe.app",
+      "bundleIdentifier": "com.anilgoktepe.wordswipe",
       "buildNumber": "2",
       "requireFullScreen": false,
       "usesAppleSignIn": false,
