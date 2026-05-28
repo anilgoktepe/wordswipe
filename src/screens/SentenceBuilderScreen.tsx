@@ -16,7 +16,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { getLocalWords, Word } from '../services/vocabularyService';
+import { getLocalWords, getEffectiveVocab, Word } from '../services/vocabularyService';
 import { analyzeSentenceLocal, LocalAnalysisResult, validateCorrectedSentence } from '../services/sentenceAnalysisService';
 import {
   analyzeSentenceDetailed,
@@ -53,18 +53,19 @@ interface Props {
  * Otherwise prioritizes review-due words (nextReviewAt <= now) before not-yet-due ones.
  */
 function buildQueue(
+  vocab: Word[],
   learnedIds: number[],
   max: number,
   wordProgress: Record<number, { nextReviewAt: number }>,
   pinnedIds?: number[],
 ): Word[] {
   if (pinnedIds && pinnedIds.length > 0) {
-    const pool = vocabulary.filter(w => pinnedIds.includes(w.id));
+    const pool = vocab.filter(w => pinnedIds.includes(w.id));
     return [...pool].sort(() => Math.random() - 0.5).slice(0, max);
   }
 
   const now  = Date.now();
-  const pool = vocabulary.filter(w => learnedIds.includes(w.id));
+  const pool = vocab.filter(w => learnedIds.includes(w.id));
 
   const due    = pool.filter(w => (wordProgress[w.id]?.nextReviewAt ?? 0) <= now);
   const notDue = pool.filter(w => (wordProgress[w.id]?.nextReviewAt ?? 0) > now);
@@ -101,7 +102,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route, onBa
     : (isPremium ? learnedIds.length : FREE_SENTENCE_SESSION_CAP);
 
   // One-time queue built at mount — does not rebuild on re-render.
-  const [queue]               = useState<Word[]>(() => buildQueue(learnedIds, sessionMax, state.wordProgress, pinnedIds));
+  const [queue]               = useState<Word[]>(() => buildQueue(getEffectiveVocab(vocabulary, state.customWords), learnedIds, sessionMax, state.wordProgress, pinnedIds));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sentence, setSentence]         = useState('');
   const [result, setResult]             = useState<LocalAnalysisResult | null>(null);

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '../context/AppContext';
-import { getLocalWords } from '../services/vocabularyService';
+import { getLocalWords, getEffectiveVocab } from '../services/vocabularyService';
 import { Button } from '../components/Button';
 import { AdBanner } from '../components/AdBanner';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
@@ -37,6 +37,7 @@ interface Props {
 
 export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
   const { state, dispatch } = useApp();
+  const effectiveVocab = getEffectiveVocab(vocabulary, state.customWords);
   const theme = getTheme(state.darkMode);
 
   const results = state.sessionResults;
@@ -133,7 +134,7 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
 
   const _execRetryWrong = () => {
     // Look up wrong words directly from vocabulary — no dependency on isDifficult flag.
-    const wrongWords = vocabulary.filter(w => results?.wrongWordIds?.includes(w.id));
+    const wrongWords = effectiveVocab.filter(w => results?.wrongWordIds?.includes(w.id));
     if (wrongWords.length === 0) return;
     dispatch({ type: 'SET_SESSION_WORDS', words: wrongWords });
     dispatch({ type: 'SET_SESSION_RESULTS', results: null });

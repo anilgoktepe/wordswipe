@@ -17,7 +17,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/Button';
-import { getLocalWords } from '../services/vocabularyService';
+import { getLocalWords, getEffectiveVocab } from '../services/vocabularyService';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import {
   ALL_LESSON_SIZES,
@@ -45,6 +45,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   useIsFocused();
 
   const { state, dispatch, getDailyWords } = useApp();
+  const effectiveVocab = getEffectiveVocab(vocabulary, state.customWords);
 
   // Entrance animations — staggered fade + slide-up for each card
   const headerAnim  = useRef(new Animated.Value(0)).current;
@@ -199,7 +200,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   // on nextReviewAt. The SRS schedule still governs what appears *first*, not
   // whether the card is enabled.
   const now = Date.now();
-  const learnedReviewWords = vocabulary
+  const learnedReviewWords = effectiveVocab
     .filter(w => {
       const wp = state.wordProgress[w.id];
       return wp && wp.correctCount > 0;
