@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { Word } from '../data/vocabulary';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
+import { FREE_SESSION_CAP } from '../utils/monetization';
 
 interface Props {
   navigation: any;
@@ -63,6 +64,16 @@ function WordCard({
 export const MyWordsScreen: React.FC<Props> = ({ navigation }) => {
   const { state, dispatch } = useApp();
   const theme = getTheme(state.darkMode);
+  const isPremium = state.isPremium;
+
+  const sorted = [...state.customWords].sort((a, b) => (b.addedAt ?? 0) - (a.addedAt ?? 0));
+  const sessionCap = isPremium ? sorted.length : Math.min(sorted.length, FREE_SESSION_CAP);
+
+  const handleStartCustomSession = () => {
+    const words = sorted.slice(0, sessionCap);
+    dispatch({ type: 'SET_SESSION_WORDS', words });
+    navigation.navigate('Quiz');
+  };
 
   const handleDelete = (word: Word) => {
     Alert.alert(
@@ -78,8 +89,6 @@ export const MyWordsScreen: React.FC<Props> = ({ navigation }) => {
       ],
     );
   };
-
-  const sorted = [...state.customWords].sort((a, b) => (b.addedAt ?? 0) - (a.addedAt ?? 0));
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.background }]}>
@@ -118,6 +127,19 @@ export const MyWordsScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={[styles.count, { color: theme.textSecondary }]}>
             {sorted.length} kelime · En yeni en üstte
           </Text>
+          <TouchableOpacity
+            style={[styles.practiceBtn, { backgroundColor: theme.primary }]}
+            onPress={handleStartCustomSession}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="play-circle-outline" size={20} color="#fff" />
+            <Text style={styles.practiceBtnText}>
+              {'Kelimelerimi Test Et '}
+              {!isPremium && sorted.length > FREE_SESSION_CAP
+                ? `(${FREE_SESSION_CAP}/${sorted.length})`
+                : `(${sorted.length})`}
+            </Text>
+          </TouchableOpacity>
           <FlatList
             data={sorted}
             keyExtractor={w => String(w.id)}
@@ -215,4 +237,16 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   emptyBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  practiceBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radius.lg,
+    justifyContent: 'center',
+  },
+  practiceBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
 });
