@@ -44,10 +44,10 @@ function isDisplayDifficult(wp: WordProgress): boolean {
  * Any word ever answered incorrectly appears here, even after the user has
  * since recovered it.  This preserves a full history of words the user has
  * ever struggled with, separate from the active practice pool.
- * Threshold: wrongCount > 0 (regardless of correctCount).
+ * Threshold: isDifficult === true (active SRS recovery flag).
  */
 function isHistoricallyDifficult(wp: WordProgress): boolean {
-  return wp.wrongCount > 0;
+  return wp.isDifficult === true;
 }
 
 /**

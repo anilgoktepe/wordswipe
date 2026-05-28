@@ -17,7 +17,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/Button';
-import { getLocalWords, getEffectiveVocab } from '../services/vocabularyService';
+import { getLocalWords } from '../services/vocabularyService';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import {
   ALL_LESSON_SIZES,
@@ -44,9 +44,7 @@ interface Props {
 export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   useIsFocused();
 
-  const { state, dispatch, getDailyWords } = useApp();
-  const effectiveVocab = getEffectiveVocab(vocabulary, state.customWords);
-
+  const { state, dispatch, getDailyWords, getDifficultWordObjects } = useApp();
   // Entrance animations — staggered fade + slide-up for each card
   const headerAnim  = useRef(new Animated.Value(0)).current;
   const ctaAnim     = useRef(new Animated.Value(0)).current;
@@ -186,10 +184,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   //               but hasn't cleared 3 consecutive yet), OR
   //             • wrongCount > 0 AND correctCount === 0 (wrong, never correct)
   // seenCount = words answered at least once (not just seeded at session start)
-  const difficultWords = vocabulary.filter(w => {
-    const wp = state.wordProgress[w.id];
-    return wp ? wp.isDifficult === true : false;
-  });
+  const difficultWords = getDifficultWordObjects();
   // learnedReviewWords = all words with at least one correct answer, sorted by
   // smart review priority so the most urgent words surface first in a session:
   //   1. SRS-due words (nextReviewAt <= now)
@@ -200,7 +195,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   // on nextReviewAt. The SRS schedule still governs what appears *first*, not
   // whether the card is enabled.
   const now = Date.now();
-  const learnedReviewWords = effectiveVocab
+  const learnedReviewWords = vocabulary
     .filter(w => {
       const wp = state.wordProgress[w.id];
       return wp && wp.correctCount > 0;

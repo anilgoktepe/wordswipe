@@ -248,17 +248,14 @@ function getMotivation(overallPct: number, streak: number, learnedCount: number)
 
 export const StatsScreen: React.FC<{ navigation?: any }> = () => {
   useIsFocused();
-  const { state } = useApp();
+  const { state, getDifficultWordObjects } = useApp();
   const theme = getTheme(state.darkMode);
 
   const learnedWords = vocabulary.filter(w => {
     const wp = state.wordProgress[w.id];
     return wp ? wp.correctCount >= 2 : false;
   });
-  const difficultWords = vocabulary.filter(w => {
-    const wp = state.wordProgress[w.id];
-    return wp ? wp.isDifficult === true : false;
-  });
+  const difficultWords = getDifficultWordObjects();
 
   const easyTotal   = vocabulary.filter(w => w.level === 'easy').length;
   const mediumTotal = vocabulary.filter(w => w.level === 'medium').length;

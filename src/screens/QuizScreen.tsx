@@ -150,11 +150,6 @@ export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
         newCorrect = correctCount + 1;
         setCorrectCount(newCorrect);
         dispatch({ type: 'MARK_WORD_LEARNED', wordId: q.word.id });
-        // User didn't feel confident during flashcard phase → review again tomorrow
-        // even though they answered correctly (avoids premature long SRS interval).
-        if (selfRatings[q.word.id] === 'dont_know') {
-          dispatch({ type: 'SCHEDULE_WORD_REVIEW', wordId: q.word.id });
-        }
       } else {
         // Wrong first, eventually correct — word stays difficult but move review to tomorrow
         // so it doesn't resurface immediately in the next lesson.
