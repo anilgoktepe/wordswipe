@@ -226,17 +226,17 @@ export const ResultsScreen: React.FC<Props> = ({ navigation }) => {
           <Animated.View style={[styles.statsRow, { opacity: fadeAnim }]}>
             <View style={[styles.statCard, { backgroundColor: theme.correctLight, ...shadows.sm }]}>
               <Ionicons name="checkmark-circle" size={24} color={theme.correct} />
-              <Text style={[styles.statValue, { color: theme.correct }]}>{correct}</Text>
+              <Text style={[styles.statValue, { color: theme.correct }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{correct}</Text>
               <Text style={[styles.statLabel, { color: theme.correct }]}>Doğru</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: theme.incorrectLight, ...shadows.sm }]}>
               <Ionicons name="close-circle" size={24} color={theme.incorrect} />
-              <Text style={[styles.statValue, { color: theme.incorrect }]}>{incorrect}</Text>
+              <Text style={[styles.statValue, { color: theme.incorrect }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{incorrect}</Text>
               <Text style={[styles.statLabel, { color: theme.incorrect }]}>Yanlış</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: theme.primaryLight, ...shadows.sm }]}>
               <Ionicons name="star" size={24} color={theme.primary} />
-              <Text style={[styles.statValue, { color: theme.primary }]}>{state.xp}</Text>
+              <Text style={[styles.statValue, { color: theme.primary }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{state.xp}</Text>
               <Text style={[styles.statLabel, { color: theme.primary }]}>Puan</Text>
             </View>
           </Animated.View>

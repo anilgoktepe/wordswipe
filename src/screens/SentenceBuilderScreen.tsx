@@ -31,6 +31,7 @@ import {
   REWARDED_AD_AI_BONUS,
   showRewardedAd,
   isRewardedAdReady,
+  DEBUG_BYPASS_AI_ANALYSIS_GATE,
 } from '../utils/monetization';
 import { AiAnalysisGateModal } from '../components/MonetizationModals';
 
@@ -292,7 +293,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route, onBa
     // analysis (if the user triggers it) can influence the final grade first.
     setIsAnalyzing(false);
 
-    const canAutoAnalyze = isPremium || !aiLimitReached;
+    const canAutoAnalyze = isPremium || !aiLimitReached || DEBUG_BYPASS_AI_ANALYSIS_GATE;
     if (shouldAutoAnalyze(analysis, sentence) && canAutoAnalyze) {
       if (!isPremium) dispatch({ type: 'RECORD_AI_ANALYSIS_USED' });
       _runDetailedAnalysis(analysis);
@@ -309,7 +310,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route, onBa
   // Free + limit not reached: open gate modal (ad or upgrade).
   // Free + limit reached: open gate modal (upgrade only).
   const handleAiAnalysisTap = useCallback(() => {
-    if (isPremium) {
+    if (isPremium || DEBUG_BYPASS_AI_ANALYSIS_GATE) {
       handleDetailedAnalysis();
     } else {
       setAiGateVisible(true);

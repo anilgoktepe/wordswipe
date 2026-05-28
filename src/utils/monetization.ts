@@ -39,6 +39,14 @@ export const REWARDED_AD_AI_BONUS = 5;
  */
 export const DEBUG_BYPASS_DAILY_LESSON_GATE = true;
 
+/**
+ * When true, free users bypass the rewarded-ad / premium gate for detailed AI
+ * analysis in SentenceBuilderScreen. Lets QA run the full AI verdict flow in
+ * TestFlight without requiring ads or IAP.
+ * INTERNAL TESTING ONLY — set to false before App Store release.
+ */
+export const DEBUG_BYPASS_AI_ANALYSIS_GATE = true;
+
 // ─── Rewarded Ad ─────────────────────────────────────────────────────────────
 //
 // The implementation lives in src/services/rewardedAdService:

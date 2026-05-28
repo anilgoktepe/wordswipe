@@ -241,7 +241,7 @@ function getMotivation(overallPct: number, streak: number, learnedCount: number)
   if (overallPct >= 50) return 'Yarıyı geçtin! Bitiş çizgisi görünüyor.';
   if (overallPct >= 25) return `${learnedCount} kelime öğrendin, çok iyi gidiyorsun!`;
   if (overallPct >= 10) return 'Güzel bir başlangıç, her gün biraz daha!';
-  return `${learnedCount} kelimeyle başladın, devam et!`;
+  return `${learnedCount} kelime öğrendin, devam et!`;
 }
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
@@ -257,7 +257,7 @@ export const StatsScreen: React.FC<{ navigation?: any }> = () => {
   });
   const difficultWords = vocabulary.filter(w => {
     const wp = state.wordProgress[w.id];
-    return wp ? wp.wrongCount > 0 && wp.wrongCount >= wp.correctCount : false;
+    return wp ? wp.isDifficult === true : false;
   });
 
   const easyTotal   = vocabulary.filter(w => w.level === 'easy').length;
@@ -271,9 +271,16 @@ export const StatsScreen: React.FC<{ navigation?: any }> = () => {
   const totalWords     = vocabulary.length;
   const overallPct     = Math.round((learnedWords.length / totalWords) * 100);
 
-  const xpLevel        = Math.floor(state.xp / 100) + 1;
-  const xpToNextLevel  = xpLevel * 100 - state.xp;
-  const xpRingProgress = (state.xp % 100) / 100;
+  function xpLevelFromXp(xp: number): number {
+    let n = 1;
+    while (n * (n - 1) / 2 * 100 <= xp) n++;
+    return n - 1;
+  }
+  const xpLevel          = xpLevelFromXp(state.xp);
+  const currentThreshold = xpLevel * (xpLevel - 1) / 2 * 100;
+  const nextThreshold    = xpLevel * (xpLevel + 1) / 2 * 100;
+  const xpToNextLevel    = nextThreshold - state.xp;
+  const xpRingProgress   = (state.xp - currentThreshold) / (nextThreshold - currentThreshold);
 
   const motivation = getMotivation(overallPct, state.streak, learnedWords.length);
 

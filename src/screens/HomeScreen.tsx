@@ -187,7 +187,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   // seenCount = words answered at least once (not just seeded at session start)
   const difficultWords = vocabulary.filter(w => {
     const wp = state.wordProgress[w.id];
-    return wp ? wp.isDifficult || (wp.wrongCount > 0 && wp.correctCount === 0) : false;
+    return wp ? wp.isDifficult === true : false;
   });
   // learnedReviewWords = all words with at least one correct answer, sorted by
   // smart review priority so the most urgent words surface first in a session:
@@ -434,7 +434,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <View style={styles.statCard}>
                 <MaterialCommunityIcons name="book-open-variant" size={24} color="rgba(255,255,255,0.95)" />
                 <Text style={styles.statValue}>{seenCount}</Text>
-                <Text style={styles.statLabel}>Kelime</Text>
+                <Text style={styles.statLabel}>Çalışılan</Text>
               </View>
             </View>
 
