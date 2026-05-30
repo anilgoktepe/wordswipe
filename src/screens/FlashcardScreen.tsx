@@ -12,6 +12,7 @@ import {
   Pressable,
   Modal,
   BackHandler,
+  Image,
 } from 'react-native';
 import * as Speech from 'expo-speech';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -370,6 +371,8 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
   const [showExitModal, setShowExitModal] = useState(false);
   const [showKnowHintModal, setShowKnowHintModal] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(true);
+  const swipeHintAnim = useRef(new Animated.Value(0)).current;
+  const knowHintFromSwipeRef = useRef(false);
   const { showInterstitial } = useInterstitialAd();
 
   const words = state.sessionWords.length > 0 ? state.sessionWords : getDailyWords();
@@ -406,7 +409,12 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
   }, [navigation]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowSwipeHint(false), 3000);
+    Animated.timing(swipeHintAnim, { toValue: 1, duration: 350, useNativeDriver: true }).start();
+    const timer = setTimeout(() => {
+      Animated.timing(swipeHintAnim, { toValue: 0, duration: 400, useNativeDriver: true }).start(
+        () => setShowSwipeHint(false),
+      );
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -419,19 +427,17 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
   const finishLesson = useCallback((seenUpToIndex: number) => {
     const seenWords = words.slice(0, seenUpToIndex + 1);
     dispatch({ type: 'SET_LAST_LESSON_WORDS', wordIds: seenWords.map(w => w.id) });
-    dispatch({ type: 'ADD_XP', amount: 20 });
-    dispatch({ type: 'UPDATE_STREAK' });
+    // XP and streak are awarded in QuizScreen after validated learning — not here.
     navigation.navigate('Quiz', { selfRatings: selfRatingsRef.current });
   }, [words, dispatch, navigation]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < words.length - 1) {
-      dispatch({ type: 'ADD_XP', amount: 1 });
       setCurrentIndex(prev => prev + 1);
     } else {
       finishLesson(currentIndex);
     }
-  }, [currentIndex, words.length, finishLesson, dispatch]);
+  }, [currentIndex, words.length, finishLesson]);
 
   const handleFinish = useCallback(async () => {
     await showInterstitial();
@@ -439,11 +445,16 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
   }, [currentIndex, finishLesson, showInterstitial]);
 
   const handleSwipeRight = useCallback(() => {
-    markKnowHintSeen(); // physical swipe → mark silently, no modal
     setShowSwipeHint(false);
     selfRatingsRef.current[words[currentIndex].id] = 'know';
+    if (!state.hasSeenKnowHint) {
+      // Card already flew off — modal will call handleNext when user confirms
+      knowHintFromSwipeRef.current = true;
+      setShowKnowHintModal(true);
+      return;
+    }
     handleNext();
-  }, [currentIndex, words, handleNext, markKnowHintSeen]);
+  }, [currentIndex, words, handleNext, state.hasSeenKnowHint]);
 
   const handleSwipeLeft = useCallback(() => {
     setShowSwipeHint(false);
@@ -451,9 +462,13 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
     handleNext();
   }, [currentIndex, words, handleNext]);
 
+  const dismissSwipeHint = useCallback(() => setShowSwipeHint(false), []);
+
   const handleKnow = () => {
     if (swipeCommand) return;
+    dismissSwipeHint();
     if (!state.hasSeenKnowHint) {
+      knowHintFromSwipeRef.current = false;
       setShowKnowHintModal(true);
       return;
     }
@@ -463,6 +478,7 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleDontKnow = () => {
     if (swipeCommand) return;
+    dismissSwipeHint();
     haptic('warning');
     setSwipeCommand('left');
   };
@@ -539,20 +555,40 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
               onSwipeCommandDone={handleSwipeCommandDone}
             />
           )}
-        </View>
 
-        {showSwipeHint && (
-          <View style={styles.swipeHintRow}>
-            <View style={styles.swipeHintItem}>
-              <Ionicons name="arrow-back" size={14} color={theme.incorrect} />
-              <Text style={[styles.swipeHintText, { color: theme.textSecondary }]}>Sola: Bilmiyorum</Text>
-            </View>
-            <View style={styles.swipeHintItem}>
-              <Text style={[styles.swipeHintText, { color: theme.textSecondary }]}>Sağa: Biliyorum</Text>
-              <Ionicons name="arrow-forward" size={14} color={theme.correct} />
-            </View>
-          </View>
-        )}
+          {showSwipeHint && (
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.swipeHintOverlay,
+                {
+                  opacity: swipeHintAnim,
+                  transform: [{
+                    scale: swipeHintAnim.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] }),
+                  }],
+                },
+              ]}
+            >
+              <View style={styles.swipeHintCol}>
+                <Image
+                  source={require('../../assets/swipe-left.png')}
+                  style={styles.swipeHintIcon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.swipeHintLabel}>Bilmiyorsan sola</Text>
+              </View>
+              <View style={styles.swipeHintDivider} />
+              <View style={styles.swipeHintCol}>
+                <Image
+                  source={require('../../assets/swipe-right.png')}
+                  style={styles.swipeHintIcon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.swipeHintLabel}>Biliyorsan sağa</Text>
+              </View>
+            </Animated.View>
+          )}
+        </View>
 
         <View style={styles.actionRow}>
           <TouchableOpacity
@@ -640,7 +676,12 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
                 setShowKnowHintModal(false);
                 markKnowHintSeen();
                 haptic('success');
-                setSwipeCommand('right');
+                if (knowHintFromSwipeRef.current) {
+                  knowHintFromSwipeRef.current = false;
+                  handleNext(); // card already flew off; just advance
+                } else {
+                  setSwipeCommand('right');
+                }
               }}
               style={[styles.modalBtnPrimary, { backgroundColor: theme.correct }]}
             >
@@ -651,14 +692,27 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
                 setShowKnowHintModal(false);
                 markKnowHintSeen();
                 haptic('warning');
-                setSwipeCommand('left');
+                if (knowHintFromSwipeRef.current) {
+                  knowHintFromSwipeRef.current = false;
+                  selfRatingsRef.current[words[currentIndex].id] = 'dont_know';
+                  handleNext();
+                } else {
+                  setSwipeCommand('left');
+                }
               }}
               style={[styles.modalBtnPrimary, { backgroundColor: theme.primary, marginTop: spacing.sm }]}
             >
               <Text style={styles.modalBtnPrimaryText}>Öğrenmeye başla</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => setShowKnowHintModal(false)}
+              onPress={() => {
+                setShowKnowHintModal(false);
+                if (knowHintFromSwipeRef.current) {
+                  // Card already gone — must advance regardless
+                  knowHintFromSwipeRef.current = false;
+                  handleNext();
+                }
+              }}
               style={styles.modalBtnSecondary}
             >
               <Text style={[styles.modalBtnSecondaryText, { color: theme.textSecondary }]}>İptal</Text>
@@ -806,21 +860,41 @@ const styles = StyleSheet.create({
   swipeLabelLeft: { left: 16, backgroundColor: 'rgba(239,68,68,0.90)' },
   swipeLabelRight: { right: 16, backgroundColor: 'rgba(16,185,129,0.90)' },
   swipeLabelText: { color: '#fff', fontWeight: '700', fontSize: 13, fontFamily: 'Inter_700Bold' },
-  swipeHintRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xs,
-  },
-  swipeHintItem: {
+  swipeHintOverlay: {
+    position: 'absolute',
+    bottom: spacing.md,
+    left: spacing.md,
+    right: spacing.md,
+    backgroundColor: 'rgba(18,18,28,0.82)',
+    borderRadius: radius.xl,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    zIndex: 20,
+    ...shadows.lg,
   },
-  swipeHintText: {
+  swipeHintCol: {
+    flex: 1,
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  swipeHintDivider: {
+    width: 1,
+    height: 44,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    marginHorizontal: spacing.sm,
+  },
+  swipeHintIcon: {
+    width: 52,
+    height: 52,
+  },
+  swipeHintLabel: {
+    color: 'rgba(255,255,255,0.88)',
     fontSize: 12,
     fontWeight: '600',
     fontFamily: 'Inter_600SemiBold',
+    textAlign: 'center',
   },
   actionRow: {
     flexDirection: 'row',

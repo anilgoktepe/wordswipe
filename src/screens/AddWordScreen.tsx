@@ -111,17 +111,6 @@ export const AddWordScreen: React.FC<Props> = ({ navigation }) => {
     const normalizedEn = normalizeWordKey(trimmedEn);
     const normalizedTr = normalizeWordKey(trimmedTr);
 
-    const existsInDefault = localVocabulary.some(
-      w => normalizeWordKey(w.word) === normalizedEn,
-    );
-    if (existsInDefault) {
-      Alert.alert(
-        'Kelime zaten mevcut',
-        `"${normalizedEn}" hazır kelime listemizde zaten var. Öğrenme akışında otomatik olarak karşına çıkacak.`,
-      );
-      return;
-    }
-
     const existsInCustom = state.customWords.some(
       w => normalizeWordKey(w.word) === normalizedEn,
     );
