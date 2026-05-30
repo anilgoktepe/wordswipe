@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useState } fro
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState as RNAppState } from 'react-native';
 import { Word, getLocalWords, getWords, WordSource, getEffectiveVocab } from '../services/vocabularyService';
+import { DEBUG_FORCE_PREMIUM } from '../utils/monetization';
 
 export type Level = 'easy' | 'medium' | 'hard';
 
@@ -210,7 +211,7 @@ export const initialState: AppState = {
   dailyProgress: 0,
   todayDate: new Date().toDateString(),
   dailyLearnedIds: [],
-  isPremium: false,
+  isPremium: DEBUG_FORCE_PREMIUM,
   dailyAdsShown: 0,
   adsDate: new Date().toDateString(),
   dailyAiAnalysesUsed: 0,
@@ -488,7 +489,7 @@ export function reducer(state: AppState, action: Action): AppState {
         todayDate:       today,
         dailyLearnedIds: isNewDay    ? [] : (loaded.dailyLearnedIds ?? []),
         // Ad state
-        isPremium:             loaded.isPremium             ?? false,
+        isPremium:             DEBUG_FORCE_PREMIUM || (loaded.isPremium ?? false),
         dailyAdsShown:         isNewAdsDay ? 0 : (loaded.dailyAdsShown   ?? 0),
         adsDate:               today,
         // AI analysis gate — reset on a new day

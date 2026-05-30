@@ -32,6 +32,14 @@ export const REWARDED_AD_AI_BONUS = 5;
 // ─── Feature flags ────────────────────────────────────────────────────────────
 
 /**
+ * When true, forces isPremium = true throughout the entire app, bypassing all
+ * free-tier session caps, lesson-size locks, ad gates, and retry gates.
+ * Cascades automatically — no per-screen changes needed.
+ * INTERNAL TESTFLIGHT QA ONLY — MUST be false before App Store public release.
+ */
+export const DEBUG_FORCE_PREMIUM = true;
+
+/**
  * When true, bypasses the "daily base session already started" gate in
  * HomeScreen so free users can press "Derse Başla" unlimited times per day.
  * Keep false in all non-debug builds.
