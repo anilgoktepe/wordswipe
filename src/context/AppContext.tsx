@@ -586,6 +586,7 @@ export function reducer(state: AppState, action: Action): AppState {
         dailyAiAnalysesUsed:       0,
         aiAnalysisDate:            today,
         extraAiAnalyses:           0,
+        lastReviewWordIds:         [],
       };
     }
 

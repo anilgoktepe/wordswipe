@@ -369,6 +369,7 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
   const [swipeCommand, setSwipeCommand] = useState<'left' | 'right' | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showKnowHintModal, setShowKnowHintModal] = useState(false);
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
   const { showInterstitial } = useInterstitialAd();
 
   const words = state.sessionWords.length > 0 ? state.sessionWords : getDailyWords();
@@ -404,6 +405,11 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
     return unsub;
   }, [navigation]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSwipeHint(false), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const markKnowHintSeen = useCallback(() => {
     if (!state.hasSeenKnowHint) {
       dispatch({ type: 'MARK_KNOW_HINT_SEEN' });
@@ -434,11 +440,13 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleSwipeRight = useCallback(() => {
     markKnowHintSeen(); // physical swipe → mark silently, no modal
+    setShowSwipeHint(false);
     selfRatingsRef.current[words[currentIndex].id] = 'know';
     handleNext();
   }, [currentIndex, words, handleNext, markKnowHintSeen]);
 
   const handleSwipeLeft = useCallback(() => {
+    setShowSwipeHint(false);
     selfRatingsRef.current[words[currentIndex].id] = 'dont_know';
     handleNext();
   }, [currentIndex, words, handleNext]);
@@ -532,6 +540,19 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
             />
           )}
         </View>
+
+        {showSwipeHint && (
+          <View style={styles.swipeHintRow}>
+            <View style={styles.swipeHintItem}>
+              <Ionicons name="arrow-back" size={14} color={theme.incorrect} />
+              <Text style={[styles.swipeHintText, { color: theme.textSecondary }]}>Sola: Bilmiyorum</Text>
+            </View>
+            <View style={styles.swipeHintItem}>
+              <Text style={[styles.swipeHintText, { color: theme.textSecondary }]}>Sağa: Biliyorum</Text>
+              <Ionicons name="arrow-forward" size={14} color={theme.correct} />
+            </View>
+          </View>
+        )}
 
         <View style={styles.actionRow}>
           <TouchableOpacity
@@ -785,6 +806,22 @@ const styles = StyleSheet.create({
   swipeLabelLeft: { left: 16, backgroundColor: 'rgba(239,68,68,0.90)' },
   swipeLabelRight: { right: 16, backgroundColor: 'rgba(16,185,129,0.90)' },
   swipeLabelText: { color: '#fff', fontWeight: '700', fontSize: 13, fontFamily: 'Inter_700Bold' },
+  swipeHintRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xs,
+  },
+  swipeHintItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  swipeHintText: {
+    fontSize: 12,
+    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
+  },
   actionRow: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,

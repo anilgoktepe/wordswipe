@@ -277,7 +277,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const words = freshReviewWords.slice(0, cap);
     dispatch({ type: 'SET_LAST_REVIEW_WORDS', wordIds: words.map(w => w.id) });
     dispatch({ type: 'SET_SESSION_WORDS', words });
-    navigation.navigate('Flashcard');
+    navigation.navigate('Quiz');
   };
 
   // ── Bonus words rewarded ad ───────────────────────────────────────────────

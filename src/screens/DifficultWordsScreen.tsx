@@ -116,10 +116,17 @@ const WordCard: React.FC<{
         ) : null}
       </View>
 
-      {/* Status badge + expand toggle (only if example exists) */}
+      {/* Status badge + recovery pill + expand toggle (only if example exists) */}
       <View style={styles.wordCardFooter}>
-        <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
-          <Text style={[styles.statusText, { color: badge.text }]}>{badge.label}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
+            <Text style={[styles.statusText, { color: badge.text }]}>{badge.label}</Text>
+          </View>
+          {progress?.isDifficult === true && (
+            <View style={styles.recoveryPill}>
+              <Text style={styles.recoveryText}>Toparlanma: {progress.consecutiveCorrect}/3</Text>
+            </View>
+          )}
         </View>
         {hasExample && (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -505,6 +512,18 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     fontFamily: 'Inter_600SemiBold',
+  },
+  recoveryPill: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+  },
+  recoveryText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#D97706',
+    fontFamily: 'Inter_700Bold',
   },
   exampleBox: {
     borderRadius: radius.sm,

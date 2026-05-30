@@ -474,21 +474,28 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route, onBa
 
   // ── Finished state: all words in this session done ───────────────────────────
   if (isFinished) {
+    const didComplete = completed > 0;
     return (
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.lg }}>
           <LinearGradient colors={['#6C63FF20', '#9B5CF610']} style={StyleSheet.absoluteFillObject} />
 
-          <Ionicons name="trophy" size={64} color="#F59E0B" style={{ marginBottom: spacing.lg }} />
+          {didComplete ? (
+            <Ionicons name="trophy" size={64} color="#F59E0B" style={{ marginBottom: spacing.lg }} />
+          ) : (
+            <Ionicons name="book-outline" size={64} color={theme.textTertiary} style={{ marginBottom: spacing.lg }} />
+          )}
 
           <Text style={[typography.h2, { color: theme.text, textAlign: 'center', marginBottom: spacing.sm }]}>
-            Oturum Tamamlandı!
+            {didComplete ? 'Oturum Tamamlandı!' : 'Oturum Bitti'}
           </Text>
           <Text style={{ color: theme.textSecondary, textAlign: 'center', marginBottom: spacing.xl, fontSize: 15 }}>
-            {queue.length} kelimeden {completed} tanesini başarıyla cümlede kullandın.
+            {didComplete
+              ? `${queue.length} kelimeden ${completed} tanesini başarıyla cümlede kullandın.`
+              : 'Henüz cümle kurmadın. Hazır olduğunda tekrar deneyebilirsin.'}
           </Text>
 
-          {totalXp > 0 && (
+          {didComplete && totalXp > 0 && (
             <View style={[styles.xpSummary, { backgroundColor: theme.primaryLight }]}>
               <Ionicons name="star" size={20} color={theme.primary} />
               <Text style={[styles.xpSummaryText, { color: theme.primary }]}>+{totalXp} puan kazandın!</Text>
