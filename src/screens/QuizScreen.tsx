@@ -137,9 +137,10 @@ export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
       const bonusXp = (newStreak > 0 && newStreak % 3 === 0)
         ? (newStreak >= 10 ? 5 : 3)
         : 0;
-      const totalXp = 1 + bonusXp;
+      const BASE_XP = 5;
+      const totalXp = BASE_XP + bonusXp;
 
-      dispatch({ type: 'ADD_XP', amount: 1 });
+      dispatch({ type: 'ADD_XP', amount: BASE_XP });
       if (bonusXp > 0) dispatch({ type: 'ADD_XP', amount: bonusXp });
 
       xpPopupRef.current?.show(totalXp);

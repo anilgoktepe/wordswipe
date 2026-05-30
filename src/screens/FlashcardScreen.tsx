@@ -569,22 +569,32 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
                 },
               ]}
             >
-              <View style={styles.swipeHintCol}>
-                <Image
-                  source={require('../../assets/swipe-left.png')}
-                  style={styles.swipeHintIcon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.swipeHintLabel}>Bilmiyorsan sola</Text>
+              {/* Two-column swipe directions */}
+              <View style={styles.swipeHintCols}>
+                <View style={styles.swipeHintCol}>
+                  <Image
+                    source={require('../../assets/swipe-left.png')}
+                    style={styles.swipeHintIcon}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.swipeHintLabel}>Bilmiyorsan</Text>
+                  <Text style={styles.swipeHintLabel}>sola kaydır</Text>
+                </View>
+                <View style={styles.swipeHintDivider} />
+                <View style={styles.swipeHintCol}>
+                  <Image
+                    source={require('../../assets/swipe-right.png')}
+                    style={styles.swipeHintIcon}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.swipeHintLabel}>Biliyorsan</Text>
+                  <Text style={styles.swipeHintLabel}>sağa kaydır</Text>
+                </View>
               </View>
-              <View style={styles.swipeHintDivider} />
-              <View style={styles.swipeHintCol}>
-                <Image
-                  source={require('../../assets/swipe-right.png')}
-                  style={styles.swipeHintIcon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.swipeHintLabel}>Biliyorsan sağa</Text>
+
+              {/* Bottom sub-hint */}
+              <View style={styles.swipeHintFooter}>
+                <Text style={styles.swipeHintFooterText}>Kaydır ya da butonları kullan</Text>
               </View>
             </Animated.View>
           )}
@@ -862,17 +872,21 @@ const styles = StyleSheet.create({
   swipeLabelText: { color: '#fff', fontWeight: '700', fontSize: 13, fontFamily: 'Inter_700Bold' },
   swipeHintOverlay: {
     position: 'absolute',
-    bottom: spacing.md,
-    left: spacing.md,
-    right: spacing.md,
-    backgroundColor: 'rgba(18,18,28,0.82)',
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
     borderRadius: radius.xl,
+    backgroundColor: 'rgba(12,12,20,0.72)',
+    zIndex: 20,
+    overflow: 'hidden',
+    justifyContent: 'space-between',
+    paddingBottom: spacing.lg,
+  },
+  swipeHintCols: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
+    justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    zIndex: 20,
-    ...shadows.lg,
   },
   swipeHintCol: {
     flex: 1,
@@ -881,17 +895,31 @@ const styles = StyleSheet.create({
   },
   swipeHintDivider: {
     width: 1,
-    height: 44,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignSelf: 'stretch',
+    marginVertical: spacing.xl,
+    backgroundColor: 'rgba(255,255,255,0.20)',
     marginHorizontal: spacing.sm,
   },
   swipeHintIcon: {
-    width: 52,
-    height: 52,
+    width: 56,
+    height: 56,
+    marginBottom: spacing.xs,
   },
   swipeHintLabel: {
-    color: 'rgba(255,255,255,0.88)',
-    fontSize: 12,
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  swipeHintFooter: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  swipeHintFooterText: {
+    color: 'rgba(255,255,255,0.50)',
+    fontSize: 11,
     fontWeight: '600',
     fontFamily: 'Inter_600SemiBold',
     textAlign: 'center',
