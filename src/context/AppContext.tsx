@@ -118,6 +118,14 @@ export interface AppState {
    */
   hasSeenKnowHint: boolean;
 
+  /**
+   * True once the swipe-direction overlay has been shown and dismissed
+   * (auto-timeout or user interaction) for the first time.
+   * Never resets on new day, level change, or premium change.
+   * Only resets on RESET_PROGRESS (full app data reset).
+   */
+  hasSeenSwipeHint: boolean;
+
   // ── Word Management practice cycle ─────────────────────────────────────────
   /**
    * IDs of words already practiced in the current Word Management cycle.
@@ -190,7 +198,8 @@ export type Action =
   | { type: 'CHECK_NEW_DAY' }
   | { type: 'DELETE_CUSTOM_WORD'; wordId: number }
   | { type: 'SCHEDULE_WORD_REVIEW'; wordId: number }
-  | { type: 'MARK_KNOW_HINT_SEEN' };
+  | { type: 'MARK_KNOW_HINT_SEEN' }
+  | { type: 'MARK_SWIPE_HINT_SEEN' };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -223,6 +232,7 @@ export const initialState: AppState = {
   dailyBonusSessionStarted: false,
   customWords: [],
   hasSeenKnowHint: false,
+  hasSeenSwipeHint: false,
 };
 
 /** Build an empty progress entry for a word that has never been seen */
@@ -506,6 +516,8 @@ export function reducer(state: AppState, action: Action): AppState {
         customWords: loaded.customWords ?? [],
         // Know hint — persisted; new installs/missing field defaults to false
         hasSeenKnowHint: loaded.hasSeenKnowHint ?? false,
+        // Swipe hint — persisted; shown exactly once, never day-reset
+        hasSeenSwipeHint: loaded.hasSeenSwipeHint ?? false,
       };
     }
 
@@ -609,6 +621,10 @@ export function reducer(state: AppState, action: Action): AppState {
     // ── First-time "Biliyorum" hint ───────────────────────────────────────────
     case 'MARK_KNOW_HINT_SEEN':
       return { ...state, hasSeenKnowHint: true };
+
+    // ── First-time swipe-direction overlay ───────────────────────────────────
+    case 'MARK_SWIPE_HINT_SEEN':
+      return { ...state, hasSeenSwipeHint: true };
 
     // ── Sentence Builder review signal ───────────────────────────────────────
     // Dispatched when a Sentence Builder attempt produces FLAWED or REJECTED.

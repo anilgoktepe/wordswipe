@@ -370,7 +370,7 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
   const [swipeCommand, setSwipeCommand] = useState<'left' | 'right' | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showKnowHintModal, setShowKnowHintModal] = useState(false);
-  const [showSwipeHint, setShowSwipeHint] = useState(true);
+  const [showSwipeHint, setShowSwipeHint] = useState(!state.hasSeenSwipeHint);
   const swipeHintAnim = useRef(new Animated.Value(0)).current;
   const knowHintFromSwipeRef = useRef(false);
   const { showInterstitial } = useInterstitialAd();
@@ -409,13 +409,16 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
   }, [navigation]);
 
   useEffect(() => {
+    if (!showSwipeHint) return;
     Animated.timing(swipeHintAnim, { toValue: 1, duration: 350, useNativeDriver: true }).start();
     const timer = setTimeout(() => {
-      Animated.timing(swipeHintAnim, { toValue: 0, duration: 400, useNativeDriver: true }).start(
-        () => setShowSwipeHint(false),
-      );
+      Animated.timing(swipeHintAnim, { toValue: 0, duration: 400, useNativeDriver: true }).start(() => {
+        setShowSwipeHint(false);
+        dispatch({ type: 'MARK_SWIPE_HINT_SEEN' });
+      });
     }, 3000);
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const markKnowHintSeen = useCallback(() => {
@@ -462,7 +465,11 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
     handleNext();
   }, [currentIndex, words, handleNext]);
 
-  const dismissSwipeHint = useCallback(() => setShowSwipeHint(false), []);
+  const dismissSwipeHint = useCallback(() => {
+    if (!showSwipeHint) return;
+    setShowSwipeHint(false);
+    dispatch({ type: 'MARK_SWIPE_HINT_SEEN' });
+  }, [showSwipeHint, dispatch]);
 
   const handleKnow = () => {
     if (swipeCommand) return;
@@ -569,36 +576,28 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
                 },
               ]}
             >
-              {/* Two-column swipe directions */}
-              <View style={styles.swipeHintCols}>
-                <View style={styles.swipeHintCol}>
-                  <Image
-                    source={require('../../assets/swipe-left.png')}
-                    style={styles.swipeHintIcon}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.swipeHintLabel}>Bilmiyorsan</Text>
-                  <Text style={styles.swipeHintLabel}>sola kaydır</Text>
-                </View>
-                <View style={styles.swipeHintDivider} />
-                <View style={styles.swipeHintCol}>
-                  <Image
-                    source={require('../../assets/swipe-right.png')}
-                    style={styles.swipeHintIcon}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.swipeHintLabel}>Biliyorsan</Text>
-                  <Text style={styles.swipeHintLabel}>sağa kaydır</Text>
-                </View>
+              <View style={styles.swipeHintCol}>
+                <Image
+                  source={require('../../assets/swipe-left.png')}
+                  style={styles.swipeHintIcon}
+                  resizeMode="contain"
+                />
+                <Text style={[styles.swipeHintLabel, styles.swipeHintLabelLeft]}>Bilmiyorsan sola</Text>
               </View>
-
-              {/* Bottom sub-hint */}
-              <View style={styles.swipeHintFooter}>
-                <Text style={styles.swipeHintFooterText}>Kaydır ya da butonları kullan</Text>
+              <View style={styles.swipeHintDivider} />
+              <View style={styles.swipeHintCol}>
+                <Image
+                  source={require('../../assets/swipe-right.png')}
+                  style={styles.swipeHintIcon}
+                  resizeMode="contain"
+                />
+                <Text style={[styles.swipeHintLabel, styles.swipeHintLabelRight]}>Biliyorsan sağa</Text>
               </View>
             </Animated.View>
           )}
         </View>
+
+        <Text style={styles.swipeHelperText}>Kaydır veya butonları kullan</Text>
 
         <View style={styles.actionRow}>
           <TouchableOpacity
@@ -872,57 +871,58 @@ const styles = StyleSheet.create({
   swipeLabelText: { color: '#fff', fontWeight: '700', fontSize: 13, fontFamily: 'Inter_700Bold' },
   swipeHintOverlay: {
     position: 'absolute',
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
-    borderRadius: radius.xl,
-    backgroundColor: 'rgba(12,12,20,0.72)',
-    zIndex: 20,
-    overflow: 'hidden',
-    justifyContent: 'space-between',
-    paddingBottom: spacing.lg,
-  },
-  swipeHintCols: {
-    flex: 1,
+    bottom: spacing.lg,
+    left: spacing.xl,
+    right: spacing.xl,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.88)',
+    borderRadius: radius.xl,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
+    zIndex: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 8,
+    elevation: 4,
   },
   swipeHintCol: {
     flex: 1,
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: 4,
   },
   swipeHintDivider: {
     width: 1,
-    alignSelf: 'stretch',
-    marginVertical: spacing.xl,
-    backgroundColor: 'rgba(255,255,255,0.20)',
+    height: 40,
+    backgroundColor: 'rgba(0,0,0,0.10)',
     marginHorizontal: spacing.sm,
   },
   swipeHintIcon: {
-    width: 56,
-    height: 56,
-    marginBottom: spacing.xs,
+    width: 38,
+    height: 38,
   },
   swipeHintLabel: {
-    color: 'rgba(255,255,255,0.92)',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     fontFamily: 'Inter_700Bold',
     textAlign: 'center',
-    lineHeight: 18,
   },
-  swipeHintFooter: {
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
+  swipeHintLabelLeft: {
+    color: '#EF4444',
   },
-  swipeHintFooterText: {
-    color: 'rgba(255,255,255,0.50)',
+  swipeHintLabelRight: {
+    color: '#10B981',
+  },
+  swipeHelperText: {
+    textAlign: 'center',
     fontSize: 11,
     fontWeight: '600',
     fontFamily: 'Inter_600SemiBold',
-    textAlign: 'center',
+    color: 'rgba(120,120,140,0.70)',
+    marginBottom: spacing.xs,
+    marginTop: 2,
   },
   actionRow: {
     flexDirection: 'row',
