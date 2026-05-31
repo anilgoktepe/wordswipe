@@ -871,7 +871,7 @@ const styles = StyleSheet.create({
   swipeLabelText: { color: '#fff', fontWeight: '700', fontSize: 13, fontFamily: 'Inter_700Bold' },
   swipeHintOverlay: {
     position: 'absolute',
-    bottom: spacing.lg,
+    bottom: spacing.lg + 12,
     left: spacing.xl,
     right: spacing.xl,
     flexDirection: 'row',
@@ -879,7 +879,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.88)',
     borderRadius: radius.xl,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm + 4,
     paddingHorizontal: spacing.lg,
     zIndex: 20,
     shadowColor: '#000',
@@ -891,17 +891,17 @@ const styles = StyleSheet.create({
   swipeHintCol: {
     flex: 1,
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
   },
   swipeHintDivider: {
     width: 1,
-    height: 40,
+    height: 36,
     backgroundColor: 'rgba(0,0,0,0.10)',
     marginHorizontal: spacing.sm,
   },
   swipeHintIcon: {
-    width: 38,
-    height: 38,
+    width: 34,
+    height: 34,
   },
   swipeHintLabel: {
     fontSize: 12,
@@ -921,8 +921,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'Inter_600SemiBold',
     color: 'rgba(120,120,140,0.70)',
-    marginBottom: spacing.xs,
-    marginTop: 2,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
   },
   actionRow: {
     flexDirection: 'row',
