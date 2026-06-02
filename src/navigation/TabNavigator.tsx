@@ -28,10 +28,13 @@ const TABS: Tab[] = [
 
 const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 84 : 64;
 
-interface Props { navigation: any; }
+interface Props {
+  navigation: any;
+  route?: { params?: { initialTab?: TabName } };
+}
 
-export const TabNavigator: React.FC<Props> = ({ navigation }) => {
-  const [activeTab, setActiveTab] = useState<TabName>('home');
+export const TabNavigator: React.FC<Props> = ({ navigation, route }) => {
+  const [activeTab, setActiveTab] = useState<TabName>(route?.params?.initialTab ?? 'home');
   const { state } = useApp();
   const theme = getTheme(state.darkMode);
 

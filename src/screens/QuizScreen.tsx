@@ -7,6 +7,8 @@ import {
   SafeAreaView,
   Animated,
   Platform,
+  Modal,
+  BackHandler,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -56,7 +58,7 @@ function generateQuiz(words: Word[], level: 'easy' | 'medium' | 'hard'): QuizQue
 
 interface Props {
   navigation: any;
-  route?: { params?: { selfRatings?: Record<number, 'know' | 'dont_know'> } };
+  route?: { params?: { selfRatings?: Record<number, 'know' | 'dont_know'>; exitTarget?: 'myWords'; source?: 'lesson' | 'review' | 'difficult' | 'myWords' } };
 }
 
 export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -73,10 +75,23 @@ export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
   const [incorrectCount, setIncorrectCount] = useState(0);
   const [wrongWordIds, setWrongWordIds] = useState<number[]>([]);
   const [streak, setStreak] = useState(0);
+  const [showExitModal, setShowExitModal] = useState(false);
   const shakeAnim  = useRef(new Animated.Value(0)).current;
   const scaleAnim  = useRef(new Animated.Value(1)).current;
   const flashAnim  = useRef(new Animated.Value(0)).current;  // green overlay flash
   const xpPopupRef = useRef<XPPopupHandle>(null);
+
+  const exitTarget = route?.params?.exitTarget;
+  const streakBonusEnabled = route?.params?.source === 'lesson';
+
+  const confirmExit = () => {
+    setShowExitModal(false);
+    if (exitTarget === 'myWords') {
+      navigation.replace('Main', { initialTab: 'myWords' });
+    } else {
+      navigation.replace('Main');
+    }
+  };
 
   useEffect(() => {
     const words = state.sessionWords;
@@ -84,6 +99,25 @@ export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
       setQuestions(generateQuiz(words, state.level));
     }
   }, []);
+
+  // Hardware back button — show modal instead of immediate exit
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      setShowExitModal(true);
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
+
+  // iOS gesture / React Navigation back — intercept before screen pops
+  useEffect(() => {
+    const unsub = navigation.addListener('beforeRemove', (e: any) => {
+      if (e.data.action.type !== 'GO_BACK') return;
+      e.preventDefault();
+      setShowExitModal(true);
+    });
+    return unsub;
+  }, [navigation]);
 
   // Reset per-question state when question advances
   useEffect(() => {
@@ -134,7 +168,7 @@ export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
       // Calculate total XP for this answer to show in popup
       const newStreak = streak + 1;
       setStreak(newStreak);
-      const bonusXp = (newStreak > 0 && newStreak % 3 === 0)
+      const bonusXp = streakBonusEnabled && newStreak > 0 && newStreak % 3 === 0
         ? (newStreak >= 10 ? 5 : 3)
         : 0;
       const BASE_XP = 5;
@@ -230,7 +264,7 @@ export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
       <SafeAreaView style={{ flex: 1 }}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.replace('Main')} style={styles.backBtn}>
+          <TouchableOpacity onPress={() => setShowExitModal(true)} style={styles.backBtn}>
             <Ionicons name="close" size={22} color={theme.textSecondary} />
           </TouchableOpacity>
           <View style={{ flex: 1, marginHorizontal: spacing.md }}>
@@ -364,6 +398,35 @@ export const QuizScreen: React.FC<Props> = ({ navigation, route }) => {
 
       {/* ── Floating XP reward badge ── */}
       <XPPopup ref={xpPopupRef} />
+
+      {/* ── Exit confirmation modal ── */}
+      <Modal
+        visible={showExitModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowExitModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: theme.card }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Testten çıkılsın mı?</Text>
+            <Text style={[styles.modalMessage, { color: theme.textSecondary }]}>
+              Çıkarsan bu test tamamlanmayacak. Devam etmek ister misin?
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowExitModal(false)}
+              style={[styles.modalBtnPrimary, { backgroundColor: theme.primary }]}
+            >
+              <Text style={styles.modalBtnPrimaryText}>Teste Devam Et</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={confirmExit}
+              style={styles.modalBtnSecondary}
+            >
+              <Text style={[styles.modalBtnSecondaryText, { color: theme.textSecondary }]}>Yine de çık</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -485,5 +548,53 @@ const styles = StyleSheet.create({
   hintText: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    alignItems: 'stretch',
+    ...shadows.lg,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  modalBtnPrimary: {
+    paddingVertical: spacing.md,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+  },
+  modalBtnPrimaryText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
+  },
+  modalBtnSecondary: {
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginTop: spacing.xs,
+  },
+  modalBtnSecondaryText: {
+    fontSize: 15,
+    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
 });

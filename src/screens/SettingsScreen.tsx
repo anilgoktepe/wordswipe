@@ -10,6 +10,7 @@ import {
   Alert,
   Linking,
   Platform,
+  TextInput,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -103,6 +104,8 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
   const theme = getTheme(state.darkMode);
   const [showLevelPicker, setShowLevelPicker] = useState(false);
   const [showSizePicker, setShowSizePicker] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
   const [premiumModal, setPremiumModal] = useState({ visible: false, featureTitle: '', featureDescription: '' });
   const [testNotifStatus, setTestNotifStatus] = useState<'idle' | 'sent' | 'unsupported' | 'denied'>('idle');
 
@@ -233,11 +236,51 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={{ fontSize: 32 }}>🦉</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.profileTitle, { color: theme.text }]}>
-                Kelime Öğrencisi
-              </Text>
+              {editingName ? (
+                <View style={styles.nameEditRow}>
+                  <TextInput
+                    style={[styles.nameInput, { color: theme.text, borderColor: theme.border }]}
+                    value={nameInput}
+                    onChangeText={setNameInput}
+                    autoFocus
+                    maxLength={30}
+                    placeholder="Adını gir"
+                    placeholderTextColor={theme.textTertiary}
+                    returnKeyType="done"
+                    onSubmitEditing={() => {
+                      dispatch({ type: 'SET_PROFILE_NAME', name: nameInput });
+                      setEditingName(false);
+                    }}
+                  />
+                  <TouchableOpacity
+                    onPress={() => {
+                      dispatch({ type: 'SET_PROFILE_NAME', name: nameInput });
+                      setEditingName(false);
+                    }}
+                  >
+                    <Ionicons name="checkmark-circle" size={24} color={theme.primary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setEditingName(false)}>
+                    <Ionicons name="close-circle-outline" size={24} color={theme.textTertiary} />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.nameRow}
+                  onPress={() => {
+                    setNameInput(state.profileName);
+                    setEditingName(true);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.profileTitle, { color: theme.text }]}>
+                    {state.profileName || 'Kelime Öğrencisi'}
+                  </Text>
+                  <Ionicons name="pencil-outline" size={14} color={theme.textTertiary} style={{ marginLeft: 4 }} />
+                </TouchableOpacity>
+              )}
               <Text style={[styles.profileSub, { color: theme.textSecondary }]}>
-                {state.xp} puan · {state.streak} gün serisi · {Object.values(state.wordProgress).filter(p => p.correctCount >= 2).length} kelime
+                {state.xp} puan · {state.streak} gün serisi · {Object.values(state.wordProgress).filter(p => p.isLearned === true).length} kelime
               </Text>
             </View>
           </View>
@@ -507,6 +550,24 @@ const styles = StyleSheet.create({
   profileTitle: {
     ...typography.h4,
     fontFamily: 'Inter_700Bold',
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  nameEditRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  nameInput: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
+    borderBottomWidth: 1,
+    paddingVertical: 2,
   },
   profileSub: {
     fontSize: 13,

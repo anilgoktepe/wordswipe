@@ -126,6 +126,9 @@ export interface AppState {
    */
   hasSeenSwipeHint: boolean;
 
+  /** User's chosen display name. Empty string = not set; UI shows fallback "Kelime Öğrencisi". */
+  profileName: string;
+
   // ── Word Management practice cycle ─────────────────────────────────────────
   /**
    * IDs of words already practiced in the current Word Management cycle.
@@ -199,7 +202,8 @@ export type Action =
   | { type: 'DELETE_CUSTOM_WORD'; wordId: number }
   | { type: 'SCHEDULE_WORD_REVIEW'; wordId: number }
   | { type: 'MARK_KNOW_HINT_SEEN' }
-  | { type: 'MARK_SWIPE_HINT_SEEN' };
+  | { type: 'MARK_SWIPE_HINT_SEEN' }
+  | { type: 'SET_PROFILE_NAME'; name: string };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -233,6 +237,7 @@ export const initialState: AppState = {
   customWords: [],
   hasSeenKnowHint: false,
   hasSeenSwipeHint: false,
+  profileName: '',
 };
 
 /** Build an empty progress entry for a word that has never been seen */
@@ -518,6 +523,8 @@ export function reducer(state: AppState, action: Action): AppState {
         hasSeenKnowHint: loaded.hasSeenKnowHint ?? false,
         // Swipe hint — persisted; shown exactly once, never day-reset
         hasSeenSwipeHint: loaded.hasSeenSwipeHint ?? false,
+        // Profile name — persisted; never reset on RESET_PROGRESS
+        profileName: loaded.profileName ?? '',
       };
     }
 
@@ -626,6 +633,10 @@ export function reducer(state: AppState, action: Action): AppState {
     case 'MARK_SWIPE_HINT_SEEN':
       return { ...state, hasSeenSwipeHint: true };
 
+    // ── Profile name ──────────────────────────────────────────────────────────
+    case 'SET_PROFILE_NAME':
+      return { ...state, profileName: action.name.trim() };
+
     // ── Sentence Builder review signal ───────────────────────────────────────
     // Dispatched when a Sentence Builder attempt produces FLAWED or REJECTED.
     // Lighter than ADD_DIFFICULT_WORD: does NOT touch wrongCount, isDifficult,
@@ -649,6 +660,7 @@ export function reducer(state: AppState, action: Action): AppState {
         darkMode:    state.darkMode,
         isPremium:   state.isPremium,   // preserve subscription across resets
         customWords: state.customWords, // preserve user's own word list across resets
+        profileName: state.profileName, // preserve display name across learning resets
         // initialState.todayDate is computed once at module load and can be
         // stale if the app runs past midnight. Always use the real current date
         // so dailyLearnedIds / dailyProgress start clean from the correct day.

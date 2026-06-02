@@ -72,7 +72,7 @@ export const MyWordsScreen: React.FC<Props> = ({ navigation }) => {
   const handleStartCustomSession = () => {
     const words = sorted.slice(0, sessionCap);
     dispatch({ type: 'SET_SESSION_WORDS', words });
-    navigation.navigate('Quiz');
+    navigation.navigate('Quiz', { exitTarget: 'myWords', source: 'myWords' });
   };
 
   const handleDelete = (word: Word) => {

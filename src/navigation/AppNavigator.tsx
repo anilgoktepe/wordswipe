@@ -28,9 +28,9 @@ const vocabulary = getLocalWords();
 
 export type RootStackParamList = {
   LevelSelection: undefined;
-  Main: undefined;
+  Main: { initialTab?: 'home' | 'myWords' | 'sentenceBuilder' | 'stats' | 'settings' } | undefined;
   Flashcard: undefined;
-  Quiz: { selfRatings?: Record<number, 'know' | 'dont_know'> } | undefined;
+  Quiz: { selfRatings?: Record<number, 'know' | 'dont_know'>; exitTarget?: 'myWords'; source?: 'lesson' | 'review' | 'difficult' | 'myWords' } | undefined;
   Results: undefined;
   DifficultWords: undefined;
   Settings: undefined;

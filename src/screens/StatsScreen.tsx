@@ -11,10 +11,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import { useApp } from '../context/AppContext';
-import { getLocalWords } from '../services/vocabularyService';
+import { getLocalWords, getEffectiveVocab } from '../services/vocabularyService';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 
-const vocabulary = getLocalWords();
+const localVocabularyStatic = getLocalWords();
 
 // ─── Animated horizontal bar ──────────────────────────────────────────────────
 
@@ -204,8 +204,9 @@ const WeeklyHeatmap: React.FC<{
       {Array.from({ length: 7 }, (_, i) => {
         const dayOffset = 6 - i; // 6=6 days ago, 0=today
         const slotMs = todayMs - dayOffset * msPerDay;
-        const isActive = lastStudyMs > 0 && slotMs <= lastStudyMs && slotMs > lastStudyMs - streak * msPerDay;
         const isToday = dayOffset === 0;
+        const isActive = (lastStudyMs > 0 && slotMs <= lastStudyMs && slotMs > lastStudyMs - streak * msPerDay)
+          || (isToday && !!lastStudyDate && lastStudyDate === today.toDateString());
         const dotDate = new Date(slotMs);
         const label = days[dotDate.getDay() === 0 ? 6 : dotDate.getDay() - 1];
 
@@ -234,14 +235,24 @@ const WeeklyHeatmap: React.FC<{
 
 // ─── Motivational message ─────────────────────────────────────────────────────
 
-function getMotivation(overallPct: number, streak: number, learnedCount: number): string {
-  if (learnedCount === 0) return 'İlk dersi tamamla ve yolculuğunu başlat!';
-  if (streak >= 7)  return `${streak} günlük serin var! Harika bir alışkanlık oluşturuyorsun.`;
-  if (streak >= 3)  return `${streak} gün üst üste çalıştın, ritmi koruyorsun!`;
-  if (overallPct >= 50) return 'Yarıyı geçtin! Bitiş çizgisi görünüyor.';
-  if (overallPct >= 25) return `${learnedCount} kelime öğrendin, çok iyi gidiyorsun!`;
-  if (overallPct >= 10) return 'Güzel bir başlangıç, her gün biraz daha!';
-  return `${learnedCount} kelime öğrendin, devam et!`;
+function getMotivation(streak: number, learnedCount: number, difficultCount: number): string {
+  if (learnedCount === 0)
+    return 'İlk dersini tamamla ve kelime yolculuğunu başlat.';
+  if (streak >= 7)
+    return `Harika seri! ${streak} gündür ritmi koruyorsun. Bu alışkanlık kalıcı öğrenmenin temeli.`;
+  if (streak >= 3)
+    return 'Seri güzel gidiyor. Bugün kısa bir tekrar yapıp ritmi bozma.';
+  if (difficultCount > 0)
+    return 'Zorlandığın kelimeler var. Onları toparladıkça ilerlemen hızlanacak.';
+  if (learnedCount >= 50)
+    return 'Ciddi bir kelime birikimi oluştu. Şimdi hedef: düzenli tekrar ve cümle içinde kullanmak.';
+  if (learnedCount >= 20)
+    return 'Ritim oluşuyor. Bugünkü tekrarlarla öğrendiklerini kalıcı hale getirebilirsin.';
+  if (learnedCount >= 5)
+    return 'İlk set tamam. Her doğru cevap kelime hafızanı biraz daha güçlendiriyor.';
+  if (learnedCount > 0)
+    return 'Güzel başlangıç! Birkaç kelimeyle ritmi yakalamaya başladın.';
+  return 'Bugün birkaç kelimeyle başlamak bile ritmi güçlendirir.';
 }
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
@@ -251,22 +262,26 @@ export const StatsScreen: React.FC<{ navigation?: any }> = () => {
   const { state, getDifficultWordObjects } = useApp();
   const theme = getTheme(state.darkMode);
 
-  const learnedWords = vocabulary.filter(w => {
-    const wp = state.wordProgress[w.id];
-    return wp ? wp.correctCount >= 2 : false;
-  });
+  // Bug 2 fix: include custom words via effective vocab
+  const effectiveVocab = getEffectiveVocab(localVocabularyStatic, state.customWords);
+
+  // Bug 1 fix: use isLearned (source of truth) instead of correctCount >= 2
+  const learnedWords = effectiveVocab.filter(w => state.wordProgress[w.id]?.isLearned === true);
   const difficultWords = getDifficultWordObjects();
 
-  const easyTotal   = vocabulary.filter(w => w.level === 'easy').length;
-  const mediumTotal = vocabulary.filter(w => w.level === 'medium').length;
-  const hardTotal   = vocabulary.filter(w => w.level === 'hard').length;
+  const easyTotal   = effectiveVocab.filter(w => w.level === 'easy').length;
+  const mediumTotal = effectiveVocab.filter(w => w.level === 'medium').length;
+  const hardTotal   = effectiveVocab.filter(w => w.level === 'hard').length;
 
   const easyLearned   = learnedWords.filter(w => w.level === 'easy').length;
   const mediumLearned = learnedWords.filter(w => w.level === 'medium').length;
   const hardLearned   = learnedWords.filter(w => w.level === 'hard').length;
 
-  const totalWords     = vocabulary.length;
-  const overallPct     = Math.round((learnedWords.length / totalWords) * 100);
+  // Bug 3 fix: scope denominator to user's active level so % is meaningful
+  const scopedVocab   = state.level ? effectiveVocab.filter(w => w.level === state.level) : effectiveVocab;
+  const scopedLearned = state.level ? learnedWords.filter(w => w.level === state.level) : learnedWords;
+  const totalWords    = scopedVocab.length;
+  const overallPct    = totalWords > 0 ? Math.round((scopedLearned.length / totalWords) * 100) : 0;
 
   function xpLevelFromXp(xp: number): number {
     let n = 1;
@@ -279,7 +294,7 @@ export const StatsScreen: React.FC<{ navigation?: any }> = () => {
   const xpToNextLevel    = nextThreshold - state.xp;
   const xpRingProgress   = (state.xp - currentThreshold) / (nextThreshold - currentThreshold);
 
-  const motivation = getMotivation(overallPct, state.streak, learnedWords.length);
+  const motivation = getMotivation(state.streak, learnedWords.length, difficultWords.length);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -342,7 +357,7 @@ export const StatsScreen: React.FC<{ navigation?: any }> = () => {
                   <MaterialCommunityIcons name="target" size={28} color={theme.primary} />
                 </View>
                 <Text style={[styles.bigValue, { color: theme.primary }]}>%{overallPct}</Text>
-                <Text style={[styles.bigLabel, { color: theme.textSecondary }]}>Genel ilerleme</Text>
+                <Text style={[styles.bigLabel, { color: theme.textSecondary }]}>Seviye ilerlemesi</Text>
               </View>
             </View>
 
@@ -380,7 +395,7 @@ export const StatsScreen: React.FC<{ navigation?: any }> = () => {
           {/* ── Overall progress bar ── */}
           <View style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border, ...shadows.md }]}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>Toplam Kelime İlerlemesi</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>Seviye İlerlemesi</Text>
               <Text style={[styles.sectionValue, { color: theme.primary }]}>%{overallPct}</Text>
             </View>
             <AnimatedProgressBar

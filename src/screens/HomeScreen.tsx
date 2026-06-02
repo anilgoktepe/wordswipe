@@ -221,9 +221,8 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const greeting = () => {
     const h = new Date().getHours();
-    if (h < 12) return 'Günaydın 👋';
-    if (h < 18) return 'İyi günler 👋';
-    return 'İyi akşamlar 👋';
+    const base = h < 12 ? 'Günaydın' : h < 18 ? 'İyi günler' : 'İyi akşamlar';
+    return state.profileName ? `${base}, ${state.profileName} 👋` : `${base} 👋`;
   };
 
   // ── Session handlers with free-tier caps ─────────────────────────────────
@@ -268,7 +267,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
       ? difficultWords
       : difficultWords.slice(0, FREE_SESSION_CAP);
     dispatch({ type: 'SET_SESSION_WORDS', words });
-    navigation.navigate('Quiz');
+    navigation.navigate('Quiz', { source: 'difficult' });
   };
 
   const handleReviewWords = () => {
@@ -277,7 +276,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const words = freshReviewWords.slice(0, cap);
     dispatch({ type: 'SET_LAST_REVIEW_WORDS', wordIds: words.map(w => w.id) });
     dispatch({ type: 'SET_SESSION_WORDS', words });
-    navigation.navigate('Quiz');
+    navigation.navigate('Quiz', { source: 'review' });
   };
 
   // ── Bonus words rewarded ad ───────────────────────────────────────────────

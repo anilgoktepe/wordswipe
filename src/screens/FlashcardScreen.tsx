@@ -274,6 +274,7 @@ const FlashCard: React.FC<{
       {...(isTop ? panResponder.panHandlers : {})}
       style={[
         styles.cardWrapper,
+        { backgroundColor: theme.card },
         isTop && {
           transform: [
             { translateX: pan.x },
@@ -431,7 +432,7 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
     const seenWords = words.slice(0, seenUpToIndex + 1);
     dispatch({ type: 'SET_LAST_LESSON_WORDS', wordIds: seenWords.map(w => w.id) });
     // XP and streak are awarded in QuizScreen after validated learning — not here.
-    navigation.navigate('Quiz', { selfRatings: selfRatingsRef.current });
+    navigation.navigate('Quiz', { selfRatings: selfRatingsRef.current, source: 'lesson' });
   }, [words, dispatch, navigation]);
 
   const handleNext = useCallback(() => {
@@ -563,39 +564,41 @@ export const FlashcardScreen: React.FC<Props> = ({ navigation }) => {
             />
           )}
 
-          {showSwipeHint && (
-            <Animated.View
-              pointerEvents="none"
-              style={[
-                styles.swipeHintOverlay,
-                {
-                  opacity: swipeHintAnim,
-                  transform: [{
-                    scale: swipeHintAnim.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] }),
-                  }],
-                },
-              ]}
-            >
-              <View style={styles.swipeHintCol}>
-                <Image
-                  source={require('../../assets/swipe-left.png')}
-                  style={styles.swipeHintIcon}
-                  resizeMode="contain"
-                />
-                <Text style={[styles.swipeHintLabel, styles.swipeHintLabelLeft]}>Bilmiyorsan sola</Text>
-              </View>
-              <View style={styles.swipeHintDivider} />
-              <View style={styles.swipeHintCol}>
-                <Image
-                  source={require('../../assets/swipe-right.png')}
-                  style={styles.swipeHintIcon}
-                  resizeMode="contain"
-                />
-                <Text style={[styles.swipeHintLabel, styles.swipeHintLabelRight]}>Biliyorsan sağa</Text>
-              </View>
-            </Animated.View>
-          )}
         </View>
+
+        {/* Swipe hint row — in-flow, between card area and action buttons */}
+        {showSwipeHint && (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.swipeHintRow,
+              {
+                opacity: swipeHintAnim,
+                transform: [{
+                  scale: swipeHintAnim.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }),
+                }],
+              },
+            ]}
+          >
+            <View style={styles.swipeHintCol}>
+              <Image
+                source={require('../../assets/swipe-left.png')}
+                style={styles.swipeHintIcon}
+                resizeMode="contain"
+              />
+              <Text style={[styles.swipeHintLabel, styles.swipeHintLabelLeft]}>Bilmiyorsan sola</Text>
+            </View>
+            <View style={styles.swipeHintDivider} />
+            <View style={styles.swipeHintCol}>
+              <Image
+                source={require('../../assets/swipe-right.png')}
+                style={styles.swipeHintIcon}
+                resizeMode="contain"
+              />
+              <Text style={[styles.swipeHintLabel, styles.swipeHintLabelRight]}>Biliyorsan sağa</Text>
+            </View>
+          </Animated.View>
+        )}
 
         <Text style={styles.swipeHelperText}>Kaydır veya butonları kullan</Text>
 
@@ -869,24 +872,22 @@ const styles = StyleSheet.create({
   swipeLabelLeft: { left: 16, backgroundColor: 'rgba(239,68,68,0.90)' },
   swipeLabelRight: { right: 16, backgroundColor: 'rgba(16,185,129,0.90)' },
   swipeLabelText: { color: '#fff', fontWeight: '700', fontSize: 13, fontFamily: 'Inter_700Bold' },
-  swipeHintOverlay: {
-    position: 'absolute',
-    bottom: spacing.lg + 12,
-    left: spacing.xl,
-    right: spacing.xl,
+  swipeHintRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    marginHorizontal: spacing.xl,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
     backgroundColor: 'rgba(255,255,255,0.88)',
     borderRadius: radius.xl,
-    paddingVertical: spacing.sm + 4,
+    paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.lg,
-    zIndex: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.10,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
   },
   swipeHintCol: {
     flex: 1,
