@@ -13,7 +13,12 @@
 
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+// Guard: react-native-google-mobile-ads is unavailable in Expo Go.
+let BannerAd: any = null;
+let BannerAdSize: any = null;
+try {
+  ({ BannerAd, BannerAdSize } = require('react-native-google-mobile-ads'));
+} catch { /* Expo Go — native module not available */ }
 import { spacing } from '../utils/theme';
 import { BANNER_UNIT_ID } from '../config/adConfig';
 
@@ -26,7 +31,7 @@ export const AdBanner: React.FC<Props> = () => {
   // Hide cleanly if the network request fails — no blank space left behind.
   const [adFailed, setAdFailed] = useState(false);
 
-  if (adFailed) return null;
+  if (!BannerAd || !BannerAdSize || adFailed) return null;
 
   return (
     <View style={styles.container}>

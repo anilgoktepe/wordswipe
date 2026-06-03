@@ -16,10 +16,12 @@
  */
 
 import { useEffect, useRef } from 'react';
-import {
-  InterstitialAd,
-  AdEventType,
-} from 'react-native-google-mobile-ads';
+// Guard: react-native-google-mobile-ads is unavailable in Expo Go.
+let InterstitialAd: any = null;
+let AdEventType: any = null;
+try {
+  ({ InterstitialAd, AdEventType } = require('react-native-google-mobile-ads'));
+} catch { /* Expo Go — native module not available */ }
 import { useApp } from '../context/AppContext';
 import {
   INTERSTITIAL_UNIT_ID,
@@ -33,13 +35,14 @@ let sessionInterstitialsShown = 0;
 
 export function useInterstitialAd() {
   const { state, dispatch } = useApp();
-  const adRef = useRef<InterstitialAd | null>(null);
+  const adRef = useRef<any>(null);
   const loadedRef = useRef(false);
 
   // Pre-load the interstitial as soon as the hook mounts, but only if it
   // will potentially be eligible to show (skip the network request for
   // premium users or when both caps are already reached).
   useEffect(() => {
+    if (!InterstitialAd) return; // Expo Go: native module unavailable
     const dailyCapReached = state.dailyAdsShown >= MAX_DAILY_ADS;
     const sessionCapReached = sessionInterstitialsShown >= MAX_SESSION_INTERSTITIALS;
 

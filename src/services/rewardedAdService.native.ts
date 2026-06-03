@@ -38,11 +38,17 @@
  *   preventing any double grant from overlapping event paths.
  */
 
-import {
-  RewardedAd,
-  RewardedAdEventType,
-  AdEventType,
-} from 'react-native-google-mobile-ads';
+// Guard: react-native-google-mobile-ads is unavailable in Expo Go.
+// In Expo Go the require throws and all three references stay null, making
+// _loadNext() return early and the public API return safe no-op values.
+// In real native builds the require succeeds and behavior is unchanged.
+let RewardedAd: any = null;
+let RewardedAdEventType: any = null;
+let AdEventType: any = null;
+try {
+  ({ RewardedAd, RewardedAdEventType, AdEventType } = require('react-native-google-mobile-ads'));
+} catch { /* Expo Go — native module not available */ }
+
 import { REWARDED_UNIT_ID } from '../config/adConfig';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -51,7 +57,7 @@ export type RewardedAdCallback = (rewarded: boolean) => void;
 
 // ─── Module-level state ───────────────────────────────────────────────────────
 
-let _ad:             RewardedAd | null = null;
+let _ad:             any               = null;
 let _isLoaded:       boolean           = false;
 let _isShowing:      boolean           = false;
 let _rewardEarned:   boolean           = false;
@@ -96,6 +102,7 @@ function _resolve(rewarded: boolean): void {
  * Called once at module init and once after each complete ad cycle.
  */
 function _loadNext(): void {
+  if (!RewardedAd) return; // Expo Go: native module unavailable
   _cleanup();
 
   const ad = RewardedAd.createForAdRequest(REWARDED_UNIT_ID, {

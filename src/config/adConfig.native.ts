@@ -19,7 +19,14 @@
  */
 
 import { Platform } from 'react-native';
-import { TestIds } from 'react-native-google-mobile-ads';
+
+// Guard: react-native-google-mobile-ads is unavailable in Expo Go.
+// Dynamic require lets the module load without crashing; TestIds falls back to
+// empty strings so unit-ID exports are safe strings in all environments.
+let TestIds: { BANNER: string; INTERSTITIAL: string; REWARDED: string } | null = null;
+try {
+  ({ TestIds } = require('react-native-google-mobile-ads'));
+} catch { /* Expo Go — native module not available */ }
 
 // ─── Banner unit IDs ──────────────────────────────────────────────────────────
 
@@ -34,7 +41,7 @@ const PRODUCTION_BANNER_IDS = {
  * __DEV__ = false in production builds   → real unit ID used automatically.
  */
 export const BANNER_UNIT_ID: string = __DEV__
-  ? TestIds.BANNER
+  ? (TestIds?.BANNER ?? '')
   : Platform.OS === 'ios'
     ? PRODUCTION_BANNER_IDS.ios
     : PRODUCTION_BANNER_IDS.android;
@@ -51,7 +58,7 @@ const PRODUCTION_INTERSTITIAL_IDS = {
  * Same __DEV__ auto-switch as the banner — no manual toggle needed.
  */
 export const INTERSTITIAL_UNIT_ID: string = __DEV__
-  ? TestIds.INTERSTITIAL
+  ? (TestIds?.INTERSTITIAL ?? '')
   : Platform.OS === 'ios'
     ? PRODUCTION_INTERSTITIAL_IDS.ios
     : PRODUCTION_INTERSTITIAL_IDS.android;
@@ -69,7 +76,7 @@ const PRODUCTION_REWARDED_IDS = {
  * Production → real unit ID registered in AdMob.
  */
 export const REWARDED_UNIT_ID: string = __DEV__
-  ? TestIds.REWARDED
+  ? (TestIds?.REWARDED ?? '')
   : Platform.OS === 'ios'
     ? PRODUCTION_REWARDED_IDS.ios
     : PRODUCTION_REWARDED_IDS.android;
