@@ -333,9 +333,17 @@ function _mockAnalysis({
   // Exact match OR derived form (e.g. "develop" matches "developer").
   const normalizedTarget = targetWord.toLowerCase().trim();
   const sentenceTokens   = trimmed.toLowerCase().split(/\W+/).filter(Boolean);
-  const usedTargetWord   = sentenceTokens.some(
-    (w) => w === normalizedTarget || w.startsWith(normalizedTarget),
-  );
+  const usedTargetWord   = sentenceTokens.some((w) => {
+    if (w === normalizedTarget) return true;
+    // Derived form: e.g. "increases" / "increased" / "increasing" ← "increase"
+    if (w.startsWith(normalizedTarget)) {
+      const suffix = w.slice(normalizedTarget.length);
+      return ['s', 'es', 'd', 'ed', 'ing'].includes(suffix);
+    }
+    // Drop-e gerund: "making" ← "make", "using" ← "use", "providing" ← "provide"
+    if (normalizedTarget.endsWith('e') && w === normalizedTarget.slice(0, -1) + 'ing') return true;
+    return false;
+  });
 
   // ── Cosmetic flags ────────────────────────────────────────────────────────
   const hasCapital = /^[A-Z]/.test(trimmed);

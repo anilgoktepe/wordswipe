@@ -331,7 +331,8 @@ export function normalizeDetailedAnalysisResult(
     localAnalysis.status === 'perfect' &&
     !_hasStructuralIssue(localAnalysis.issues) &&
     ltResult !== null &&
-    !ltResult.hasStructuralError;
+    !ltResult.hasStructuralError &&
+    grammarScore >= 65; // AI's own grammar signal: if it rates grammar < 65, its structural errors are not hallucinations
 
   const guardedAiIssues: DetailedIssue[] = localAndLtClean
     ? normalizedAiIssues.map(i => {

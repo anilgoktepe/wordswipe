@@ -442,7 +442,6 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route, onBa
   }, []);
 
   const handleRetry = useCallback(() => {
-    setSentence('');
     setResult(null);
     setDetailedResult(null);
     setAiError(false);
@@ -962,22 +961,20 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route, onBa
 
                   {/* Actions */}
                   <View style={styles.resultActions}>
-                    {effectiveStatus !== 'perfect' && (
-                      <TouchableOpacity
-                        onPress={handleRetry}
-                        disabled={isDetailedAnalyzing}
-                        style={[
-                          styles.retryBtn,
-                          {
-                            borderColor: theme.border,
-                            backgroundColor: theme.surface,
-                            opacity: isDetailedAnalyzing ? 0.4 : 1,
-                          },
-                        ]}
-                      >
-                        <Text style={{ color: theme.text, fontWeight: '700', fontSize: 14 }}>Tekrar Dene</Text>
-                      </TouchableOpacity>
-                    )}
+                    <TouchableOpacity
+                      onPress={handleRetry}
+                      disabled={isDetailedAnalyzing}
+                      style={[
+                        styles.retryBtn,
+                        {
+                          borderColor: theme.border,
+                          backgroundColor: theme.surface,
+                          opacity: isDetailedAnalyzing ? 0.4 : 1,
+                        },
+                      ]}
+                    >
+                      <Text style={{ color: theme.text, fontWeight: '700', fontSize: 14 }}>Tekrar Dene</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity
                       onPress={handleNext}
                       disabled={isDetailedAnalyzing}
