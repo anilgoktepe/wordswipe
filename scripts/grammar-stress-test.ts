@@ -1626,6 +1626,98 @@ const TEST_CASES: TestCase[] = [
     expectedStatus: 'perfect', shouldAwardXp: true,
     note: 'Must-not-flag: "listen to music" — correct preposition present. "like" used as the recognizable finite verb because "listen" alone is not in THIRD_PERSON_VERBS (local-engine finite-verb vocabulary limit).',
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CATEGORY: modal-verb-s
+  // Modal verbs (can, could, will, would, shall, should, may, might, must)
+  // must be followed by the BASE form of the verb, never the 3rd-person-
+  // singular inflected form (-s/-es/-ies/has/does).
+  // Rule 6b in sentenceAnalysisService.ts.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Error cases ──────────────────────────────────────────────────────────────
+
+  {
+    id: 215, category: 'modal-verb-s',
+    targetWord: 'discover', sentence: 'He can discovers new places.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"can discovers" — modal + 3rd-person inflected form. Must be "can discover".',
+  },
+  {
+    id: 216, category: 'modal-verb-s',
+    targetWord: 'provide', sentence: 'She should provides more examples.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"should provides" — modal + 3rd-person inflected form. Must be "should provide".',
+  },
+  {
+    id: 217, category: 'modal-verb-s',
+    targetWord: 'manage', sentence: 'This app will manages tasks.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"will manages" — modal + 3rd-person inflected form. Must be "will manage".',
+  },
+  {
+    id: 218, category: 'modal-verb-s',
+    targetWord: 'suggest', sentence: 'I might suggests a better approach.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"might suggests" — modal + 3rd-person inflected form. Must be "might suggest".',
+  },
+  {
+    id: 219, category: 'modal-verb-s',
+    targetWord: 'involve', sentence: 'The task could involves many steps.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"could involves" — modal + 3rd-person inflected form. Must be "could involve".',
+  },
+  {
+    id: 220, category: 'modal-verb-s',
+    targetWord: 'require', sentence: 'This must requires special tools.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"must requires" — modal + 3rd-person inflected form. Must be "must require".',
+  },
+  {
+    id: 221, category: 'modal-verb-s',
+    targetWord: 'express', sentence: 'She would expresses her feelings clearly.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"would expresses" — modal + 3rd-person inflected form. Must be "would express".',
+  },
+  {
+    id: 222, category: 'modal-verb-s',
+    targetWord: 'support', sentence: 'He can supports the team well.',
+    expectedStatus: 'fail', shouldAwardXp: false,
+    note: '"can supports" — modal + 3rd-person inflected form. Must be "can support".',
+  },
+
+  // ── Guard: correct sentences must NOT fire ───────────────────────────────────
+
+  {
+    id: 223, category: 'modal-verb-s',
+    targetWord: 'discover', sentence: 'He can discover new places.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "can discover" — correct base form after modal.',
+  },
+  {
+    id: 224, category: 'modal-verb-s',
+    targetWord: 'provide', sentence: 'She should provide more examples.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "should provide" — correct base form after modal.',
+  },
+  {
+    id: 225, category: 'modal-verb-s',
+    targetWord: 'suggest', sentence: 'We might suggest a better plan.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "might suggest" — correct base form after modal.',
+  },
+  {
+    id: 226, category: 'modal-verb-s',
+    targetWord: 'manage', sentence: 'She can manage the situation.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "can manage" — correct base form after modal.',
+  },
+  {
+    id: 227, category: 'modal-verb-s',
+    targetWord: 'involve', sentence: 'This could involve many people.',
+    expectedStatus: 'perfect', shouldAwardXp: true,
+    note: 'Must-not-flag: "could involve" — correct base form after modal.',
+  },
 ];
 
 // ─── Runner ────────────────────────────────────────────────────────────────────

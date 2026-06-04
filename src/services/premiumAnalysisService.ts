@@ -280,15 +280,60 @@ function checkThirdPerson(s: string): RuleMatch | null {
   return null;
 }
 
+// ── Rule 4: Modal + 3rd-person-singular inflected verb ───────────────────────
+// "can discovers" → "can discover"  (modal must be followed by base form)
+
+/** Converts a verb base form to 3rd-person singular (duplicates key logic). */
+function _inflect3pLocal(verb: string): string {
+  const v = verb.toLowerCase();
+  if (v === 'have') return 'has';
+  if (v === 'do')   return 'does';
+  if (/(?:s|sh|ch|x|o)$/.test(v)) return v + 'es';
+  if (/[^aeiou]y$/.test(v))        return v.slice(0, -1) + 'ies';
+  return v + 's';
+}
+
+const _MODAL_INFLECTED_PAIRS_PREMIUM: ReadonlyArray<{ inflected: string; base: string }> =
+  _3P_VERBS.split('|').map(base => ({ base, inflected: _inflect3pLocal(base) }))
+    .filter(({ inflected, base }) => inflected !== base);
+
+const _MODAL_INFLECTED_RE_PREMIUM: RegExp = (() => {
+  const alt = _MODAL_INFLECTED_PAIRS_PREMIUM.map(p => p.inflected).join('|');
+  return new RegExp(`\\b(${MODALS})\\s+(${alt})\\b`, 'gi');
+})();
+
+function checkModalInflected(s: string): RuleMatch | null {
+  _MODAL_INFLECTED_RE_PREMIUM.lastIndex = 0;
+  const m = _MODAL_INFLECTED_RE_PREMIUM.exec(s);
+  if (!m) return null;
+  const modal    = m[1];
+  const inflected = m[2].toLowerCase();
+  const pair     = _MODAL_INFLECTED_PAIRS_PREMIUM.find(p => p.inflected === inflected);
+  if (!pair) return null;
+  const base = pair.base;
+  return {
+    description:     `"${modal} ${inflected}" hatalı — modal fiillerden sonra fiilin sade hali kullanılmalı.`,
+    feedbackOverride: `Modal fiillerden (${modal}) sonra fiilin yalın hali gelir. Doğrusu: "${modal} ${base}".`,
+    fix: (str) => {
+      _MODAL_INFLECTED_RE_PREMIUM.lastIndex = 0;
+      return str.replace(
+        new RegExp(`\\b(${MODALS})\\s+(${inflected})\\b`, 'gi'),
+        (_, mod) => `${mod} ${base}`,
+      );
+    },
+  };
+}
+
 /**
  * Runs all grammar rules in priority order.
  * Returns the FIRST match found (rules are ordered most-impactful first).
  */
 function _runGrammarRules(sentence: string): RuleMatch | null {
   return (
-    checkThirdPerson(sentence)   ??   // most common learner error first
-    checkModalTo(sentence)       ??
-    checkOpportunityTo(sentence) ??
+    checkThirdPerson(sentence)    ??   // most common learner error first
+    checkModalInflected(sentence) ??   // modal + inflected-s verb
+    checkModalTo(sentence)        ??
+    checkOpportunityTo(sentence)  ??
     null
   );
 }

@@ -366,6 +366,8 @@ const THIRD_PERSON_VERBS: readonly string[] = [
   'introduce', 'employ', 'establish',
   // additional verbs for Pass 5 (-ed past tense detection)
   'talk',
+  // common vocabulary target words
+  'express', 'discover',
 ];
 
 /** Converts a verb base form to its 3rd-person singular present simple form. */
@@ -716,6 +718,63 @@ function _checkModalWithParticipleForm(
   );
   return {
     feedback:  `"${modal} ${edForm}" hatalı — modal fiillerden (can, could, should, will…) sonra fiilin sade hali kullanılmalı, geçmiş zaman/ortaç formu değil. Doğrusu: "${modal} ${base}".`,
+    corrected: cosmeticFix(fixed) ?? fixed,
+  };
+}
+
+// ─── Rule 6b — modal + 3rd-person-singular inflected verb ────────────────────
+//
+// "can discovers", "should provides", "will manages" are structural errors.
+// After a modal the verb MUST be in base form.  Rule 6 catches the -ed case;
+// this rule catches the -s/-es/-ies/-has/-does case.
+//
+// The inflected-form list is derived at module load from THIRD_PERSON_VERBS +
+// toThirdPersonSingular(), so it stays in sync automatically.
+
+const _MODAL_INFLECTED_PAIRS: ReadonlyArray<{ inflected: string; base: string }> =
+  [...new Set(THIRD_PERSON_VERBS)].map(base => ({
+    base,
+    inflected: toThirdPersonSingular(base),
+  })).filter(({ inflected, base }) => inflected !== base);  // exclude no-change entries
+
+const _MODAL_INFLECTED_RE: RegExp = (() => {
+  const modals   = 'can|could|will|would|shall|should|may|might|must';
+  const inflectedAlt = _MODAL_INFLECTED_PAIRS.map(p => p.inflected).join('|');
+  return new RegExp(`\\b(${modals})\\s+(${inflectedAlt})\\b`, 'gi');
+})();
+
+/**
+ * Detects modal + 3rd-person-singular inflected verb.
+ *
+ *   "He can discovers new places"   → "He can discover new places"
+ *   "She should provides an example" → "She should provide an example"
+ *   "This app will manages tasks"   → "This app will manage tasks"
+ *
+ * Safety notes:
+ *   – "can does" is caught (does → do) ✓
+ *   – "could has" is caught (has → have) ✓
+ *   – "should have" never fires: "have" is the base, not an inflected form ✓
+ *   – inverted questions ("Can she discover?") have base verb → never fire ✓
+ */
+function _checkModalWithInflectedVerb(
+  sentence: string,
+): { feedback: string; corrected: string } | null {
+  _MODAL_INFLECTED_RE.lastIndex = 0;
+  const m = _MODAL_INFLECTED_RE.exec(sentence);
+  if (!m) return null;
+
+  const modal    = m[1];
+  const inflected = m[2].toLowerCase();
+  const pair     = _MODAL_INFLECTED_PAIRS.find(p => p.inflected === inflected);
+  if (!pair) return null;
+
+  const base = pair.base;
+  const fixed = sentence.replace(
+    new RegExp(`\\b(can|could|will|would|shall|should|may|might|must)\\s+(${inflected})\\b`, 'gi'),
+    (_, mod) => `${mod} ${base}`,
+  );
+  return {
+    feedback:  `"${modal} ${inflected}" hatalı — modal fiillerden (can, could, should, will…) sonra fiilin sade (yalın) hali kullanılmalı. Doğrusu: "${modal} ${base}".`,
     corrected: cosmeticFix(fixed) ?? fixed,
   };
 }
@@ -1986,6 +2045,10 @@ function _checkGrammar(
   // ── Rule 6: modal + past-participle / -ed form ────────────────────────────
   const r6 = _checkModalWithParticipleForm(sentence);
   if (r6) return r6;
+
+  // ── Rule 6b: modal + 3rd-person-singular inflected verb ──────────────────
+  const r6b = _checkModalWithInflectedVerb(sentence);
+  if (r6b) return r6b;
 
   // ── Rule 7: double negation ───────────────────────────────────────────────
   const r7 = _checkDoubleNegation(sentence);
