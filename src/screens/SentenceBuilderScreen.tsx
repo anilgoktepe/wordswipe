@@ -733,7 +733,10 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route, onBa
                       if (correctionIsValid) {
                         return (
                           <View style={[styles.correctedBox, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '40' }]}>
-                            <Text style={[styles.boxLabel, { color: theme.primary }]}>✏️ Düzeltilmiş hali:</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                              <Ionicons name="create-outline" size={13} color={theme.primary} />
+                              <Text style={[styles.boxLabel, { color: theme.primary }]}>Düzeltilmiş hali:</Text>
+                            </View>
                             <Text style={{ color: theme.text, fontSize: 15 }}>{result.correctedSentence}</Text>
                           </View>
                         );
@@ -747,7 +750,10 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route, onBa
                     if (!detailedResult && result.correctedSentence && correctionIsValid) {
                       return (
                         <View style={[styles.correctedBox, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '40' }]}>
-                          <Text style={[styles.boxLabel, { color: theme.primary }]}>✏️ Düzeltilmiş hali:</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Ionicons name="create-outline" size={13} color={theme.primary} />
+                            <Text style={[styles.boxLabel, { color: theme.primary }]}>Düzeltilmiş hali:</Text>
+                          </View>
                           <Text style={{ color: theme.text, fontSize: 15 }}>{result.correctedSentence}</Text>
                         </View>
                       );
@@ -841,7 +847,7 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route, onBa
                                 detailedResult.score >= 65 ? '#B45309'  : theme.incorrect,
                             },
                           ]}>
-                            {detailedResult.score}/100
+                            Kalite: {detailedResult.score}/100
                           </Text>
                         </View>
                       </View>
@@ -867,13 +873,20 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route, onBa
                       {detailedResult.correctedSentence &&
                        validateCorrectedSentence(detailedResult.correctedSentence) && (
                         <View style={[styles.premiumBox, { backgroundColor: theme.primaryLight, borderColor: theme.primary + '30' }]}>
-                          <Text style={[styles.boxLabel, { color: theme.primary }]}>
-                            {detailedResult.correctionType === 'rewrite'
-                              ? '🔄 Doğru bir yol:'
-                              : detailedResult.correctionType === 'minor_fix'
-                              ? '✏️ Küçük düzeltme:'
-                              : '✏️ Düzeltilmiş hali:'}
-                          </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Ionicons
+                              name={detailedResult.correctionType === 'rewrite' ? 'refresh-outline' : 'create-outline'}
+                              size={13}
+                              color={theme.primary}
+                            />
+                            <Text style={[styles.boxLabel, { color: theme.primary }]}>
+                              {detailedResult.correctionType === 'rewrite'
+                                ? 'Doğru bir yol:'
+                                : detailedResult.correctionType === 'minor_fix'
+                                ? 'Küçük düzeltme:'
+                                : 'Düzeltilmiş hali:'}
+                            </Text>
+                          </View>
                           <Text style={{ color: theme.text, fontSize: 14 }}>{detailedResult.correctedSentence}</Text>
                         </View>
                       )}
@@ -882,7 +895,10 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route, onBa
                           user sees the better phrasing before the explanation. */}
                       {detailedResult.naturalAlternative && (
                         <View style={[styles.premiumBox, { backgroundColor: '#FEF3C720', borderColor: '#F59E0B40' }]}>
-                          <Text style={[styles.boxLabel, { color: '#B45309' }]}>💡 Daha doğal bir ifade:</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Ionicons name="bulb-outline" size={13} color="#B45309" />
+                            <Text style={[styles.boxLabel, { color: '#B45309' }]}>Daha doğal bir ifade:</Text>
+                          </View>
                           <Text style={{ color: theme.text, fontSize: 14, fontStyle: 'italic' }}>
                             {detailedResult.naturalAlternative}
                           </Text>
@@ -899,7 +915,10 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route, onBa
                        detailedResult.exampleSentences &&
                        detailedResult.exampleSentences.length > 0 && (
                         <View style={[styles.premiumBox, { backgroundColor: '#FEF3C720', borderColor: '#F59E0B40' }]}>
-                          <Text style={[styles.boxLabel, { color: '#B45309' }]}>💡 Bu kelime nasıl kullanılır:</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Ionicons name="bulb-outline" size={13} color="#B45309" />
+                            <Text style={[styles.boxLabel, { color: '#B45309' }]}>Bu kelime nasıl kullanılır:</Text>
+                          </View>
                           {detailedResult.exampleSentences.map((ex, i) => (
                             <Text key={i} style={{ color: theme.text, fontSize: 14, fontStyle: 'italic' }}>• {ex}</Text>
                           ))}
@@ -910,7 +929,10 @@ export const SentenceBuilderScreen: React.FC<Props> = ({ navigation, route, onBa
                        (!detailedResult.exampleSentences || detailedResult.exampleSentences.length === 0) &&
                        !!currentWord?.example && (
                         <View style={[styles.premiumBox, { backgroundColor: '#FEF3C720', borderColor: '#F59E0B40' }]}>
-                          <Text style={[styles.boxLabel, { color: '#B45309' }]}>💡 Bu kelime nasıl kullanılır:</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Ionicons name="bulb-outline" size={13} color="#B45309" />
+                            <Text style={[styles.boxLabel, { color: '#B45309' }]}>Bu kelime nasıl kullanılır:</Text>
+                          </View>
                           <Text style={{ color: theme.text, fontSize: 14, fontStyle: 'italic' }}>• {currentWord.example}</Text>
                         </View>
                       )}

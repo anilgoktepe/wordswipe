@@ -443,7 +443,16 @@ export function normalizeDetailedAnalysisResult(
     ? (localAnalysis.targetWordMode ?? 'exact')
     : r.targetWordMode;
 
-  let finalFeedbackTr = aiSaysWordMissing
+  // Second guard: AI sometimes returns usedTargetWord:true but still writes a
+  // "must use target word" shortFeedbackTr (AI self-contradiction).  If the word
+  // IS present, any such feedback is misleading → replace with the same generic
+  // grammar-error message.  The patterns are structural Turkish strings that
+  // appear regardless of which target word is involved, so this is fully generic.
+  const feedbackSaysMissing =
+    shortFeedbackTr.includes('kelimesini cümlende kullanmalısın') ||
+    shortFeedbackTr.includes('kelimesi cümlede kullanılmamış');
+
+  let finalFeedbackTr = (aiSaysWordMissing || (finalUsedTargetWord && feedbackSaysMissing))
     ? 'Cümlede dilbilgisi hatası var. Aşağıdaki geri bildirimi incele.'
     : shortFeedbackTr;
 
