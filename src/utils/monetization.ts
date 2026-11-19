@@ -37,7 +37,7 @@ export const REWARDED_AD_AI_BONUS = 5;
  * Cascades automatically — no per-screen changes needed.
  * INTERNAL TESTFLIGHT QA ONLY — MUST be false before App Store public release.
  */
-export const DEBUG_FORCE_PREMIUM = true;
+export const DEBUG_FORCE_PREMIUM = false;
 
 /**
  * When true, bypasses the "daily base session already started" gate in
@@ -45,7 +45,7 @@ export const DEBUG_FORCE_PREMIUM = true;
  * Keep false in all non-debug builds.
  * INTERNAL TESTING ONLY — must be set back to false before external beta / TestFlight.
  */
-export const DEBUG_BYPASS_DAILY_LESSON_GATE = true;
+export const DEBUG_BYPASS_DAILY_LESSON_GATE = false;
 
 /**
  * When true, free users bypass the rewarded-ad / premium gate for detailed AI
@@ -53,7 +53,7 @@ export const DEBUG_BYPASS_DAILY_LESSON_GATE = true;
  * TestFlight without requiring ads or IAP.
  * INTERNAL TESTING ONLY — set to false before App Store release.
  */
-export const DEBUG_BYPASS_AI_ANALYSIS_GATE = true;
+export const DEBUG_BYPASS_AI_ANALYSIS_GATE = false;
 
 // ─── Rewarded Ad ─────────────────────────────────────────────────────────────
 //
