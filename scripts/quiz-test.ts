@@ -1,52 +1,16 @@
 /**
  * quiz-test.ts
  *
- * Regression tests for the generateQuiz function in QuizScreen.tsx.
+ * Regression tests for quiz question generation.
  * Runner: tsx scripts/quiz-test.ts
  *
- * Tests are self-contained: generateQuiz is inlined here because QuizScreen.tsx
- * imports react-native which cannot load in a plain Node.js process.
- * The logic must stay in sync with QuizScreen.tsx manually.
+ * Imports the real generateQuiz from src/utils/quizGenerator.ts — no copy of
+ * the algorithm lives here. That module is deliberately free of react-native
+ * imports so it loads under plain Node.
  */
 
-// ─── Minimal Word type (mirrors src/data/vocabulary.ts) ───────────────────────
-
-interface Word {
-  id: number;
-  word: string;
-  translation: string;
-  level: 'easy' | 'medium' | 'hard';
-}
-
-// ─── generateQuiz (mirrors QuizScreen.tsx) ────────────────────────────────────
-
-function generateQuiz(
-  words: Word[],
-  levelPool: Word[],
-): Array<{ word: Word; options: string[]; correctIndex: number }> {
-  return words.map(word => {
-    const normalizedCorrect = word.translation.trim().toLowerCase();
-
-    const shuffled = [...levelPool].sort(() => Math.random() - 0.5);
-
-    const seen = new Set<string>([normalizedCorrect]);
-    const uniquePool: Word[] = [];
-    for (const w of shuffled) {
-      if (w.id === word.id) continue;
-      const norm = w.translation.trim().toLowerCase();
-      if (seen.has(norm)) continue;
-      seen.add(norm);
-      uniquePool.push(w);
-    }
-
-    const wrongOptions = uniquePool.slice(0, 3).map(w => w.translation);
-    const correctIndex = Math.floor(Math.random() * (wrongOptions.length + 1));
-    const options = [...wrongOptions];
-    options.splice(correctIndex, 0, word.translation);
-
-    return { word, options, correctIndex };
-  });
-}
+import { generateQuiz } from '../src/utils/quizGenerator';
+import type { Word } from '../src/data/vocabulary';
 
 // ─── Test runner ──────────────────────────────────────────────────────────────
 
@@ -54,169 +18,190 @@ let passed = 0;
 let failed = 0;
 
 function expect(label: string, actual: unknown, expected: unknown) {
-  const ok =
-    typeof expected === 'function'
-      ? (expected as (v: unknown) => boolean)(actual)
-      : actual === expected;
+  const ok = actual === expected;
   if (ok) {
     console.log(`  \x1b[32m✓\x1b[0m \x1b[2m${label}\x1b[0m`);
     passed++;
   } else {
     console.log(`  \x1b[31m✗ ${label}\x1b[0m`);
-    console.log(`      expected: ${typeof expected === 'function' ? '(predicate)' : JSON.stringify(expected)}`);
+    console.log(`      expected: ${JSON.stringify(expected)}`);
     console.log(`      received: ${JSON.stringify(actual)}`);
     failed++;
   }
 }
 
-// ─── Vocabulary fixtures ──────────────────────────────────────────────────────
+// ─── Fixtures ─────────────────────────────────────────────────────────────────
+//
+// Minimal Word objects — generateQuiz only reads id and translation.
+
+function w(id: number, word: string, translation: string): Word {
+  return { id, word, translation, example: '', level: 'easy' } as Word;
+}
 
 const POOL_NORMAL: Word[] = [
-  { id: 1, word: 'run',    translation: 'koşmak',    level: 'easy' },
-  { id: 2, word: 'eat',    translation: 'yemek',     level: 'easy' },
-  { id: 3, word: 'sleep',  translation: 'uyumak',    level: 'easy' },
-  { id: 4, word: 'read',   translation: 'okumak',    level: 'easy' },
-  { id: 5, word: 'write',  translation: 'yazmak',    level: 'easy' },
-  { id: 6, word: 'jump',   translation: 'atlamak',   level: 'easy' },
+  w(1, 'run',   'koşmak'),
+  w(2, 'eat',   'yemek'),
+  w(3, 'sleep', 'uyumak'),
+  w(4, 'read',  'okumak'),
+  w(5, 'write', 'yazmak'),
+  w(6, 'jump',  'atlamak'),
 ];
 
-// Pool with duplicate translations (mirrors the real vocabulary situation)
+// Mirrors the real dataset: 83 Turkish translations are shared by >1 word.
 const POOL_WITH_DUPES: Word[] = [
-  { id: 1,  word: 'start',    translation: 'başlamak',   level: 'easy' },
-  { id: 2,  word: 'begin',    translation: 'başlamak',   level: 'easy' }, // duplicate
-  { id: 3,  word: 'commence', translation: 'başlamak',   level: 'easy' }, // duplicate
-  { id: 4,  word: 'finish',   translation: 'bitirmek',   level: 'easy' },
-  { id: 5,  word: 'end',      translation: 'Bitirmek',   level: 'easy' }, // same (case diff)
-  { id: 6,  word: 'run',      translation: 'koşmak',     level: 'easy' },
-  { id: 7,  word: 'eat',      translation: 'yemek',      level: 'easy' },
-  { id: 8,  word: 'sleep',    translation: ' uyumak ',   level: 'easy' }, // leading/trailing space
-  { id: 9,  word: 'rest',     translation: 'uyumak',     level: 'easy' }, // duplicate of #8 after trim
-  { id: 10, word: 'write',    translation: 'yazmak',     level: 'easy' },
+  w(1,  'start',    'başlamak'),
+  w(2,  'begin',    'başlamak'),   // duplicate
+  w(3,  'commence', 'başlamak'),   // duplicate
+  w(4,  'finish',   'bitirmek'),
+  w(5,  'end',      'Bitirmek'),   // duplicate, case differs
+  w(6,  'run',      'koşmak'),
+  w(7,  'eat',      'yemek'),
+  w(8,  'sleep',    ' uyumak '),   // duplicate, padded
+  w(9,  'rest',     'uyumak'),
+  w(10, 'write',    'yazmak'),
 ];
 
-// Pool too small to fill 3 wrong options
 const POOL_TINY: Word[] = [
-  { id: 1, word: 'run',  translation: 'koşmak', level: 'easy' },
-  { id: 2, word: 'eat',  translation: 'yemek',  level: 'easy' },
+  w(1, 'run', 'koşmak'),
+  w(2, 'eat', 'yemek'),
 ];
 
-// ─── Test suite ───────────────────────────────────────────────────────────────
+const norm = (s: string) => s.trim().toLowerCase();
+
+// ─── Suite ────────────────────────────────────────────────────────────────────
 
 console.log('\n\x1b[1m\x1b[36m══════════════════════════════════════════\x1b[0m');
 console.log('\x1b[1mQuiz generation regression tests\x1b[0m');
 console.log('\x1b[1m\x1b[36m══════════════════════════════════════════\x1b[0m\n');
 
-// ── Q1: No duplicate options in a normal pool ─────────────────────────────────
+// ── Q1: normal pool, no duplicate options ─────────────────────────────────────
 {
-  console.log('\x1b[1mQ1: Normal pool — no duplicate options\x1b[0m');
-  const target = POOL_NORMAL[0]; // 'run' / 'koşmak'
-  for (let i = 0; i < 50; i++) {
-    const [q] = generateQuiz([target], POOL_NORMAL);
-    const unique = new Set(q.options.map(o => o.trim().toLowerCase()));
-    expect(`run (iteration ${i+1}) — all 4 options unique`, unique.size, q.options.length);
-    if (unique.size !== q.options.length) break; // stop spamming on first failure
+  console.log('\x1b[1mQ1: Normal pool — options always unique\x1b[0m');
+  let violations = 0;
+  for (let i = 0; i < 200; i++) {
+    const [q] = generateQuiz([POOL_NORMAL[0]], 'easy', POOL_NORMAL);
+    if (new Set(q.options.map(norm)).size !== q.options.length) violations++;
   }
+  expect('0 duplicate-option violations in 200 runs', violations, 0);
 }
 
-// ── Q2: No duplicate options with a pool that has duplicate translations ──────
+// ── Q2: pool containing duplicate translations ────────────────────────────────
 {
-  console.log('\n\x1b[1mQ2: Pool with duplicate translations — no duplicate options\x1b[0m');
-  const target = POOL_WITH_DUPES[5]; // 'run' / 'koşmak'
-  let dupeFound = false;
-  for (let i = 0; i < 100; i++) {
-    const [q] = generateQuiz([target], POOL_WITH_DUPES);
-    const normalized = q.options.map(o => o.trim().toLowerCase());
-    const unique = new Set(normalized);
-    if (unique.size !== q.options.length) { dupeFound = true; break; }
+  console.log('\n\x1b[1mQ2: Pool with duplicate translations — options still unique\x1b[0m');
+  let violations = 0;
+  for (const target of POOL_WITH_DUPES) {
+    for (let i = 0; i < 50; i++) {
+      const [q] = generateQuiz([target], 'easy', POOL_WITH_DUPES);
+      if (new Set(q.options.map(norm)).size !== q.options.length) violations++;
+    }
   }
-  expect('no duplicate option found across 100 iterations', dupeFound, false);
+  expect('0 violations across every word × 50 runs', violations, 0);
 }
 
-// ── Q3: Correct answer appears exactly once ───────────────────────────────────
+// ── Q3: correct answer appears exactly once ───────────────────────────────────
 {
   console.log('\n\x1b[1mQ3: Correct answer appears exactly once\x1b[0m');
-  const target = POOL_NORMAL[1]; // 'eat' / 'yemek'
-  for (let i = 0; i < 50; i++) {
-    const [q] = generateQuiz([target], POOL_NORMAL);
-    const count = q.options.filter(o => o === target.translation).length;
-    expect(`eat (iteration ${i+1}) — correct answer count = 1`, count, 1);
-    if (count !== 1) break;
-  }
-}
-
-// ── Q4: correctIndex always points to the correct translation ─────────────────
-{
-  console.log('\n\x1b[1mQ4: correctIndex always points to correct translation\x1b[0m');
-  const target = POOL_NORMAL[2]; // 'sleep' / 'uyumak'
-  for (let i = 0; i < 100; i++) {
-    const [q] = generateQuiz([target], POOL_NORMAL);
-    expect(
-      `sleep (iteration ${i+1}) — options[correctIndex] === translation`,
-      q.options[q.correctIndex],
-      target.translation,
-    );
-    if (q.options[q.correctIndex] !== target.translation) break;
-  }
-}
-
-// ── Q5: Case and whitespace differences treated as same translation ────────────
-{
-  console.log('\n\x1b[1mQ5: Case / whitespace variants of same translation de-duped\x1b[0m');
-  const target = POOL_WITH_DUPES[3]; // 'finish' / 'bitirmek'
-  let casedupeFound = false;
-  for (let i = 0; i < 100; i++) {
-    const [q] = generateQuiz([target], POOL_WITH_DUPES);
-    const normalized = q.options.map(o => o.trim().toLowerCase());
-    const unique = new Set(normalized);
-    if (unique.size !== q.options.length) { casedupeFound = true; break; }
-  }
-  expect('no case/whitespace dupe found across 100 iterations', casedupeFound, false);
-}
-
-// ── Q6: Correct translation is never used as a distractor ─────────────────────
-{
-  console.log('\n\x1b[1mQ6: Correct translation never appears as a wrong option\x1b[0m');
-  const target = POOL_WITH_DUPES[0]; // 'start' / 'başlamak' — 3 duplicates in pool
-  let correctAsDistractor = false;
-  for (let i = 0; i < 100; i++) {
-    const [q] = generateQuiz([target], POOL_WITH_DUPES);
-    const wrongOpts = q.options.filter((_, idx) => idx !== q.correctIndex);
-    if (wrongOpts.some(o => o.trim().toLowerCase() === target.translation.toLowerCase())) {
-      correctAsDistractor = true;
-      break;
+  let violations = 0;
+  for (const target of POOL_WITH_DUPES) {
+    for (let i = 0; i < 50; i++) {
+      const [q] = generateQuiz([target], 'easy', POOL_WITH_DUPES);
+      if (q.options.filter(o => norm(o) === norm(target.translation)).length !== 1) violations++;
     }
   }
-  expect('correct translation never used as distractor (100 iters)', correctAsDistractor, false);
+  expect('0 violations across every word × 50 runs', violations, 0);
 }
 
-// ── Q7: Small pool — graceful fallback with fewer than 4 options ──────────────
+// ── Q4: correctIndex points at the correct translation ────────────────────────
 {
-  console.log('\n\x1b[1mQ7: Tiny pool — graceful with fewer than 4 options\x1b[0m');
-  const target = POOL_TINY[0]; // 'run' — only 1 other unique wrong translation
-  const [q] = generateQuiz([target], POOL_TINY);
-  expect('options count >= 1', q.options.length >= 1, true);
-  expect('options count <= 4', q.options.length <= 4, true);
-  expect('correct answer present', q.options.includes(target.translation), true);
-  expect('correctIndex in bounds', q.correctIndex < q.options.length, true);
-  expect('options[correctIndex] is correct answer', q.options[q.correctIndex], target.translation);
+  console.log('\n\x1b[1mQ4: correctIndex always points to the correct translation\x1b[0m');
+  let violations = 0;
+  for (const target of POOL_NORMAL) {
+    for (let i = 0; i < 50; i++) {
+      const [q] = generateQuiz([target], 'easy', POOL_NORMAL);
+      if (q.options[q.correctIndex] !== target.translation) violations++;
+    }
+  }
+  expect('0 violations across every word × 50 runs', violations, 0);
 }
 
-// ── Q8: Multiple questions in one quiz call all pass invariants ───────────────
+// ── Q5: correct translation never used as a distractor ────────────────────────
 {
-  console.log('\n\x1b[1mQ8: Multi-word quiz — all questions pass invariants\x1b[0m');
-  const targets = POOL_NORMAL.slice(0, 4);
-  let anyViolation = false;
-  for (let iter = 0; iter < 20; iter++) {
-    const questions = generateQuiz(targets, POOL_NORMAL);
+  console.log('\n\x1b[1mQ5: Correct translation never appears as a distractor\x1b[0m');
+  let violations = 0;
+  for (const target of POOL_WITH_DUPES) {
+    for (let i = 0; i < 50; i++) {
+      const [q] = generateQuiz([target], 'easy', POOL_WITH_DUPES);
+      const distractors = q.options.filter((_, idx) => idx !== q.correctIndex);
+      if (distractors.some(o => norm(o) === norm(target.translation))) violations++;
+    }
+  }
+  expect('0 violations across every word × 50 runs', violations, 0);
+}
+
+// ── Q6: tiny pool degrades gracefully ─────────────────────────────────────────
+{
+  console.log('\n\x1b[1mQ6: Tiny pool — graceful with fewer than 4 options\x1b[0m');
+  const [q] = generateQuiz([POOL_TINY[0]], 'easy', POOL_TINY);
+  expect('at least 1 option', q.options.length >= 1, true);
+  expect('at most 4 options', q.options.length <= 4, true);
+  expect('no invented duplicates', new Set(q.options.map(norm)).size, q.options.length);
+  expect('correctIndex within bounds', q.correctIndex < q.options.length, true);
+  expect('correctIndex resolves correctly', q.options[q.correctIndex], POOL_TINY[0].translation);
+}
+
+// ── Q7: single-word pool — no distractors available ───────────────────────────
+{
+  console.log('\n\x1b[1mQ7: Single-word pool — correct answer only, no fabrication\x1b[0m');
+  const solo = [w(1, 'run', 'koşmak')];
+  const [q] = generateQuiz([solo[0]], 'easy', solo);
+  expect('exactly 1 option', q.options.length, 1);
+  expect('that option is the correct answer', q.options[0], 'koşmak');
+  expect('correctIndex is 0', q.correctIndex, 0);
+}
+
+// ── Q8: multi-word quiz keeps every invariant ─────────────────────────────────
+{
+  console.log('\n\x1b[1mQ8: Multi-word quiz — all invariants hold per question\x1b[0m');
+  let violations = 0;
+  for (let i = 0; i < 100; i++) {
+    const questions = generateQuiz(POOL_WITH_DUPES.slice(0, 5), 'easy', POOL_WITH_DUPES);
+    if (questions.length !== 5) { violations++; continue; }
     for (const q of questions) {
-      const normalized = q.options.map(o => o.trim().toLowerCase());
-      const unique = new Set(normalized);
-      if (unique.size !== q.options.length) { anyViolation = true; break; }
-      if (q.options[q.correctIndex] !== q.word.translation) { anyViolation = true; break; }
+      if (new Set(q.options.map(norm)).size !== q.options.length) violations++;
+      if (q.options[q.correctIndex] !== q.word.translation) violations++;
     }
-    if (anyViolation) break;
   }
-  expect('no invariant violations in 20 × 4-word quiz runs', anyViolation, false);
+  expect('0 violations across 100 × 5-word quizzes', violations, 0);
+}
+
+// ── Q9: a pool with enough unique translations always yields 4 options ────────
+{
+  console.log('\n\x1b[1mQ9: Enough unique translations — always exactly 4 options\x1b[0m');
+  // POOL_WITH_DUPES has 10 words but only 6 unique translations, so every
+  // target still leaves >= 3 distinct distractors available.
+  let wrongCount = 0;
+  for (const target of POOL_WITH_DUPES) {
+    for (let i = 0; i < 50; i++) {
+      const [q] = generateQuiz([target], 'easy', POOL_WITH_DUPES);
+      if (q.options.length !== 4) wrongCount++;
+    }
+  }
+  expect('every question had 4 options', wrongCount, 0);
+}
+
+// ── Q10: distractors vary between runs (shuffle actually applied) ─────────────
+{
+  console.log('\n\x1b[1mQ10: Distractor set varies across runs\x1b[0m');
+  const target = POOL_NORMAL[0];
+  const distinctSets = new Set<string>();
+  for (let i = 0; i < 100; i++) {
+    const [q] = generateQuiz([target], 'easy', POOL_NORMAL);
+    const distractors = q.options.filter((_, idx) => idx !== q.correctIndex);
+    distinctSets.add([...distractors].map(norm).sort().join('|'));
+  }
+  // 5 candidate distractors choose 3 => 10 possible sets; a working shuffle
+  // should surface several of them over 100 runs.
+  expect('more than one distinct distractor set observed', distinctSets.size > 1, true);
 }
 
 // ─── Summary ──────────────────────────────────────────────────────────────────

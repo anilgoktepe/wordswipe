@@ -14,7 +14,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '../context/AppContext';
-import { Word, getWordsByLevel } from '../data/vocabulary';
+import { Word } from '../data/vocabulary';
+import { generateQuiz, QuizQuestion } from '../utils/quizGenerator';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import { SoundService } from '../utils/sound';
 import { XPPopup, XPPopupHandle } from '../components/XPPopup';
@@ -31,41 +32,6 @@ function haptic(type: 'success' | 'error' | 'light') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   } catch (_) {}
-}
-
-interface QuizQuestion {
-  word: Word;
-  options: string[];
-  correctIndex: number;
-}
-
-function generateQuiz(words: Word[], level: 'easy' | 'medium' | 'hard'): QuizQuestion[] {
-  const levelPool = getWordsByLevel(level);
-  return words.map(word => {
-    const normalizedCorrect = word.translation.trim().toLowerCase();
-
-    // Shuffle first so that among words sharing a translation, a random one wins.
-    const shuffled = [...levelPool].sort(() => Math.random() - 0.5);
-
-    // Build unique-translation wrong-option pool, excluding the correct answer's
-    // translation so it can never appear as a distractor.
-    const seen = new Set<string>([normalizedCorrect]);
-    const uniquePool: Word[] = [];
-    for (const w of shuffled) {
-      if (w.id === word.id) continue;
-      const norm = w.translation.trim().toLowerCase();
-      if (seen.has(norm)) continue;
-      seen.add(norm);
-      uniquePool.push(w);
-    }
-
-    const wrongOptions = uniquePool.slice(0, 3).map(w => w.translation);
-    const correctIndex = Math.floor(Math.random() * (wrongOptions.length + 1));
-    const options = [...wrongOptions];
-    options.splice(correctIndex, 0, word.translation);
-
-    return { word, options, correctIndex };
-  });
 }
 
 interface Props {
