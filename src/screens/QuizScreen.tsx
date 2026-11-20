@@ -42,13 +42,25 @@ interface QuizQuestion {
 function generateQuiz(words: Word[], level: 'easy' | 'medium' | 'hard'): QuizQuestion[] {
   const levelPool = getWordsByLevel(level);
   return words.map(word => {
-    const wrongOptions = levelPool
-      .filter(w => w.id !== word.id)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3)
-      .map(w => w.translation);
+    const normalizedCorrect = word.translation.trim().toLowerCase();
 
-    const correctIndex = Math.floor(Math.random() * 4);
+    // Shuffle first so that among words sharing a translation, a random one wins.
+    const shuffled = [...levelPool].sort(() => Math.random() - 0.5);
+
+    // Build unique-translation wrong-option pool, excluding the correct answer's
+    // translation so it can never appear as a distractor.
+    const seen = new Set<string>([normalizedCorrect]);
+    const uniquePool: Word[] = [];
+    for (const w of shuffled) {
+      if (w.id === word.id) continue;
+      const norm = w.translation.trim().toLowerCase();
+      if (seen.has(norm)) continue;
+      seen.add(norm);
+      uniquePool.push(w);
+    }
+
+    const wrongOptions = uniquePool.slice(0, 3).map(w => w.translation);
+    const correctIndex = Math.floor(Math.random() * (wrongOptions.length + 1));
     const options = [...wrongOptions];
     options.splice(correctIndex, 0, word.translation);
 
