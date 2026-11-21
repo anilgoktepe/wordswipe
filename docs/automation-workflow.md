@@ -102,17 +102,19 @@ Token'ı `git credential ... get` ile çıkarıp `curl`'e aktarmak **yasaktır**
 
 PR açma — tercih sırası:
 
-1. **`gh` CLI** (kurulu değil — tercih edilen yol). Kurulduktan sonra:
+1. **`gh` CLI** — kurulu (2.105.0), tercih edilen yol:
    ```bash
    gh pr create --base main --head <dal> --title "..." --body-file <dosya>
    ```
-   `gh` kendi güvenli token deposunu kullanır.
+   `gh` kendi güvenli token deposunu kullanır; sır hiçbir komuta geçmez.
 
-2. **Push + tarayıcı** (kurulum gerektirmez, bugün kullanılan yol):
+   **Tek seferlik kurulum gerekiyor:** `gh auth login` (interaktif tarayıcı OAuth). Bu adım kullanıcıya aittir — ajan kullanıcının token'ını giremez. Yapıldıktan sonra PR açma tamamen otomatikleşir.
+
+2. **Push + tarayıcı** (yedek yol, kimlik doğrulaması gerektirmez):
    ```bash
    git push -u origin <dal>
    ```
-   GitHub, çıktıda hazır bir PR oluşturma bağlantısı döndürür. Kullanıcı bağlantıya tıklayıp PR'ı açar.
+   GitHub, çıktıda hazır bir PR oluşturma bağlantısı döndürür.
 
 `main`'e merge her iki yolda da **kullanıcının kararıdır** — otomatikleştirilmez.
 
@@ -214,7 +216,7 @@ Bu sistem güvenilirliğini raporların doğruluğundan alır:
 | iOS derleme | **Hazır ama kırılgan** — `xcodebuild` yolu çalışıyor, Podfile yaması kalıcı değil |
 | iOS QA (Mobile MCP) | **Koşullu** — ana oturumdan çalışır; `mobile-qa` alt-ajanından `tools` kaldırıldıktan sonra yeniden test edilmeli |
 | Bağımsız kod incelemesi | **Hazır** — gerçek bulgular üretti |
-| GitHub PR | **Yarı otomatik** — push otomatik, PR açma kullanıcıda (`gh` kurulu değil) |
+| GitHub PR | **Tek adım kaldı** — `gh` kurulu; kullanıcı bir kez `gh auth login` çalıştırınca tam otomatik |
 | GitHub Actions CI | **Yok** — `.github/workflows/` mevcut değil; testler yalnızca yerelde |
 | Computer Use | **Yok** — bu ortamda hiçbir desktop kontrol aracı mevcut değil |
 
