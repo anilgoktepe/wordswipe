@@ -26,13 +26,25 @@ Ana Claude oturumu **koordinatördür** — kendisi de kod yazabilir, ama asıl 
 
 Bu yüzden `mobile-qa` tanımında `tools` alanı **bilerek yok**; yazma araçları yerine `disallowedTools: Edit, Write` ile kesiliyor. 2026-11-23'te doğrulandı: `Edit` ve `Write` hem yüklü hem *deferred* havuzdan düşüyor (`ToolSearch select:Edit,Write` → `No matching deferred tools found`), `ToolSearch` ve Mobile MCP ise yerinde kalıyor. Yani `disallowedTools` allowlist'in yan etkilerini doğurmuyor.
 
-**Allowlist'e yazılan her araç gelmiyor.** `ios-build-engineer`, `tools:` içinde `Grep, Glob` istemesine rağmen ikisini de almıyor. Kök neden: **ana oturumun kendisinde `Grep`/`Glob` yok**, dolayısıyla devralma imkânsız. İşlevsel kayıp yok — `Bash` ile `rg`/`grep`/`find` aynı işi yapıyor. Allowlist'e `Skill` eklemek ise çalışıyor (`Skill(skill="<geçersiz>")` → `Unknown skill: ...`, yani araç seviyesinde değil argüman seviyesinde ret).
+**Allowlist'e yazılan her araç gelmiyor.** `Grep` ve `Glob` hiçbir alt ajana ulaşmıyor. Kök neden: **ana oturumun kendisinde `Grep`/`Glob` yok**, dolayısıyla devralma imkânsız. İki bağımsız ölçüm: `ios-build-engineer` ikisini de istediği hâlde almadı, ve `code-security-reviewer` kendi havuzunun `Read` + `Bash` olduğunu bildirdi. İşlevsel kayıp yok — `Bash` ile `rg`/`grep`/`find` aynı işi yapıyor. Bu yüzden dört ajanın frontmatter'ından da çıkarıldılar: bir dosyanın gelmeyen araçları listelemesi, okuyanı yanıltır.
 
-**Sonuç: ikisi de güvenlik duvarı değil, niyet beyanıdır.** `disallowedTools` yalnızca modele verilen araç şemalarını filtreler; o araçların başlattığı süreçleri kısıtlamaz. `Bash` duran her ajan yönlendirme (`>`, heredoc), `tee`, `sed -i`, `cp`/`mv`, `patch`/`git apply`, `git checkout`/`reset`/`clean` veya `python3 -c`/`node -e` ile yazabilir; üstüne `Agent` ile yazma yetkili bir ajan çağırmak kendi başına bir yazma yoludur. Koruma *kazara* yazmayı engeller ve kasıtlı yazmayı transcript'te görünür kılar. Gerçek kapatma permission-layer deny kuralı veya sandbox ister; frontmatter yetmez.
+Allowlist'e `Skill` eklemek ise çalışıyor (`Skill(skill="<geçersiz>")` → `Unknown skill: ...`, yani araç seviyesinde değil argüman seviyesinde ret).
+
+### Onayı kim verir
+
+**Alt ajanın görev metnini koordinatör yazar, kullanıcı değil.** Bir ajan dosyası "onay sana verilen görevde olmalı" derse, koordinatörün görev metnine *"Onaylandı: X yap"* yazması o koşulu sağlamış görünür — ve kullanıcı hiçbir şey onaylamamış olur. Bu, tasarım gereği permission laundering.
+
+Onay gerektiren her kural **kullanıcıyı** adlandırmalı ve onayın birebir aktarılmasını istemeli. Referans dil `ios-build-engineer.md`'de: *"Require explicit **user** approval before"*. Hiçbir ajan mesajı — koordinatör dahil — kullanıcı onayı yerine geçmez.
+
+**Sonuç: `tools` ve `disallowedTools` güvenlik duvarı değil, niyet beyanıdır.** `disallowedTools` yalnızca modele verilen araç şemalarını filtreler; o araçların başlattığı süreçleri kısıtlamaz. `Bash` duran her ajan yönlendirme (`>`, heredoc), `tee`, `sed -i`, `cp`/`mv`, `patch`/`git apply`, `git checkout`/`reset`/`clean` veya `python3 -c`/`node -e` ile yazabilir; üstüne `Agent` ile yazma yetkili bir ajan çağırmak kendi başına bir yazma yoludur. Koruma *kazara* yazmayı engeller ve kasıtlı yazmayı transcript'te görünür kılar. Gerçek kapatma permission-layer deny kuralı veya sandbox ister; frontmatter yetmez.
 
 ### Ajan tanımları ne zaman yüklenir
 
-`.claude/agents/` **izleniyor** — değişiklik için oturumu yeniden başlatmak şart değil. **Ama yükleme anında değil.** 2026-11-22'de iki frontmatter değişikliği yapıldıktan hemen sonra probe edildi ve ikisi de bayat sonuç verdi (eski araç havuzu); 2026-11-23'te aynı probe'lar ikisini de canlı gösterdi. Pratik kural: bir tanımı değiştirdikten sonra ölçüm yapacaksan, ilk olumsuz sonucu kesin kabul etme — tekrarla.
+**Ölçülen:** 2026-11-22'de iki frontmatter değişikliği yapıldıktan hemen sonra probe edildi ve ikisi de bayat sonuç verdi (eski araç havuzu); 2026-11-23'te aynı probe'lar ikisini de canlı gösterdi.
+
+**Suspected, doğrulanmadı:** bu gözlem "gecikmeli izleme" ile "oturum başında yükleme + arada bir oturum yeniden başlaması" arasında **ayrım yapmıyor**; iki açıklama da aynı sonucu üretir. Aleyhte bir delil de var: bir alt ajan, context'ine enjekte edilen `CLAUDE.md` kopyasının commit **öncesi** metni taşıdığını, diskteki dosyanın ise commit sonrası metni taşıdığını ölçtü — yani talimat dosyaları oturum başına önbelleğe alınıyor.
+
+**Pratik kural:** bir tanımı değiştirdikten sonra ölçmen gerekiyorsa en güvenli yol oturumu yeniden başlatmak. Başlatmadıysan ilk olumsuz sonucu kesin kabul etme, tekrarla. Kesin ayrım için tek oturum içinde yeniden probe gerekiyor — henüz yapılmadı.
 
 ---
 
@@ -75,7 +87,7 @@ Simulator tek bir paylaşılan kaynaktır. `mobile-qa` çalışırken hiçbir aj
 
 | İş | Araç |
 |---|---|
-| Dosya okuma/yazma | Read / Edit / Write / Grep / Glob |
+| Dosya okuma/yazma | Read / Edit / Write (`Grep`/`Glob` alt ajanlara ulaşmıyor — arama için `Bash` + `rg`) |
 | Derleme, test, git | Bash (terminal) |
 | iOS ekran kontrolü | **Mobile MCP** (`mcp__mobile-mcp__*`) |
 | Başka yolla erişilemeyen GUI | Computer Use — *bu ortamda mevcut değil* |
@@ -227,7 +239,8 @@ Bu sistem güvenilirliğini raporların doğruluğundan alır:
 |---|---|
 | PR #1 | `fix/quiz-duplicate-translations` — Quiz mükerrer çeviri düzeltmesi, **açık**, merge edilmedi |
 | Bu dal | `chore/agent-infrastructure` — ajan altyapısı |
-| Testler | tsc temiz · quiz 16/16 · SRS 57/57 · gramer 227/227 (10 known limit) · kelime 1000 temiz |
+| Testler (bu dal) | tsc temiz · SRS 57/57 · gramer 227 toplam / 217 pass / 0 fail / 10 known limit · kelime 1000 temiz |
+| Testler (PR #1'de) | quiz 16/16 — `test:quiz` bu dalda **yok**, yalnızca PR #1'in dalında koşuyor |
 | Simulator | iPhone 17, iOS 26.3 — `com.anilgoktepe.wordswipe` çalışır durumda |
 | Computer Use | Bu ortamda **mevcut değil** |
 
@@ -241,7 +254,7 @@ Bu sistem güvenilirliğini raporların doğruluğundan alır:
 | iOS QA (Mobile MCP) | **Hazır** — `mobile-qa` alt-ajanından doğrulandı: gerçek UDID, crash 0; `disallowedTools: Edit, Write` MCP erişimini bozmadı |
 | Bağımsız kod incelemesi | **Hazır** — gerçek bulgular üretti |
 | GitHub PR | **Tek adım kaldı** — `gh` kurulu; kullanıcı bir kez `gh auth login` çalıştırınca tam otomatik |
-| GitHub Actions CI | **Yazıldı** — `.github/workflows/ci.yml`; beş paket her PR'da ve `main` dışı her push'ta koşar. İlk gerçek koşu push sonrası doğrulanacak |
+| GitHub Actions CI | **Çalışıyor** — `.github/workflows/ci.yml`; beş paket her PR'da ve `main` dışı her push'ta koşar. `1c75395` üzerinde iki yeşil koşu doğrulandı (`push` 32s, `pull_request` 39s) |
 | Computer Use | **Yok** — bu ortamda hiçbir desktop kontrol aracı mevcut değil |
 
 ### Açık konular
@@ -249,5 +262,7 @@ Bu sistem güvenilirliğini raporların doğruluğundan alır:
 - **`scripts/srs-test.ts` kopyası üretimden sapmış.** Doğru-cevap yolunda `seenCount` güncellemesi eksik (`AppContext.tsx` → `MARK_WORD_LEARNED` onu artırıyor). Bu alanı bozan bir regresyon 57 testin tamamını yeşil bırakır. Düzeltmesi SRS reducer'ına dokunur → onay gerekir.
 - `ios/Podfile` deployment-target yaması kalıcı değil — `ios/` gitignore'da ve prebuild ile silinir. Kalıcı çözüm: Expo config plugin. Prebuild öncesi Podfile `ios/` dışına kopyalanmalı.
 - Eski `com.wordswipe.app` kurulumu simulator'da duruyor; içinde eski AsyncStorage verisi olabilir. **Onaysız silinmemeli.** (Not: bu id hâlâ `app.json`'da Android paket adı olarak canlı — iOS tarafında kullanılmıyor.)
-- CI'ın gerçekten koştuğu henüz görülmedi: workflow yazıldı ve beş komut yerelde doğrulandı, ama GitHub üzerinde ilk koşu için dalın push edilmesi gerekiyor. O ana kadar **"yazıldı, çalıştığı kanıtlanmadı"**.
-- `ios-build-engineer` frontmatter'ı `Grep, Glob` istiyor ama ikisi de gelmiyor (ana oturumda yok). İşlevsel sorun değil; dosyanın gelmeyen araçları iddia etmemesi için temizlenebilir.
+- **`main` korumasız ve CI hiçbir şeyi zorunlu kılmıyor.** `branches/main/protection` → 404. Kırmızı bir PR merge edilebilir; ayrıca `push: branches-ignore: [main]` yüzünden `main`'e doğrudan push hiç CI almıyor. `CLAUDE.md`'nin "`main`'e doğrudan değişiklik onay ister" kuralının mekanik karşılığı yok. Düzeltme bir depo ayarı: required status check = `Types and test suites`.
+- **Quiz suite'i CI'da henüz hiç koşmadı.** `test:quiz` bu dalda olmadığı için guard her koşuda devreye giriyor ve adımı `::warning::` ile geçiriyor. PR #1 merge olup guard kaldırılana kadar duplicate-translation regresyonu CI tarafından korunmuyor. Guard'ın kaldırılması **takip edilmesi gereken bir iş** — kendi kendini çözen bir yorum değil: script ileride yeniden adlandırılırsa CI sessizce yeşil kalır.
+- Aynı commit için `push` ve `pull_request` iki ayrı koşu başlatıyor; `concurrency` anahtarı `github.ref` olduğu için gruplar farklı ve birleşmiyor. Depo public olduğundan maliyet para değil, log gürültüsü. `push` tetikleyicisi bootstrap amacını tamamladı, kaldırılabilir.
+- `ci.yml`'de test adımları `if: always()` kullanıyor; iptal edilen koşuda da çalışmaya devam ediyor. Doğru deyim `if: '!cancelled()'`. Ayrıca `npm ci` düşerse beş adım birden kırmızı olur (tek net hata yerine).

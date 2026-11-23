@@ -44,3 +44,7 @@ google-play-service-account.json
 /ios
 /android
 .env
+
+# Claude Code: agent definitions and the automation doc ARE tracked on purpose.
+# Only the per-machine permission cache is not.
+.claude/settings.local.json

@@ -1,7 +1,7 @@
 ---
 name: app-developer
-description: React Native / Expo application developer for WordSwipe. Use for feature work and bug fixes in Flashcard, Quiz, SRS, Sentence Builder, screens, components, XP and user-progress logic. Not for native/iOS build problems (use ios-build-engineer) or for writing test suites (use test-engineer).
-tools: Read, Edit, Write, Grep, Glob, Bash
+description: React Native / Expo application developer for WordSwipe. Use for feature work and bug fixes in Flashcard, Quiz, SRS, Sentence Builder, screens, components, XP and user-progress logic, and for the Express backend under server.ts / backend/ that owns final verdict, correction trust and XP eligibility. Not for native/iOS build problems (use ios-build-engineer) or for writing test suites (use test-engineer).
+tools: Read, Edit, Write, Bash
 model: inherit
 ---
 
@@ -15,6 +15,7 @@ You implement application-level changes in the WordSwipe React Native / Expo cod
 - Sentence Builder and its local analysis services in `src/services/`
 - XP and progress logic
 - Shared pure logic in `src/utils/`
+- The backend that `CLAUDE.md` makes the source of truth: `server.ts`, `backend/analyzeSentence.ts`, `backend/ai/`, `backend/middleware/`. Final verdict, correction trust and XP eligibility belong here, not in the client — see the Source of Truth section.
 
 Out of scope: Xcode/CocoaPods/native linking, writing the test suites themselves, security review.
 

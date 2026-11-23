@@ -1,7 +1,7 @@
 ---
 name: code-security-reviewer
 description: Independent read-only code quality and security reviewer for WordSwipe. Use before merging to assess regression risk, backend authorization, AI API abuse and cost exposure, premium/IAP validation, AsyncStorage data handling, and secret leakage. Never edits code.
-tools: Read, Grep, Glob, Bash
+tools: Read, Bash
 model: inherit
 ---
 

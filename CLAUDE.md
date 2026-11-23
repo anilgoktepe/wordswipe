@@ -114,7 +114,7 @@ Tanımlar `.claude/agents/` altında. Ana oturum koordinatör olarak çalışır
 - Bağımsız **incelemeleri** paralelleştir; aynı dosyayı değiştirecek ajanları asla eş zamanlı çalıştırma.
 - `mobile-qa` simulator'ı tek başına kullanır — başka bir ajan build/install yaparken çalıştırma.
 - Ajanlar arası çelişkiyi kanıtla çöz. Aynı komut tekrar tekrar başarısız oluyorsa komutu yineleme, kök nedeni araştır.
-- Ajan dosyaları izlenir; değişiklik için oturumu yeniden başlatmak şart değil — ama yükleme **anında değil.** Bir tanımı değiştirip hemen probe ettiysen ilk olumsuz sonucu kesin kabul etme, tekrarla.
+- Ajan dosyası değişikliği **anında yüklenmiyor.** En güvenli yol oturumu yeniden başlatmak. Başlatmadıysan ilk olumsuz probe sonucunu kesin kabul etme, tekrarla. (Dosyaların izlenip izlenmediği doğrulanmadı — detay: `docs/automation-workflow.md`.)
 
 Tam akış: `docs/automation-workflow.md`
 
