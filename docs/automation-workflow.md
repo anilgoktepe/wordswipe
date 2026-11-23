@@ -18,19 +18,21 @@ Ana Claude oturumu **koordinatördür** — kendisi de kod yazabilir, ama asıl 
 | `test-engineer` | Otomatik test paketleri | `scripts/` — `src/` için onay gerekir |
 | `code-security-reviewer` | Bağımsız inceleme | Edit/Write yok; Bash var, **kural gereği salt okunur** |
 
-### `tools` allowlist'i hakkında — ölçülmüş davranış
+### `tools` ve `disallowedTools` — ölçülmüş davranış
 
-Frontmatter'daki `tools:` listesi **MCP araçlarını ve `ToolSearch`'ü kapsam dışı bırakıyor.** 2026-11-21'de ölçüldü: `mobile-qa`, `tools: Read, Grep, Glob, Bash` ile çalıştırıldığında yalnızca `Read` ve `Bash` görebildi; her Mobile MCP çağrısı şu hatayla düştü:
+**`tools:` allowlist'i MCP araçlarını ve `ToolSearch`'ü kapsam dışı bırakıyor.** 2026-11-21'de ölçüldü: `mobile-qa`, `tools: Read, Grep, Glob, Bash` ile yalnızca `Read` ve `Bash` görebildi; her Mobile MCP çağrısı şu hatayla düştü:
 
 > `its MCP server 'mobile-mcp' is connected but does not offer this tool here`
 
-Listeye `ToolSearch` eklemek de çözmedi. Bu yüzden `mobile-qa` tanımında `tools` alanı **bilerek yok** — simulator'a ulaşmanın tek yolu bu. Bedeli, ajanın `Edit`/`Write`'ı da devralması; bu, dosyasındaki açık yasakla dengeleniyor.
+Bu yüzden `mobile-qa` tanımında `tools` alanı **bilerek yok**; yazma araçları yerine `disallowedTools: Edit, Write` ile kesiliyor. 2026-11-23'te doğrulandı: `Edit` ve `Write` hem yüklü hem *deferred* havuzdan düşüyor (`ToolSearch select:Edit,Write` → `No matching deferred tools found`), `ToolSearch` ve Mobile MCP ise yerinde kalıyor. Yani `disallowedTools` allowlist'in yan etkilerini doğurmuyor.
 
-**Sonuç: `tools` listesi bir güvenlik duvarı değil, bir niyet beyanıdır.** `Bash` veren her ajan teknik olarak yazabilir/silebilir. Gerçek koruma, ajan dosyalarındaki açık yasaklar ve `CLAUDE.md`'deki onay kapısıdır.
+**Allowlist'e yazılan her araç gelmiyor.** `ios-build-engineer`, `tools:` içinde `Grep, Glob` istemesine rağmen ikisini de almıyor. Kök neden: **ana oturumun kendisinde `Grep`/`Glob` yok**, dolayısıyla devralma imkânsız. İşlevsel kayıp yok — `Bash` ile `rg`/`grep`/`find` aynı işi yapıyor. Allowlist'e `Skill` eklemek ise çalışıyor (`Skill(skill="<geçersiz>")` → `Unknown skill: ...`, yani araç seviyesinde değil argüman seviyesinde ret).
+
+**Sonuç: ikisi de güvenlik duvarı değil, niyet beyanıdır.** `disallowedTools` yalnızca modele verilen araç şemalarını filtreler; o araçların başlattığı süreçleri kısıtlamaz. `Bash` duran her ajan yönlendirme (`>`, heredoc), `tee`, `sed -i`, `cp`/`mv`, `patch`/`git apply`, `git checkout`/`reset`/`clean` veya `python3 -c`/`node -e` ile yazabilir; üstüne `Agent` ile yazma yetkili bir ajan çağırmak kendi başına bir yazma yoludur. Koruma *kazara* yazmayı engeller ve kasıtlı yazmayı transcript'te görünür kılar. Gerçek kapatma permission-layer deny kuralı veya sandbox ister; frontmatter yetmez.
 
 ### Ajan tanımları ne zaman yüklenir
 
-`.claude/agents/` **oturum başında** okunur. Dosya eklemek veya değiştirmek çalışan oturumu etkilemez — değişiklik için oturumu yeniden başlat. Bu iki kez ölçüldü.
+`.claude/agents/` **izleniyor** — değişiklik için oturumu yeniden başlatmak şart değil. **Ama yükleme anında değil.** 2026-11-22'de iki frontmatter değişikliği yapıldıktan hemen sonra probe edildi ve ikisi de bayat sonuç verdi (eski araç havuzu); 2026-11-23'te aynı probe'lar ikisini de canlı gösterdi. Pratik kural: bir tanımı değiştirdikten sonra ölçüm yapacaksan, ilk olumsuz sonucu kesin kabul etme — tekrarla.
 
 ---
 
@@ -77,7 +79,8 @@ Simulator tek bir paylaşılan kaynaktır. `mobile-qa` çalışırken hiçbir aj
 | Derleme, test, git | Bash (terminal) |
 | iOS ekran kontrolü | **Mobile MCP** (`mcp__mobile-mcp__*`) |
 | Başka yolla erişilemeyen GUI | Computer Use — *bu ortamda mevcut değil* |
-| GitHub | `git` + GitHub REST API (`gh` CLI kurulu değil) |
+| GitHub | **`gh` CLI** (2.105.0) — push için `git`'in credential helper'ı |
+| CI | GitHub Actions — `.github/workflows/ci.yml` |
 
 ### Mobile MCP
 
@@ -167,6 +170,27 @@ Referans desen: `generateQuiz`, `src/utils/quizGenerator.ts` içinde `react-nati
 
 Bilinen borç: `scripts/srs-test.ts` hâlâ SRS reducer'ını kopyalıyor, çünkü `AppContext.tsx` AsyncStorage import ediyor.
 
+### CI — `.github/workflows/ci.yml`
+
+Aynı beş komut `main`'e açılan her PR'da ve `main` dışı her push'ta GitHub Actions üzerinde koşar.
+
+| Tasarım kararı | Gerekçe |
+|---|---|
+| `permissions: contents: read`, secret yok | Üç test scriptinde `process.env`, `fetch` veya API anahtarı yok — ölçüldü. CI'ın hiçbir sırra ihtiyacı yok |
+| `ubuntu-latest` | Beş komutun hiçbiri macOS/Xcode gerektirmiyor; macOS runner ~10x pahalı |
+| `node-version: '22'` | Repo'da sürüm pini yok (`.nvmrc`/`engines` yok). 22 aktif LTS |
+| `npm ci` | `package-lock.json` v3 ve `package.json` ile senkron — doğrulandı |
+| Action'lar SHA'ya sabitli | Tag taşınmasına karşı; `actions/checkout` ve `actions/setup-node` v7 |
+| Her test adımında `if: always()` | Bir paket patlasa bile beşi de rapor eder; iş yine kırmızı olur |
+| `push: branches-ignore: [main]` | PR olmadan CI hiç koşmazdı: `pull_request` PR ister, `workflow_dispatch` ise workflow `main`'de olmadığı için UI'da görünmez |
+| `test:quiz` koruması | Script bu dalda yok (`fix/quiz-duplicate-translations`'a ait) ve `npm run test:quiz` EXIT 1 verir. Koruma **sessiz atlamaz**, `::warning::` basar; o dal merge olunca kendiliğinden devre dışı kalır |
+
+Push öncesi yerel doğrulama — CI'ın yapacağının aynısı:
+```bash
+npm ci --dry-run && npx tsc --noEmit && npm run test:srs \
+  && npm run test:grammar && npm run validate:vocab
+```
+
 ---
 
 ## 6. Teslimat
@@ -214,10 +238,10 @@ Bu sistem güvenilirliğini raporların doğruluğundan alır:
 | Uzman ajan çağırma | **Hazır** — beşi de kayıtlı, çağrıldı |
 | Otomatik testler | **Hazır** — 5 paket, tek komutla |
 | iOS derleme | **Hazır ama kırılgan** — `xcodebuild` yolu çalışıyor, Podfile yaması kalıcı değil |
-| iOS QA (Mobile MCP) | **Koşullu** — ana oturumdan çalışır; `mobile-qa` alt-ajanından `tools` kaldırıldıktan sonra yeniden test edilmeli |
+| iOS QA (Mobile MCP) | **Hazır** — `mobile-qa` alt-ajanından doğrulandı: gerçek UDID, crash 0; `disallowedTools: Edit, Write` MCP erişimini bozmadı |
 | Bağımsız kod incelemesi | **Hazır** — gerçek bulgular üretti |
 | GitHub PR | **Tek adım kaldı** — `gh` kurulu; kullanıcı bir kez `gh auth login` çalıştırınca tam otomatik |
-| GitHub Actions CI | **Yok** — `.github/workflows/` mevcut değil; testler yalnızca yerelde |
+| GitHub Actions CI | **Yazıldı** — `.github/workflows/ci.yml`; beş paket her PR'da ve `main` dışı her push'ta koşar. İlk gerçek koşu push sonrası doğrulanacak |
 | Computer Use | **Yok** — bu ortamda hiçbir desktop kontrol aracı mevcut değil |
 
 ### Açık konular
@@ -225,4 +249,5 @@ Bu sistem güvenilirliğini raporların doğruluğundan alır:
 - **`scripts/srs-test.ts` kopyası üretimden sapmış.** Doğru-cevap yolunda `seenCount` güncellemesi eksik (`AppContext.tsx` → `MARK_WORD_LEARNED` onu artırıyor). Bu alanı bozan bir regresyon 57 testin tamamını yeşil bırakır. Düzeltmesi SRS reducer'ına dokunur → onay gerekir.
 - `ios/Podfile` deployment-target yaması kalıcı değil — `ios/` gitignore'da ve prebuild ile silinir. Kalıcı çözüm: Expo config plugin. Prebuild öncesi Podfile `ios/` dışına kopyalanmalı.
 - Eski `com.wordswipe.app` kurulumu simulator'da duruyor; içinde eski AsyncStorage verisi olabilir. **Onaysız silinmemeli.** (Not: bu id hâlâ `app.json`'da Android paket adı olarak canlı — iOS tarafında kullanılmıyor.)
-- CI yok: testler commit/PR'da otomatik koşmuyor.
+- CI'ın gerçekten koştuğu henüz görülmedi: workflow yazıldı ve beş komut yerelde doğrulandı, ama GitHub üzerinde ilk koşu için dalın push edilmesi gerekiyor. O ana kadar **"yazıldı, çalıştığı kanıtlanmadı"**.
+- `ios-build-engineer` frontmatter'ı `Grep, Glob` istiyor ama ikisi de gelmiyor (ana oturumda yok). İşlevsel sorun değil; dosyanın gelmeyen araçları iddia etmemesi için temizlenebilir.

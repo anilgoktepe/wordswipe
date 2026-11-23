@@ -1,0 +1,78 @@
+name: CI
+
+# Runs the five local test commands on every pull request to main and on every
+# push to a feature branch. The push trigger matters: without it CI could not
+# run at all until a PR existed, and workflow_dispatch does not appear in the
+# UI while this file is absent from the default branch.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches-ignore: [main]
+  workflow_dispatch:
+
+# Least privilege: the suites read the repo and nothing else. No secrets are
+# referenced anywhere in this workflow, because none of the test scripts read
+# process.env, call fetch, or need an API key.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Types and test suites
+    runs-on: ubuntu-latest # none of the five commands need macOS or Xcode
+    timeout-minutes: 15
+
+    steps:
+      # Third-party actions are pinned to a commit SHA, not a moving tag.
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          # The repo pins no Node version (no .nvmrc, no engines field), so the
+          # choice is made here. 22 is the active LTS.
+          node-version: '22'
+          cache: npm
+
+      # package-lock.json is lockfileVersion 3 and in sync with package.json,
+      # so ci is safe and reproducible.
+      - name: Install dependencies
+        run: npm ci
+
+      # Every suite below uses `if: always()` so that one failure still lets the
+      # rest report. The job as a whole still fails.
+      - name: TypeScript
+        if: always()
+        run: npx tsc --noEmit
+
+      # test:quiz lives on the quiz branch and is not present here yet. Skipping
+      # is explicit and annotated rather than silent; once that branch merges the
+      # guard stops triggering on its own.
+      - name: Quiz tests
+        if: always()
+        run: |
+          if node -e "process.exit(require('./package.json').scripts['test:quiz'] ? 0 : 1)"; then
+            npm run test:quiz
+          else
+            echo "::warning title=Quiz tests skipped::test:quiz is not defined in package.json on this branch"
+          fi
+
+      - name: SRS tests
+        if: always()
+        run: npm run test:srs
+
+      # The grammar suite reports "known limits" — acknowledged local-rule gaps.
+      # Those are not regressions and the suite exits 0 with them present.
+      - name: Grammar tests
+        if: always()
+        run: npm run test:grammar
+
+      - name: Vocabulary validation
+        if: always()
+        run: npm run validate:vocab
