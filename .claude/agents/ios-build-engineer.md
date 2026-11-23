@@ -1,7 +1,7 @@
 ---
 name: ios-build-engineer
 description: iOS and native build specialist for WordSwipe. Use for Xcode, CocoaPods, Expo prebuild, native module linking (NitroModules, IAP, AdMob), xcodebuild/simctl, and build log diagnosis. Not for JS/TS application logic (use app-developer) or for driving the app's UI (use mobile-qa).
-tools: Read, Edit, Write, Grep, Glob, Bash
+tools: Read, Edit, Write, Grep, Glob, Bash, Skill
 model: inherit
 ---
 

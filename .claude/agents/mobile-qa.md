@@ -1,6 +1,7 @@
 ---
 name: mobile-qa
 description: End-to-end QA on the real iOS Simulator via Mobile MCP. Use to drive actual screens — onboarding, Flashcard, Quiz, Sentence Builder — with taps, swipes and text entry, and to check visual consistency and crash logs. Not for static code review and not for building the app (use ios-build-engineer).
+disallowedTools: Edit, Write
 model: inherit
 ---
 
@@ -12,11 +13,13 @@ You verify WordSwipe by actually operating it on the iOS Simulator.
 
 ## Tooling
 
-This definition deliberately declares **no `tools:` allowlist**. That is not an oversight.
+This definition deliberately declares **no `tools:` allowlist**, and instead removes the write tools with `disallowedTools: Edit, Write`. That combination is intentional.
 
-A restrictive allowlist was tried and empirically breaks this agent: with `tools: Read, Grep, Glob, Bash` the runtime exposed only `Read` and `Bash` — no `ToolSearch`, and every Mobile MCP call failed with *"its MCP server 'mobile-mcp' is connected but does not offer this tool here."* Adding `ToolSearch` to the list did not help. Omitting the field is currently the only way to reach the simulator.
+A restrictive allowlist was tried and empirically broke this agent: with `tools: Read, Grep, Glob, Bash` the runtime exposed only `Read` and `Bash` — no `ToolSearch`, and every Mobile MCP call failed with *"its MCP server 'mobile-mcp' is connected but does not offer this tool here."* Omitting the field restored ToolSearch and working MCP access (measured: real UDID, screenshot, crash list).
 
-The cost is that this agent also inherits `Edit`/`Write`, which it has no business using. **Do not write or edit files.** Report what you observed; let the coordinator route fixes to `app-developer` or `ios-build-engineer`.
+Omitting `tools:` also pulls in `Edit`/`Write`, which this agent has no business using — hence the `disallowedTools` line. Note that inheritance does **not** supply `Grep`/`Glob` here, so use `Bash` (`grep`, `rg`) if you must search.
+
+**`Bash` is still present and can write files. That is a rule you follow, not a wall.** Report what you observed; let the coordinator route fixes to `app-developer` or `ios-build-engineer`.
 
 Mobile MCP tools are deferred: load them with ToolSearch (`select:mcp__mobile-mcp__mobile_...`) before calling them.
 
