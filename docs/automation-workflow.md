@@ -184,7 +184,7 @@ Bilinen borç: `scripts/srs-test.ts` hâlâ SRS reducer'ını kopyalıyor, çün
 
 ### CI — `.github/workflows/ci.yml`
 
-Aynı beş komut `main`'e açılan her PR'da ve `main` dışı her push'ta GitHub Actions üzerinde koşar.
+Aynı beş komut `main`'e açılan her PR'da ve merge sonrası `main`'in kendisinde GitHub Actions üzerinde koşar. PR'sız feature dalı push'u CI almaz — merge adayı değildir.
 
 | Tasarım kararı | Gerekçe |
 |---|---|
@@ -193,14 +193,15 @@ Aynı beş komut `main`'e açılan her PR'da ve `main` dışı her push'ta GitHu
 | `node-version: '22'` | Repo'da sürüm pini yok (`.nvmrc`/`engines` yok). 22 aktif LTS |
 | `npm ci` | `package-lock.json` v3 ve `package.json` ile senkron — doğrulandı |
 | Action'lar SHA'ya sabitli | Tag taşınmasına karşı; `actions/checkout` ve `actions/setup-node` v7 |
-| Her test adımında `if: always()` | Bir paket patlasa bile beşi de rapor eder; iş yine kırmızı olur |
-| `push: branches-ignore: [main]` | PR olmadan CI hiç koşmazdı: `pull_request` PR ister, `workflow_dispatch` ise workflow `main`'de olmadığı için UI'da görünmez |
-| `test:quiz` koruması | Script bu dalda yok (`fix/quiz-duplicate-translations`'a ait) ve `npm run test:quiz` EXIT 1 verir. Koruma **sessiz atlamaz**, `::warning::` basar; o dal merge olunca kendiliğinden devre dışı kalır |
+| Her test adımında `if: ${{ !cancelled() }}` | Bir paket patlasa bile beşi de rapor eder; iş yine kırmızı olur. İptal edilen koşuda ise durur — `always()` beşini boşa koşturuyordu |
+| `push: branches: [main]` | Merge sonrası `main` doğrulanır. Eski `branches-ignore: [main]` bootstrap içindi; `pull_request` ile birlikte aynı commit'e **aynı adı taşıyan iki check-run** üretiyordu ve zorunlu check ada göre en sonkini aldığı için hangi koşunun kapıyı geçtiği deterministik değildi |
+| `test:quiz` zorunlu | Geçici varlık koruması **kaldırıldı** (#1 `test:quiz`'i `main`'e getirdi). Adım doğrudan `npm run test:quiz` koşar: eksik veya başarısız script işi kırmızı yapar. Script yeniden adlandırılırsa CI sessizce yeşil kalmaz — `npm run <yok>` EXIT 1 verir, ölçüldü |
+| Job adı `Types and test suites` | Ruleset'teki zorunlu status check'in **tam adı**. Job'ı yeniden adlandırmak kapıyı sessizce koparır; ikisi aynı değişiklikte güncellenmeli |
 
 Push öncesi yerel doğrulama — CI'ın yapacağının aynısı:
 ```bash
-npm ci --dry-run && npx tsc --noEmit && npm run test:srs \
-  && npm run test:grammar && npm run validate:vocab
+npm ci --dry-run && npx tsc --noEmit && npm run test:quiz \
+  && npm run test:srs && npm run test:grammar && npm run validate:vocab
 ```
 
 ---
@@ -233,14 +234,15 @@ Bu sistem güvenilirliğini raporların doğruluğundan alır:
 
 ---
 
-## 8. Mevcut durum (2026-11-21)
+## 8. Mevcut durum (2026-11-28)
 
 | | |
 |---|---|
-| PR #1 | `fix/quiz-duplicate-translations` — Quiz mükerrer çeviri düzeltmesi, **açık**, merge edilmedi |
-| Bu dal | `chore/agent-infrastructure` — ajan altyapısı |
-| Testler (bu dal) | tsc temiz · SRS 57/57 · gramer 227 toplam / 217 pass / 0 fail / 10 known limit · kelime 1000 temiz |
-| Testler (PR #1'de) | quiz 16/16 — `test:quiz` bu dalda **yok**, yalnızca PR #1'in dalında koşuyor |
+| PR #2 | `chore/agent-infrastructure` — ajan altyapısı + CI, **merge edildi** (`0d7e302`) |
+| PR #1 | `fix/quiz-duplicate-translations` — Quiz mükerrer çeviri düzeltmesi, **merge edildi** (`ff3068a`) |
+| `main` | Beş ajan tanımı, `ci.yml` ve quiz düzeltmesi artık `main`'de |
+| Testler (`main`) | tsc temiz · quiz 16/16 · SRS 57/57 · gramer 227 toplam / 217 pass / 0 fail / 10 known limit · kelime 1000 temiz |
+| `main` koruması | Ruleset **WordSwipe - Main Protection** aktif: zorunlu check `Types and test suites`, 0 onay, force push ve dal silme kapalı, bypass yok |
 | Simulator | iPhone 17, iOS 26.3 — `com.anilgoktepe.wordswipe` çalışır durumda |
 | Computer Use | Bu ortamda **mevcut değil** |
 
@@ -251,10 +253,10 @@ Bu sistem güvenilirliğini raporların doğruluğundan alır:
 | Uzman ajan çağırma | **Hazır** — beşi de kayıtlı, çağrıldı |
 | Otomatik testler | **Hazır** — 5 paket, tek komutla |
 | iOS derleme | **Hazır ama kırılgan** — `xcodebuild` yolu çalışıyor, Podfile yaması kalıcı değil |
-| iOS QA (Mobile MCP) | **Hazır** — `mobile-qa` alt-ajanından doğrulandı: gerçek UDID, crash 0; `disallowedTools: Edit, Write` MCP erişimini bozmadı |
+| iOS QA (Mobile MCP) | **Hazır ve kullanıldı** — 2026-11-27'de `mobile-qa` Quiz ekranının tam fonksiyonel QA'sini yaptı: 11 soru, mükerrer seçenek yok, XP/SRS ayrışması doğru, crash 0. Not: uygulamanın a11y hiyerarşisi butonları yayınlamıyor, seçenek metinleri screenshot'tan okundu — `testID` eklemek otomasyonu kolaylaştırır |
 | Bağımsız kod incelemesi | **Hazır** — gerçek bulgular üretti |
-| GitHub PR | **Tek adım kaldı** — `gh` kurulu; kullanıcı bir kez `gh auth login` çalıştırınca tam otomatik |
-| GitHub Actions CI | **Çalışıyor** — `.github/workflows/ci.yml`; beş paket her PR'da ve `main` dışı her push'ta koşar. `1c75395` üzerinde iki yeşil koşu doğrulandı (`push` 32s, `pull_request` 39s) |
+| GitHub PR | **Hazır** — `gh` 2.105.0 kurulu ve yetkili (`repo`, `workflow` scope'ları dahil); PR açma/güncelleme/koşu okuma otomatik |
+| GitHub Actions CI | **Çalışıyor** — `.github/workflows/ci.yml`; beş paket `main`'e açılan her PR'da ve merge sonrası `main`'de koşar. `a023ff9` üzerinde quiz suite'i ilk kez gerçek CI'da koştu: 16/16 |
 | Computer Use | **Yok** — bu ortamda hiçbir desktop kontrol aracı mevcut değil |
 
 ### Açık konular
@@ -262,7 +264,7 @@ Bu sistem güvenilirliğini raporların doğruluğundan alır:
 - **`scripts/srs-test.ts` kopyası üretimden sapmış.** Doğru-cevap yolunda `seenCount` güncellemesi eksik (`AppContext.tsx` → `MARK_WORD_LEARNED` onu artırıyor). Bu alanı bozan bir regresyon 57 testin tamamını yeşil bırakır. Düzeltmesi SRS reducer'ına dokunur → onay gerekir.
 - `ios/Podfile` deployment-target yaması kalıcı değil — `ios/` gitignore'da ve prebuild ile silinir. Kalıcı çözüm: Expo config plugin. Prebuild öncesi Podfile `ios/` dışına kopyalanmalı.
 - Eski `com.wordswipe.app` kurulumu simulator'da duruyor; içinde eski AsyncStorage verisi olabilir. **Onaysız silinmemeli.** (Not: bu id hâlâ `app.json`'da Android paket adı olarak canlı — iOS tarafında kullanılmıyor.)
-- **`main` korumasız ve CI hiçbir şeyi zorunlu kılmıyor.** `branches/main/protection` → 404. Kırmızı bir PR merge edilebilir; ayrıca `push: branches-ignore: [main]` yüzünden `main`'e doğrudan push hiç CI almıyor. `CLAUDE.md`'nin "`main`'e doğrudan değişiklik onay ister" kuralının mekanik karşılığı yok. Düzeltme bir depo ayarı: required status check = `Types and test suites`.
-- **Quiz suite'i CI'da henüz hiç koşmadı.** `test:quiz` bu dalda olmadığı için guard her koşuda devreye giriyor ve adımı `::warning::` ile geçiriyor. PR #1 merge olup guard kaldırılana kadar duplicate-translation regresyonu CI tarafından korunmuyor. Guard'ın kaldırılması **takip edilmesi gereken bir iş** — kendi kendini çözen bir yorum değil: script ileride yeniden adlandırılırsa CI sessizce yeşil kalır.
-- Aynı commit için `push` ve `pull_request` iki ayrı koşu başlatıyor; `concurrency` anahtarı `github.ref` olduğu için gruplar farklı ve birleşmiyor. Depo public olduğundan maliyet para değil, log gürültüsü. `push` tetikleyicisi bootstrap amacını tamamladı, kaldırılabilir.
-- `ci.yml`'de test adımları `if: always()` kullanıyor; iptal edilen koşuda da çalışmaya devam ediyor. Doğru deyim `if: '!cancelled()'`. Ayrıca `npm ci` düşerse beş adım birden kırmızı olur (tek net hata yerine).
+- **`QuizScreen.tsx:155` — `ADD_XP`, `isFirstAttempt` guard'ının dışında.** Yanlış-sonra-doğru cevap tam baz XP alıyor, ama doğru biçimde "öğrenildi" sayılmıyor. 2026-11-27 simulator koşusunda aritmetikle doğrulandı: gözlenen +56 = 10×5 baz + 6 seri bonusu; ilk denemede doğru 9 cevap 51 verirdi. PR #1'in getirdiği bir regresyon **değil** — o PR XP/SRS mantığına dokunmadı. Düzeltmesi XP davranışını değiştirir, onay gerekir.
+- **`main` push tetikleyicisi pratikte henüz doğrulanmadı.** `push: branches: [main]` ilk kez bu dalla geliyor; tanım gereği yalnızca `main`'e merge olduğunda ateşlenir. Gerçek doğrulaması bu PR merge edildikten sonra yapılabilir.
+- `concurrency.cancel-in-progress: true` bilerek korundu. Yeni `push: [main]` tetikleyicisi ilk kez `refs/heads/main` grubunu var ediyor: 15 dakika içinde iki ardışık merge olursa ilk `main` koşusu iptal edilir ve o commit yeşil kayıt bırakmaz. Tek geliştiricili projede pratikte görülmez; gerekirse tek satır çözümü var (`cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}`). PR koşuları ile `main` koşuları farklı gruplarda, birbirini iptal etmiyor.
+- `npm ci` 47 güvenlik açığı bildiriyor (2 kritik). CI'ı etkilemiyor (sır yok, yalnızca test koşuyor) ama ayrı bir iş olarak takip edilmeli.
