@@ -11,6 +11,7 @@
     "dev:api": "tsx server.ts",
     "test:srs": "tsx scripts/srs-test.ts",
     "test:grammar": "tsx scripts/grammar-stress-test.ts",
+    "test:quiz": "tsx scripts/quiz-test.ts",
     "validate:vocab": "tsx scripts/validate-vocabulary.ts",
     "vocab:export": "tsx scripts/export-vocabulary.ts",
     "vocab:generate": "tsx scripts/generate-vocabulary.ts",

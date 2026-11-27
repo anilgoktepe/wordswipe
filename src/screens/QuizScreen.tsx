@@ -14,7 +14,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useApp } from '../context/AppContext';
-import { Word, getWordsByLevel } from '../data/vocabulary';
+import { Word } from '../data/vocabulary';
+import { generateQuiz, QuizQuestion } from '../utils/quizGenerator';
 import { getTheme, spacing, radius, typography, shadows } from '../utils/theme';
 import { SoundService } from '../utils/sound';
 import { XPPopup, XPPopupHandle } from '../components/XPPopup';
@@ -31,29 +32,6 @@ function haptic(type: 'success' | 'error' | 'light') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   } catch (_) {}
-}
-
-interface QuizQuestion {
-  word: Word;
-  options: string[];
-  correctIndex: number;
-}
-
-function generateQuiz(words: Word[], level: 'easy' | 'medium' | 'hard'): QuizQuestion[] {
-  const levelPool = getWordsByLevel(level);
-  return words.map(word => {
-    const wrongOptions = levelPool
-      .filter(w => w.id !== word.id)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3)
-      .map(w => w.translation);
-
-    const correctIndex = Math.floor(Math.random() * 4);
-    const options = [...wrongOptions];
-    options.splice(correctIndex, 0, word.translation);
-
-    return { word, options, correctIndex };
-  });
 }
 
 interface Props {
