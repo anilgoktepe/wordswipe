@@ -193,7 +193,7 @@ Aynı beş komut `main`'e açılan her PR'da ve merge sonrası `main`'in kendisi
 | `node-version: '22'` | Repo'da sürüm pini yok (`.nvmrc`/`engines` yok). 22 aktif LTS |
 | `npm ci` | `package-lock.json` v3 ve `package.json` ile senkron — doğrulandı |
 | Action'lar SHA'ya sabitli | Tag taşınmasına karşı; `actions/checkout` ve `actions/setup-node` v7 |
-| Her test adımında `if: ${{ !cancelled() }}` | Bir paket patlasa bile beşi de rapor eder; iş yine kırmızı olur. İptal edilen koşuda ise durur — `always()` beşini boşa koşturuyordu |
+| Her test adımında `!cancelled() && steps.install.outcome == 'success'` | Bir paket patlasa bile beşi de rapor eder; iş yine kırmızı olur. İptal edilen koşuda durur (`always()` beşini boşa koşturuyordu) ve `npm ci` düşerse atlanır — aksi hâlde beş paket `node_modules` olmadan koşuyor, `npx tsc` de sabitlenmemiş TypeScript'i registry'den çekiyordu |
 | `push: branches: [main]` | Merge sonrası `main` doğrulanır. Eski `branches-ignore: [main]` bootstrap içindi; `pull_request` ile birlikte aynı commit'e **aynı adı taşıyan iki check-run** üretiyordu ve zorunlu check ada göre en sonkini aldığı için hangi koşunun kapıyı geçtiği deterministik değildi |
 | `test:quiz` zorunlu | Geçici varlık koruması **kaldırıldı** (#1 `test:quiz`'i `main`'e getirdi). Adım doğrudan `npm run test:quiz` koşar: eksik veya başarısız script işi kırmızı yapar. Script yeniden adlandırılırsa CI sessizce yeşil kalmaz — `npm run <yok>` EXIT 1 verir, ölçüldü |
 | Job adı `Types and test suites` | Ruleset'teki zorunlu status check'in **tam adı**. Job'ı yeniden adlandırmak kapıyı sessizce koparır; ikisi aynı değişiklikte güncellenmeli |

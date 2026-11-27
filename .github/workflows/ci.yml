@@ -50,30 +50,34 @@ jobs:
       # package-lock.json is lockfileVersion 3 and in sync with package.json,
       # so ci is safe and reproducible.
       - name: Install dependencies
+        id: install
         run: npm ci
 
-      # Every suite runs under `!cancelled()`: one failing suite still lets the
-      # others report, but a cancelled run stops instead of grinding through all
-      # five. A failing suite fails its step, and a failing step fails the job —
-      # there is no path that reports success on a failed or missing command.
+      # One failing suite still lets the others report, but a cancelled run stops
+      # instead of grinding through all five, and a failed `npm ci` skips them
+      # rather than running five suites against an absent node_modules (which
+      # also made `npx tsc` fetch an unpinned TypeScript from the registry).
+      # A failing suite fails its step and a failing step fails the job, and a
+      # skipped suite leaves `npm ci`'s own failure red — no path reports success
+      # on a failed, skipped or missing command.
       - name: TypeScript
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npx tsc --noEmit
 
       - name: Quiz tests
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run test:quiz
 
       - name: SRS tests
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run test:srs
 
       # The grammar suite reports "known limits" — acknowledged local-rule gaps.
       # Those are not regressions and the suite exits 0 with them present.
       - name: Grammar tests
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run test:grammar
 
       - name: Vocabulary validation
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run validate:vocab
