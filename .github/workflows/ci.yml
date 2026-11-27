@@ -1,14 +1,15 @@
 name: CI
 
-# Runs the five local test commands on every pull request to main and on every
-# push to a feature branch. The push trigger matters: without it CI could not
-# run at all until a PR existed, and workflow_dispatch does not appear in the
-# UI while this file is absent from the default branch.
+# Runs the five local test commands on every pull request to main, and again on
+# main itself after a merge. Feature-branch pushes deliberately do NOT trigger
+# CI: a branch with no PR is not a merge candidate, and when both triggers fired
+# on one commit they produced two check-runs sharing the required check's name,
+# so which run satisfied the gate was not deterministic.
 on:
   pull_request:
     branches: [main]
   push:
-    branches-ignore: [main]
+    branches: [main]
   workflow_dispatch:
 
 # Least privilege: the suites read the repo and nothing else. No secrets are
@@ -17,12 +18,18 @@ on:
 permissions:
   contents: read
 
+# github.ref differs per trigger (refs/pull/N/merge for a PR, refs/heads/main
+# for a merge), so PR runs and main runs never cancel each other. Within one PR,
+# a new push supersedes the run it replaced.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   test:
+    # This exact string is the required status check in the "WordSwipe - Main
+    # Protection" ruleset. Renaming the job silently detaches that gate, so the
+    # ruleset must be updated in the same change.
     name: Types and test suites
     runs-on: ubuntu-latest # none of the five commands need macOS or Xcode
     timeout-minutes: 15
@@ -43,36 +50,34 @@ jobs:
       # package-lock.json is lockfileVersion 3 and in sync with package.json,
       # so ci is safe and reproducible.
       - name: Install dependencies
+        id: install
         run: npm ci
 
-      # Every suite below uses `if: always()` so that one failure still lets the
-      # rest report. The job as a whole still fails.
+      # One failing suite still lets the others report, but a cancelled run stops
+      # instead of grinding through all five, and a failed `npm ci` skips them
+      # rather than running five suites against an absent node_modules (which
+      # also made `npx tsc` fetch an unpinned TypeScript from the registry).
+      # A failing suite fails its step and a failing step fails the job, and a
+      # skipped suite leaves `npm ci`'s own failure red — no path reports success
+      # on a failed, skipped or missing command.
       - name: TypeScript
-        if: always()
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npx tsc --noEmit
 
-      # test:quiz lives on the quiz branch and is not present here yet. Skipping
-      # is explicit and annotated rather than silent; once that branch merges the
-      # guard stops triggering on its own.
       - name: Quiz tests
-        if: always()
-        run: |
-          if node -e "process.exit(require('./package.json').scripts['test:quiz'] ? 0 : 1)"; then
-            npm run test:quiz
-          else
-            echo "::warning title=Quiz tests skipped::test:quiz is not defined in package.json on this branch"
-          fi
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run test:quiz
 
       - name: SRS tests
-        if: always()
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run test:srs
 
       # The grammar suite reports "known limits" — acknowledged local-rule gaps.
       # Those are not regressions and the suite exits 0 with them present.
       - name: Grammar tests
-        if: always()
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run test:grammar
 
       - name: Vocabulary validation
-        if: always()
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run validate:vocab
